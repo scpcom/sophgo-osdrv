@@ -47,6 +47,7 @@ static int scale;
 static bool fb_on_sc;
 static int rdma_window;
 static int option = 1; // default enable double buffer
+static int opt_bpp = 32;
 
 static const struct fb_fix_screeninfo cvifb_fix = {
 	.id =		"cvifb",
@@ -315,20 +316,20 @@ static int cvifb_check_var(struct fb_var_screeninfo *var, struct fb_info *info)
 			var->blue.offset = 0;
 			var->transp.length = var->red.length = var->green.length = var->blue.length = 4;
 		} else {
-			// ARGB1555
+			// ABGR1555
 			var->transp.offset = 15;
-			var->red.offset = 10;
+			var->blue.offset = 10;
 			var->green.offset = 5;
-			var->blue.offset = 0;
+			var->red.offset = 0;
 			var->transp.length = 1;
 			var->red.length	= var->green.length = var->blue.length = 5;
 		}
 		break;
-	case 32: // ARGB8888
+	case 32: // ABGR8888
 		var->transp.offset = 24;
-		var->red.offset = 16;
+		var->blue.offset = 16;
 		var->green.offset = 8;
-		var->blue.offset = 0;
+		var->red.offset = 0;
 		var->transp.length = 8;
 		var->red.length = var->green.length = var->blue.length = 8;
 		break;
@@ -687,7 +688,15 @@ int cvifb_probe(struct platform_device *pdev)
 		sclr_disp_get_hw_timing(&timing);
 		info->var.xres = timing.hfde_end - timing.hfde_start + 1;
 		info->var.yres = timing.vfde_end - timing.vfde_start + 1;
-		info->var.bits_per_pixel = 16;
+		switch (opt_bpp) {
+		case 16: case 32:
+			info->var.bits_per_pixel = opt_bpp;
+			break;
+		default:
+			dev_err(info->device, "bpp %d not support, fallback to 32\n", opt_bpp);
+			info->var.bits_per_pixel = 32;
+			break;
+		}
 		info->var.xres_virtual = VXRES_SIZE(info->var.xres, info->var.bits_per_pixel);
 		info->var.yres_virtual =
 			double_buffer ? (info->var.yres * 2) : info->var.yres;
@@ -815,6 +824,13 @@ module_param(rdma_window, int, 0444);
  * - bit[1]: if true, fb on vpss not vo
  */
 module_param(option, int, 0444);
+
+/* opt_bpp:
+ * - 16: ABGR 1555
+ * - 32: ABGR 8888
+ */
+module_param(opt_bpp, int, 0444);
+
 MODULE_PARM_DESC(mode_option, "Default video mode (320x240-32@60', etc)");
 MODULE_PARM_DESC(scale, "scale up of the fb canvas");
 
