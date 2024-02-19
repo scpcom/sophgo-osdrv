@@ -2,6 +2,7 @@
 # Makefile for the Linux Wireless network device drivers.
 #
 
+obj-$(CONFIG_AIC_WLAN_SUPPORT) += aic8800/
 obj-$(CONFIG_WLAN_VENDOR_REALTEK) += realtek/
 obj-$(CONFIG_WLAN_VENDOR_BROADCOM) += broadcom/
 obj-$(CONFIG_WLAN_VENDOR_MEDIATEK) += mediatek/
