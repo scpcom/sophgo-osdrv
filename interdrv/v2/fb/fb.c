@@ -46,7 +46,7 @@ static bool double_buffer;
 static int scale;
 static bool fb_on_sc;
 static int rdma_window;
-static int option;
+static int option = 1; // default enable double buffer
 
 static const struct fb_fix_screeninfo cvifb_fix = {
 	.id =		"cvifb",
