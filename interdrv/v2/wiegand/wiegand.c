@@ -131,7 +131,7 @@ static int cvi_wiegand_set_rx_cfg(struct cvi_wiegand_device *ndev, struct wgn_rx
 	pr_debug("cvi_wiegand_set_rx_cfg\n");
 
 	if (rx_cfg_ptr->rx_debounce > 0xFFFF)
-		rx_cfg_ptr->rx_debounce = 0xFFFF;
+		rx_cfg_ptr->rx_debounce = 0xFFFFF;
 	writel(rx_cfg_ptr->rx_debounce, ndev->wiegand_vaddr + RX_CONFIG0);
 
 	if (rx_cfg_ptr->rx_idle_timeout > 0xFFFFFFFF)
@@ -312,8 +312,7 @@ static long cvi_wiegand_ioctl(struct file *filp, unsigned int cmd, unsigned long
 
 	case IOCTL_WGN_GET_VAL:
 		//check data
-		if ((readl(ndev->wiegand_vaddr + RX_BUFFER_VALID) & 0x1) == 0 ||
-		    (readl(ndev->wiegand_vaddr + RX_BUFFER_FLAG) & 0x180) != 0) {
+		if ((readl(ndev->wiegand_vaddr + RX_BUFFER_VALID) & 0x1) == 0) {
 			pr_debug("RX buffer is INVALID\n");
 			rx_data = 0;
 		} else {

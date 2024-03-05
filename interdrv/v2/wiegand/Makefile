@@ -15,6 +15,7 @@ all:
 clean:
 	rm -f *.o* *.ko
 	rm -f Module.symvers modules.order
+	rm -f *.mod *.mod.c
 	rm -f cvi_wiegand.mod.c
 	rm -rf .tmp_versions
 	rm -f .*cmd

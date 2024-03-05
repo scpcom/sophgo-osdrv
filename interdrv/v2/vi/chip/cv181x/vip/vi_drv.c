@@ -1,7 +1,5 @@
 #include <vip/vi_drv.h>
 #include <vip_common.h>
-#include <sys.h>
-#include <cmdq.h>
 
 #define LUMA_MAP_W_BIT	4
 #define LUMA_MAP_H_BIT	4
@@ -482,41 +480,9 @@ void isp_pre_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num, const u8 chn_nu
 	}
 }
 
-#if !defined(__SOC_PHOBOS__)
-static void _isp_cmdq_post_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num, u32 sw_ctrl_1, u32 sw_ctrl_0)
-{
-	uintptr_t cmqd = ctx->phys_regs[ISP_BLK_ID_CMDQ];
-	u32 isptop_phy_reg = ISP_TOP_PHY_REG_BASE + ISP_BLK_BA_ISPTOP;
-	u16 cmd_idx = ctx->isp_pipe_cfg[raw_num].cmdq_buf.cmd_idx;
-	union cmdq_set *cmd_start = (union cmdq_set *)ctx->isp_pipe_cfg[raw_num].cmdq_buf.vir_addr;
-
-	sys_cache_invalidate(ctx->isp_pipe_cfg[raw_num].cmdq_buf.phy_addr,
-				  ctx->isp_pipe_cfg[raw_num].cmdq_buf.vir_addr,
-				  ctx->isp_pipe_cfg[raw_num].cmdq_buf.buf_size);
-
-	cmdQ_set_package(&cmd_start[cmd_idx++].reg,
-			 isptop_phy_reg + _OFST(REG_ISP_TOP_T, SW_CTRL_1), sw_ctrl_1);
-	cmdQ_set_package(&cmd_start[cmd_idx++].reg,
-			 isptop_phy_reg + _OFST(REG_ISP_TOP_T, SW_CTRL_0), sw_ctrl_0);
-
-	cmd_start[cmd_idx - 1].reg.intr_end = 1;
-	cmd_start[cmd_idx - 1].reg.intr_last = 1;
-
-	sys_cache_flush(ctx->isp_pipe_cfg[raw_num].cmdq_buf.phy_addr,
-			     ctx->isp_pipe_cfg[raw_num].cmdq_buf.vir_addr,
-			     ctx->isp_pipe_cfg[raw_num].cmdq_buf.buf_size);
-
-	cmdQ_intr_ctrl(cmqd, 0x1F);
-	cmdQ_engine(cmqd, (uintptr_t)ctx->isp_pipe_cfg[raw_num].cmdq_buf.phy_addr,
-		    (ISP_TOP_PHY_REG_BASE + ISP_BLK_BA_CMDQ) >> 22, true, false, cmd_idx);
-}
-#endif
-
 void isp_post_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num)
 {
-#if defined(__SOC_PHOBOS__)
 	uintptr_t isptopb = ctx->phys_regs[ISP_BLK_ID_ISPTOP];
-#endif
 	union REG_ISP_TOP_SW_CTRL_0 sw_ctrl_0;
 	union REG_ISP_TOP_SW_CTRL_1 sw_ctrl_1;
 
@@ -533,12 +499,8 @@ void isp_post_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num)
 		sw_ctrl_0.bits.TRIG_STR_POST	= 1;
 		sw_ctrl_1.bits.PQ_UP_POST	= 1;
 
-#if defined(__SOC_PHOBOS__)
 		ISP_WR_REG(isptopb, REG_ISP_TOP_T, SW_CTRL_1, sw_ctrl_1.raw);
 		ISP_WR_REG(isptopb, REG_ISP_TOP_T, SW_CTRL_0, sw_ctrl_0.raw);
-#else
-		_isp_cmdq_post_trig(ctx, raw_num, sw_ctrl_1.raw, sw_ctrl_0.raw);
-#endif
 	} else if (_is_be_post_online(ctx)) { //fe->dram->be->post
 		vi_pr(VI_DBG, "dram->be post trig raw_num(%d), is_hdr_on(%d)\n",
 				raw_num, ctx->isp_pipe_cfg[raw_num].is_hdr_on);
@@ -574,12 +536,8 @@ void isp_post_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num)
 			sw_ctrl_1.bits.PQ_UP_POST	= 1;
 		}
 
-#if defined(__SOC_PHOBOS__)
 		ISP_WR_REG(isptopb, REG_ISP_TOP_T, SW_CTRL_1, sw_ctrl_1.raw);
 		ISP_WR_REG(isptopb, REG_ISP_TOP_T, SW_CTRL_0, sw_ctrl_0.raw);
-#else
-		_isp_cmdq_post_trig(ctx, raw_num, sw_ctrl_1.raw, sw_ctrl_0.raw);
-#endif
 	} else if (_is_fe_be_online(ctx) && ctx->is_slice_buf_on) { //slice buffer path
 		vi_pr(VI_DBG, "dram->post trig raw_num(%d), is_slice_buf_on(%d)\n",
 				raw_num, ctx->is_slice_buf_on);

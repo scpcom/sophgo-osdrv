@@ -20,7 +20,7 @@ ccflags-y += -I$(PWD)/../sys/common/ -I$(PWD)/../sys/common/uapi
 ccflags-y += -I$(srctree)/drivers/tee
 ccflags-y += -I$(srctree)/drivers/staging/android
 
-ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
+ccflags-y +=-Wall -Wextra -Wno-unused-parameter -Wno-sign-compare
 
 KBUILD_EXTRA_SYMBOLS = $(PWD)/../base/Module.symvers
 KBUILD_EXTRA_SYMBOLS += $(PWD)/../sys/Module.symvers
@@ -30,7 +30,7 @@ all:
 	$(MAKE) ARCH=$(ARCH) -C $(KERNEL_DIR) M=$(PWD) modules
 
 clean:
-	@rm -f *.o .*.cmd modules.order Module.symvers *.ko *.mod.c
+	@rm -f *.o .*.cmd modules.order Module.symvers *.ko *.mod.c *.mod
 	@rm -rf .tmp_versions
 	@find . -name \*.o* -type f -delete
 endif

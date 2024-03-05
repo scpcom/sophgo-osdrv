@@ -15,8 +15,6 @@
 #include <vip/vi_perf_chk.h>
 #include <vcodec_cb.h>
 #include <vi_raw_dump.h>
-#include <sys.h>
-#include <cmdq.h>
 
 /*******************************************************
  *  MACRO defines
@@ -37,7 +35,6 @@
 	} while (0)
 
 #define VI_SHARE_MEM_SIZE	(0x2000)
-#define VI_CMDQ_BUF_SIZE	(0x20000)
 #define VI_PROFILE
 #define VI_MAX_SNS_CFG_NUM	(0x10)
 
@@ -5518,16 +5515,8 @@ static long _vi_g_ctrl(struct cvi_vi_dev *vdev, struct vi_ext_control *p)
 
 	case VI_IOCTL_GET_CLUT_TBL_IDX:
 	{
-		u8 raw_num = p->sdk_cfg.pipe;
-		u8 tun_idx = p->value;
+		p->value = vi_tuning_get_clut_tbl_idx();
 
-		if (raw_num >= ISP_PRERAW_MAX)
-			break;
-
-		p->value = vi_tuning_get_clut_tbl_idx(raw_num, tun_idx);
-
-		if (p->value < 0)
-			break;
 		rc = 0;
 		break;
 	}
@@ -5596,43 +5585,6 @@ static long _vi_g_ctrl(struct cvi_vi_dev *vdev, struct vi_ext_control *p)
 	}
 
 	return rc;
-}
-
-int vi_get_ion_buf(struct cvi_vi_dev *vdev)
-{
-	int ret = CVI_SUCCESS;
-	uint8_t i = 0;
-	struct isp_ctx *ctx = &vdev->ctx;
-
-	for (i = 0; i < ISP_PRERAW_VIRT_MAX; i++) {
-		if (!ctx->isp_pipe_enable[i])
-			continue;
-
-		ret = sys_ion_alloc(&ctx->isp_pipe_cfg[i].cmdq_buf.phy_addr,
-			&ctx->isp_pipe_cfg[i].cmdq_buf.vir_addr, "vi_cmdq_buf", VI_CMDQ_BUF_SIZE, true);
-		if (ret) {
-			vi_pr(VI_ERR, "base_ion_alloc fail! ret(%d)\n", ret);
-			sys_ion_free(isp_mempool.base);
-			return ret;
-		}
-		ctx->isp_pipe_cfg[i].cmdq_buf.buf_size = VI_CMDQ_BUF_SIZE;
-	}
-
-	return CVI_SUCCESS;
-}
-
-int vi_free_ion_buf(struct cvi_vi_dev *dev)
-{
-	int ret = CVI_SUCCESS;
-	uint8_t i = 0;
-	struct isp_ctx *ctx = &dev->ctx;
-
-	for (i = 0; i < ISP_PRERAW_VIRT_MAX; i++) {
-		if (ctx->isp_pipe_cfg[i].cmdq_buf.phy_addr)
-			sys_ion_free(ctx->isp_pipe_cfg[i].cmdq_buf.phy_addr);
-	}
-
-	return ret;
 }
 
 long vi_ioctl(struct file *file, u_int cmd, u_long arg)
@@ -5725,7 +5677,7 @@ int vi_mmap(struct file *file, struct vm_area_struct *vma)
 		if (remap_pfn_range(vma, vm_start, virt_to_pfn(pos), PAGE_SIZE, vma->vm_page_prot))
 			return -EAGAIN;
 #if defined(__LP64__)
-		vi_pr(VI_DBG, "vi proc mmap vir(%p) phys(%#llx)\n", pos, (unsigned long long)virt_to_phys((void *) pos));
+		vi_pr(VI_DBG, "vi proc mmap vir(%p) phys(%#lx)\n", pos, virt_to_phys((void *) pos));
 #else
 		vi_pr(VI_DBG, "vi proc mmap vir(%p) phys(%#llx)\n", pos, virt_to_phys((void *) pos));
 #endif
@@ -7549,18 +7501,6 @@ static void _isp_postraw_done_handler(struct cvi_vi_dev *vdev)
 	}
 }
 
-static void _isp_cmdq_done_chk(struct cvi_vi_dev *vdev, const u32 cmdq_intr)
-{
-	uintptr_t cmdq = vdev->ctx.phys_regs[ISP_BLK_ID_CMDQ];
-
-	if (cmdq_intr & BIT(0)) {
-		u8 cmdq_intr_status = cmdQ_intr_status(cmdq);
-
-		vi_pr(VI_DBG, "cmdq_intr 0x%08x\n", cmdq_intr_status);
-		cmdQ_intr_clr(cmdq, cmdq_intr_status);
-	}
-}
-
 void vi_irq_handler(struct cvi_vi_dev *vdev)
 {
 	struct isp_ctx *ctx = &vdev->ctx;
@@ -7598,13 +7538,12 @@ void vi_irq_handler(struct cvi_vi_dev *vdev)
 			ctx->isp_pipe_cfg[raw_num].dg_info.bdg_chn_debug[i] = ispblk_csibdg_chn_dbg(ctx, raw_num, i);
 	}
 
-	isp_err_chk(vdev, ctx, cbdg_0_sts[0], cbdg_1_sts[0], cbdg_0_sts[1], cbdg_1_sts[1],
-		cbdg_0_sts[2], cbdg_1_sts[2]);
+	if (isp_err_chk(vdev, ctx, cbdg_0_sts[0], cbdg_1_sts[0], cbdg_0_sts[1], cbdg_1_sts[1],
+		cbdg_0_sts[2], cbdg_1_sts[2]) == -1)
+		return;
 
 	//if (top_sts.bits.INT_DMA_ERR)
 	//	vi_pr(VI_ERR, "DMA error\n");
-
-	_isp_cmdq_done_chk(vdev, top_sts_2.bits.CMDQ_INT);
 
 	/* pre_fe0 ch0 frame start */
 	if (top_sts_2.bits.FRAME_START_FE0 & 0x1) {
@@ -7676,7 +7615,7 @@ void vi_irq_handler(struct cvi_vi_dev *vdev)
 	}
 
 	/* pre_fe2 ch1 frame start */
-	if (top_sts_2.bits.FRAME_START_FE2 & 0x2) {
+	if (top_sts_2.bits.FRAME_START_FE1 & 0x2) {
 		++vdev->pre_fe_sof_cnt[ISP_PRERAW_C][ISP_FE_CH1];
 
 		//_isp_sof_handler(ISP_PRERAW_C);

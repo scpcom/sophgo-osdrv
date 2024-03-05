@@ -2630,24 +2630,13 @@ CVI_S32 emitTile(struct cvi_ive_device *ndev, IVE_TOP_C *ive_top_c,
 		ndev->tile_num = round;
 		ive_top_c->REG_2.reg_img_widthm1 = tileLen[round] - 1;
 		img_in_c->REG_02.reg_src_wd = tileLen[round] - 1;
-		if (src1->enType == IVE_IMAGE_TYPE_U8C3_PACKAGE) {
-			img_in_c->REG_Y_BASE_0.reg_src_y_base_b0 += inOffset[round] * 3;
-		} else if (src1->enType == IVE_IMAGE_TYPE_YUV420SP) {
-			img_in_c->REG_Y_BASE_0.reg_src_y_base_b0 += inOffset[round];
-			img_in_c->REG_U_BASE_0.reg_src_u_base_b0 += inOffset[round];
-		} else {
-			img_in_c->REG_Y_BASE_0.reg_src_y_base_b0 += inOffset[round];
-		}
+		img_in_c->REG_Y_BASE_0.reg_src_y_base_b0 += inOffset[round];
 		writel(ive_top_c->REG_2.val,
 			   (IVE_BLK_BA.IVE_TOP + IVE_TOP_REG_2));
 		writel(img_in_c->REG_02.val,
 			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_02));
 		writel(img_in_c->REG_Y_BASE_0.val,
 			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_Y_BASE_0));
-		writel(img_in_c->REG_U_BASE_0.val,
-			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_U_BASE_0));
-		writel(img_in_c->REG_V_BASE_0.val,
-			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_V_BASE_0));
 		if (enWdma_y) {
 			wdma_y_ctl_c->BASE_ADDR.reg_basel +=
 				y_unit * outOffset[round];
@@ -2818,6 +2807,11 @@ CVI_S32 emitTile(struct cvi_ive_device *ndev, IVE_TOP_C *ive_top_c,
 				ive_filterop_c->ODMA_REG_01
 					.reg_dma_y_base_low_part +=
 					outOffset[round] * 3;
+				img_in_c->REG_Y_BASE_0.reg_src_y_base_b0 +=
+					inOffset[round] * 2;
+				writel(img_in_c->REG_Y_BASE_0.val,
+					   (IVE_BLK_BA.IMG_IN +
+					IMG_IN_REG_Y_BASE_0));
 				break;
 			default:
 				break;
@@ -3343,13 +3337,6 @@ CVI_S32 setImgDst2(IVE_DST_IMAGE_S *dst_img, ISP_DMA_CTL_C *wdma_c_ctl_c)
 
 CVI_S32 setImgSrc1(IVE_SRC_IMAGE_S *src_img, IMG_IN_C *img_in_c, IVE_TOP_C *ive_top_c)
 {
-	//reset image in ip before input
-	img_in_c->REG_068.reg_ip_clr_w1t = 1;
-	writel(img_in_c->REG_068.val, (IVE_BLK_BA.IMG_IN + IMG_IN_REG_068));
-	udelay(10);
-	img_in_c->REG_068.reg_ip_clr_w1t = 0;
-	writel(img_in_c->REG_068.val, (IVE_BLK_BA.IMG_IN + IMG_IN_REG_068));
-
 	ive_top_c->REG_h10.reg_img_in_top_enable = 1;
 	writel(ive_top_c->REG_h10.val, (IVE_BLK_BA.IVE_TOP + IVE_TOP_REG_H10));
 
@@ -3367,11 +3354,6 @@ CVI_S32 setImgSrc1(IVE_SRC_IMAGE_S *src_img, IMG_IN_C *img_in_c, IVE_TOP_C *ive_
 	img_in_c->REG_00.reg_src_sel = 2; // 2 for others: DRMA
 	img_in_c->REG_00.reg_fmt_sel = getImgFmtSel(src_img->enType);
 	writel(img_in_c->REG_00.val, (IVE_BLK_BA.IMG_IN + IMG_IN_REG_00));
-
-	// set outstanding to 16
-	img_in_c->REG_064.reg_os_max = 0xf;
-	writel(img_in_c->REG_064.val, (IVE_BLK_BA.IMG_IN + IMG_IN_REG_064));
-
 	img_in_c->REG_Y_BASE_0.reg_src_y_base_b0 =
 		(src_img->u64PhyAddr[0] & 0xffffffff);
 	writel(img_in_c->REG_Y_BASE_0.val,
@@ -3385,28 +3367,9 @@ CVI_S32 setImgSrc1(IVE_SRC_IMAGE_S *src_img, IMG_IN_C *img_in_c, IVE_TOP_C *ive_
 	case IVE_IMAGE_TYPE_S16C1:
 	case IVE_IMAGE_TYPE_U8C1:
 		break;
-	case IVE_IMAGE_TYPE_U8C3_PACKAGE:
-		img_in_c->REG_03.reg_src_y_pitch = src_img->u32Stride[0];
-		writel(img_in_c->REG_03.val,
-				(IVE_BLK_BA.IMG_IN + IMG_IN_REG_03));
-		img_in_c->REG_04.reg_src_c_pitch = 0;
-		writel(img_in_c->REG_04.val,
-				(IVE_BLK_BA.IMG_IN + IMG_IN_REG_04));
-		img_in_c->REG_U_BASE_0.reg_src_u_base_b0 = 0;
-		writel(img_in_c->REG_U_BASE_0.val,
-			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_U_BASE_0));
-		img_in_c->REG_U_BASE_1.reg_src_u_base_b1 = 0;
-		writel(img_in_c->REG_U_BASE_1.val,
-			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_U_BASE_1));
-		img_in_c->REG_V_BASE_0.reg_src_v_base_b0 = 0;
-		writel(img_in_c->REG_V_BASE_0.val,
-			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_V_BASE_0));
-		img_in_c->REG_V_BASE_1.reg_src_v_base_b1 = 0;
-		writel(img_in_c->REG_V_BASE_1.val,
-			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_V_BASE_1));
-		break;
 	case IVE_IMAGE_TYPE_U8C3_PLANAR:
-		img_in_c->REG_04.reg_src_c_pitch = src_img->u32Stride[0];
+	case IVE_IMAGE_TYPE_U8C3_PACKAGE:
+		img_in_c->REG_04.reg_src_c_pitch = src_img->u32Stride[1];
 		writel(img_in_c->REG_04.val,
 			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_04));
 		img_in_c->REG_U_BASE_0.reg_src_u_base_b0 =
@@ -3425,29 +3388,8 @@ CVI_S32 setImgSrc1(IVE_SRC_IMAGE_S *src_img, IMG_IN_C *img_in_c, IVE_TOP_C *ive_
 			((src_img->u64PhyAddr[2] >> 32) & 0xffffffff);
 		writel(img_in_c->REG_V_BASE_1.val,
 			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_V_BASE_1));
-
 		break;
 	case IVE_IMAGE_TYPE_YUV420SP:
-		img_in_c->REG_04.reg_src_c_pitch = src_img->u32Stride[1];
-		writel(img_in_c->REG_04.val,
-			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_04));
-		img_in_c->REG_U_BASE_0.reg_src_u_base_b0 =
-			(src_img->u64PhyAddr[1] & 0xffffffff);
-		writel(img_in_c->REG_U_BASE_0.val,
-			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_U_BASE_0));
-		img_in_c->REG_U_BASE_1.reg_src_u_base_b1 =
-			((src_img->u64PhyAddr[1] >> 32) & 0xffffffff);
-		writel(img_in_c->REG_U_BASE_1.val,
-			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_U_BASE_1));
-		img_in_c->REG_V_BASE_0.reg_src_v_base_b0 =
-			((src_img->u64PhyAddr[1] + 1) & 0xffffffff);
-		writel(img_in_c->REG_V_BASE_0.val,
-			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_V_BASE_0));
-		img_in_c->REG_V_BASE_1.reg_src_v_base_b1 =
-			(((src_img->u64PhyAddr[1] + 1) >> 32) & 0xffffffff);
-		writel(img_in_c->REG_V_BASE_1.val,
-			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_V_BASE_1));
-		break;
 	case IVE_IMAGE_TYPE_YUV422SP:
 		img_in_c->REG_04.reg_src_c_pitch = src_img->u32Stride[1];
 		writel(img_in_c->REG_04.val,
@@ -3461,11 +3403,11 @@ CVI_S32 setImgSrc1(IVE_SRC_IMAGE_S *src_img, IMG_IN_C *img_in_c, IVE_TOP_C *ive_
 		writel(img_in_c->REG_U_BASE_1.val,
 			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_U_BASE_1));
 		img_in_c->REG_V_BASE_0.reg_src_v_base_b0 =
-			((src_img->u64PhyAddr[1] + 1) & 0xffffffff);
+			((src_img->u64PhyAddr[1]) & 0xffffffff);
 		writel(img_in_c->REG_V_BASE_0.val,
 			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_V_BASE_0));
 		img_in_c->REG_V_BASE_1.reg_src_v_base_b1 =
-			(((src_img->u64PhyAddr[1] + 1) >> 32) & 0xffffffff);
+			(((src_img->u64PhyAddr[1]) >> 32) & 0xffffffff);
 		writel(img_in_c->REG_V_BASE_1.val,
 			   (IVE_BLK_BA.IMG_IN + IMG_IN_REG_V_BASE_1));
 		break;
@@ -6696,10 +6638,10 @@ CVI_S32 _cvi_ive_csc(struct cvi_ive_device *ndev, IVE_SRC_IMAGE_S *pstSrc,
 				NULL, pstDst, NULL, false, 1, false, 1, true, MOD_CSC,
 				bInstant);
 		} else {
-		ret = cvi_ive_go(
-			ndev, ive_top_c, bInstant,
-			IVE_TOP_REG_FRAME_DONE_FILTEROP_ODMA_MASK,
-			MOD_CSC);
+			ret = cvi_ive_go(
+				ndev, ive_top_c, bInstant,
+				IVE_TOP_REG_FRAME_DONE_FILTEROP_ODMA_MASK,
+				MOD_CSC);
 		}
 	}
 	return ret;

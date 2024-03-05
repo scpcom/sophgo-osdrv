@@ -1513,39 +1513,21 @@ static int _cif_set_attr_bt601(struct cvi_cif_dev *dev,
 	switch (attr->ttl_attr.ttl_fmt) {
 	case TTL_VHS_11B:
 		ttl->fmt = TTL_VHS_11B_BT601;
-		ttl->vi_sel = VI_BT601;
 		break;
 	case TTL_VHS_19B:
 		ttl->fmt = TTL_VHS_19B_BT601;
-		ttl->vi_sel = VI_BT601;
 		break;
 	case TTL_VDE_11B:
 		ttl->fmt = TTL_VDE_11B_BT601;
-		ttl->vi_sel = VI_BT601;
 		break;
 	case TTL_VDE_19B:
 		ttl->fmt = TTL_VDE_19B_BT601;
-		ttl->vi_sel = VI_BT601;
 		break;
 	case TTL_VSDE_11B:
 		ttl->fmt = TTL_VSDE_11B_BT601;
-		ttl->vi_sel = VI_BT601;
 		break;
 	case TTL_VSDE_19B:
 		ttl->fmt = TTL_VSDE_19B_BT601;
-		ttl->vi_sel = VI_BT601;
-		break;
-	case TTL_VHS_PAT:
-		ttl->fmt = TTL_VHS_SENSOR;
-		ttl->vi_sel = VI_RAW;
-		break;
-	case TTL_VDE_PAT:
-		ttl->fmt = TTL_VDE_SENSOR;
-		ttl->vi_sel = VI_RAW;
-		break;
-	case TTL_VSDE_PAT:
-		ttl->fmt = TTL_VSDE_SENSOR;
-		ttl->vi_sel = VI_RAW;
 		break;
 	default:
 		return -EINVAL;
@@ -1556,6 +1538,7 @@ static int _cif_set_attr_bt601(struct cvi_cif_dev *dev,
 	ttl->width = attr->img_size.width - 1;
 	ttl->height = attr->img_size.height - 1;
 	ttl->clk_inv = link->clk_edge;
+	ttl->vi_sel = VI_BT601;
 	ttl->v_bp = (!attr->ttl_attr.v_bp) ? 0x23 : attr->ttl_attr.v_bp;
 	ttl->h_bp = (!attr->ttl_attr.h_bp) ? 0xbf : attr->ttl_attr.h_bp;
 

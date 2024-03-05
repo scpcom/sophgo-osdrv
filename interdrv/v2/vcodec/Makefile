@@ -15,7 +15,7 @@ all:
 	$(MAKE) ARCH=${ARCH} -C $(KERNEL_DIR) M=$(PWD) modules
 
 clean:
-	rm -rf *.o *~ core .depend .*.cmd *.ko *.mod.c
+	rm -rf *.o *~ core .depend .*.cmd *.ko *.mod.c *.mod
 	rm -rf .tmp_versions Module.symvers
 	rm -rf modules.order
 	rm -rf $(HAL_PATH)/*.o $(HAL_PATH)/.*.cmd

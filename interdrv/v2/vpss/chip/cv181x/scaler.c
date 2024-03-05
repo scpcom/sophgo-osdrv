@@ -1441,7 +1441,6 @@ EXPORT_SYMBOL_GPL(sclr_intr_status);
  */
 void sclr_img_set_cfg(u8 inst, struct sclr_img_cfg *cfg)
 {
-#if 0
 	if (cfg->fmt == SCL_FMT_YUV420 || cfg->fmt == SCL_FMT_NV12 || cfg->fmt == SCL_FMT_NV21) {
 		u8 fifo_rd_th_y, fifo_pr_th_y, fifo_rd_th_c, fifo_pr_th_c, pre_fetch_raw;
 
@@ -1455,19 +1454,6 @@ void sclr_img_set_cfg(u8 inst, struct sclr_img_cfg *cfg)
 		_reg_write_mask(reg_base + REG_SCL_IMG_FIFO_THR(inst), 0x00ff0000, fifo_rd_th_c << 16);
 		_reg_write_mask(reg_base + REG_SCL_IMG_FIFO_THR(inst), 0xff000000, fifo_pr_th_c << 24);
 	}
-#else
-	u8 y_buf_thre = 0x80;
-	u8 c_buf_thre;
-
-	if ((cfg->fmt == SCL_FMT_YUV420) || (cfg->fmt == SCL_FMT_NV12) || (cfg->fmt == SCL_FMT_NV21))
-		c_buf_thre = y_buf_thre / 2;
-	else
-		c_buf_thre = y_buf_thre;
-
-	_reg_write_mask(reg_base + REG_SCL_IMG_FIFO_THR(inst), 0xff00ff,
-		((c_buf_thre << 16) | y_buf_thre));
-	_reg_write(reg_base + REG_SCL_IMG_OUTSTANDING(inst), 0xf);
-#endif
 
 	_reg_write(reg_base + REG_SCL_IMG_CFG(inst),
 		   (cfg->force_clk << 31) |
@@ -3518,12 +3504,6 @@ union sclr_disp_dbg_status sclr_disp_get_dbg_status(bool clr)
 	return status;
 }
 EXPORT_SYMBOL_GPL(sclr_disp_get_dbg_status);
-
-int sclr_disp_get_axi_status(void)
-{
-	return _reg_read(reg_base + REG_SCL_DISP_AXI_ST);
-}
-EXPORT_SYMBOL_GPL(sclr_disp_get_axi_status);
 
 void sclr_disp_gamma_ctrl(bool enable, bool pre_osd)
 {

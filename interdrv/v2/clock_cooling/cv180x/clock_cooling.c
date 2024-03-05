@@ -10,7 +10,7 @@ struct dev_freq {
 	unsigned long tpu_freq;
 };
 
-struct cv180x_cooling_device {
+struct cooling_device {
 	struct thermal_cooling_device *cdev;
 	struct mutex lock; /* lock to protect the content of this struct */
 	unsigned long clk_state;
@@ -35,7 +35,7 @@ static const struct dev_freq default_dev_freqs[] = {
 /* cooling device thermal callback functions are defined below */
 
 /**
- * cv180x_cooling_get_max_state - callback function to get the max cooling state.
+ * cooling_get_max_state - callback function to get the max cooling state.
  * @cdev: thermal cooling device pointer.
  * @state: fill this variable with the max cooling state.
  *
@@ -44,10 +44,10 @@ static const struct dev_freq default_dev_freqs[] = {
  *
  * Return: 0 on success, an error code otherwise.
  */
-static int cv180x_cooling_get_max_state(struct thermal_cooling_device *cdev,
+static int cooling_get_max_state(struct thermal_cooling_device *cdev,
 					unsigned long *state)
 {
-	struct cv180x_cooling_device *cvcdev = cdev->devdata;
+	struct cooling_device *cvcdev = cdev->devdata;
 
 	mutex_lock(&cvcdev->lock);
 	*state = cvcdev->max_clk_state;
@@ -57,7 +57,7 @@ static int cv180x_cooling_get_max_state(struct thermal_cooling_device *cdev,
 }
 
 /**
- * cv180x_cooling_get_cur_state - function to get the current cooling state.
+ * cooling_get_cur_state - function to get the current cooling state.
  * @cdev: thermal cooling device pointer.
  * @state: fill this variable with the current cooling state.
  *
@@ -66,10 +66,10 @@ static int cv180x_cooling_get_max_state(struct thermal_cooling_device *cdev,
  *
  * Return: 0 (success)
  */
-static int cv180x_cooling_get_cur_state(struct thermal_cooling_device *cdev,
+static int cooling_get_cur_state(struct thermal_cooling_device *cdev,
 					unsigned long *state)
 {
-	struct cv180x_cooling_device *cvcdev = cdev->devdata;
+	struct cooling_device *cvcdev = cdev->devdata;
 
 	mutex_lock(&cvcdev->lock);
 	*state = cvcdev->clk_state;
@@ -79,7 +79,7 @@ static int cv180x_cooling_get_cur_state(struct thermal_cooling_device *cdev,
 }
 
 /**
- * cv180x_cooling_set_cur_state - function to set the current cooling state.
+ * cooling_set_cur_state - function to set the current cooling state.
  * @cdev: thermal cooling device pointer.
  * @state: set this variable to the current cooling state.
  *
@@ -88,10 +88,10 @@ static int cv180x_cooling_get_cur_state(struct thermal_cooling_device *cdev,
  *
  * Return: 0 on success, an error code otherwise.
  */
-static int cv180x_cooling_set_cur_state(struct thermal_cooling_device *cdev,
+static int cooling_set_cur_state(struct thermal_cooling_device *cdev,
 					unsigned long state)
 {
-	struct cv180x_cooling_device *cvcdev = cdev->devdata;
+	struct cooling_device *cvcdev = cdev->devdata;
 
 	dev_dbg(&cdev->device, "set cur_state=%ld\n", state);
 	dev_dbg(&cdev->device, "clk_cpu=%ld Hz\n", clk_get_rate(cvcdev->clk_cpu));
@@ -121,17 +121,17 @@ static int cv180x_cooling_set_cur_state(struct thermal_cooling_device *cdev,
 }
 
 /* Bind clock callbacks to thermal cooling device ops */
-static struct thermal_cooling_device_ops const cv180x_cooling_ops = {
-	.get_max_state = cv180x_cooling_get_max_state,
-	.get_cur_state = cv180x_cooling_get_cur_state,
-	.set_cur_state = cv180x_cooling_set_cur_state,
+static struct thermal_cooling_device_ops const cooling_ops = {
+	.get_max_state = cooling_get_max_state,
+	.get_cur_state = cooling_get_cur_state,
+	.set_cur_state = cooling_set_cur_state,
 };
 
-static struct cv180x_cooling_device *
-cv180x_cooling_device_register(struct device *dev)
+static struct cooling_device *
+cooling_device_register(struct device *dev)
 {
 	struct thermal_cooling_device *cdev;
-	struct cv180x_cooling_device *cvcdev = NULL;
+	struct cooling_device *cvcdev = NULL;
 	struct device_node *np = dev->of_node;
 	unsigned long clk_cpu_max_freq;
 	unsigned long clk_tpu_max_freq;
@@ -210,8 +210,8 @@ cv180x_cooling_device_register(struct device *dev)
 
 	cvcdev->clk_state = 0;
 	cdev = thermal_of_cooling_device_register(dev->of_node,
-						  "cv180x_cooling", cvcdev,
-						  &cv180x_cooling_ops);
+						  "cooling", cvcdev,
+						  &cooling_ops);
 	if (IS_ERR(cdev))
 		return ERR_PTR(-EINVAL);
 
@@ -220,17 +220,17 @@ cv180x_cooling_device_register(struct device *dev)
 	return cvcdev;
 }
 
-static void cv180x_cooling_device_unregister(struct cv180x_cooling_device
+static void cooling_device_unregister(struct cooling_device
 						 *cvcdev)
 {
 	thermal_cooling_device_unregister(cvcdev->cdev);
 }
 
-static int cv180x_cooling_probe(struct platform_device *pdev)
+static int cooling_probe(struct platform_device *pdev)
 {
-	struct cv180x_cooling_device *cvcdev;
+	struct cooling_device *cvcdev;
 
-	cvcdev = cv180x_cooling_device_register(&pdev->dev);
+	cvcdev = cooling_device_register(&pdev->dev);
 	if (IS_ERR(cvcdev)) {
 		int ret = PTR_ERR(cvcdev);
 
@@ -246,33 +246,33 @@ static int cv180x_cooling_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static int cv180x_cooling_remove(struct platform_device *pdev)
+static int cooling_remove(struct platform_device *pdev)
 {
-	struct cv180x_cooling_device *cvcdev = platform_get_drvdata(pdev);
+	struct cooling_device *cvcdev = platform_get_drvdata(pdev);
 
 	if (!IS_ERR(cvcdev))
-		cv180x_cooling_device_unregister(cvcdev);
+		cooling_device_unregister(cvcdev);
 
 	return 0;
 }
 
-static const struct of_device_id cv180x_cooling_match[] = {
-	{.compatible = "cvitek,cv180x-cooling"},
+static const struct of_device_id cooling_match[] = {
+	{.compatible = "sophgo,cooling"},
 	{},
 };
-MODULE_DEVICE_TABLE(of, cv180x_cooling_match);
+MODULE_DEVICE_TABLE(of, cooling_match);
 
-static struct platform_driver cv180x_cooling_driver = {
+static struct platform_driver cooling_driver = {
 	.driver = {
-		.name = "cv180x-cooling",
-		.of_match_table = of_match_ptr(cv180x_cooling_match),
+		.name = "cooling",
+		.of_match_table = of_match_ptr(cooling_match),
 	},
-	.probe = cv180x_cooling_probe,
-	.remove = cv180x_cooling_remove,
+	.probe = cooling_probe,
+	.remove = cooling_remove,
 };
 
-module_platform_driver(cv180x_cooling_driver);
+module_platform_driver(cooling_driver);
 
 MODULE_AUTHOR("bin.liu@cvitek.com");
-MODULE_DESCRIPTION("cv180x cooling driver");
+MODULE_DESCRIPTION("sophgo cooling driver");
 MODULE_LICENSE("GPL");

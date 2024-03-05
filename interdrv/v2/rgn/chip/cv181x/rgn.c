@@ -856,7 +856,7 @@ static CVI_S32 _rgn_mosaic_set_hw_cfg(RGN_HANDLE hdls[], CVI_U8 size, MMF_CHN_S 
 			ion_buf->buf_len = 0;
 			ion_buf->vir_addr = NULL;
 		}
-		goto RGN_UPDATE_HW_CFG;
+		return 0;
 	}
 
 	//rect align to 8x8 or 16x16
@@ -922,7 +922,6 @@ static CVI_S32 _rgn_mosaic_set_hw_cfg(RGN_HANDLE hdls[], CVI_U8 size, MMF_CHN_S 
 	mosaic_cfg.blk_size = enBlkSize;
 	mosaic_cfg.phy_addr = u64PhyAddr;
 
-RGN_UPDATE_HW_CFG:
 	s32Ret = _rgn_update_hw_cfg_to_module(hdls, (void *)&mosaic_cfg, pstChn, enType, false);
 	if (s32Ret != CVI_SUCCESS) {
 		CVI_TRACE_RGN(RGN_ERR, "_rgn_update_hw_cfg_to_module failed\n");
@@ -1868,7 +1867,7 @@ CVI_S32 rgn_update_canvas(RGN_HANDLE Handle)
 {
 	struct cvi_rgn_ctx *ctx = NULL;
 	CVI_S32 ret = -EINVAL;
-	CVI_S32 s32Ret, i, j;
+	CVI_S32 s32Ret, i;
 	CVI_U32 proc_idx;
 
 	s32Ret = CHECK_RGN_HANDLE(&ctx, Handle);
@@ -1950,21 +1949,10 @@ CVI_S32 rgn_update_canvas(RGN_HANDLE Handle)
 
 			if (pstCanvasCmprAttr->u32BsSize != ctx->ion_len)
 				pstCanvasCmprAttr->u32BsSize = ctx->ion_len;
-retry:
 			ret = _rgn_call_cb(E_MODULE_RTOS_CMDQU, CMDQU_CB_RGN_COMPRESS, (void *)&rgn_cb_param);
 
-			for (j = 0; j < 5; ++j) {
-				if ((ret == -EEXIST) || (ret == -ENOMEM)) {
-					CVI_TRACE_RGN(RGN_ERR, "Region(%d) OSDC fail (%d) times! ret is %X.\n",
-						Handle, j, ret);
-					goto retry;
-				} else {
-					break;
-				}
-			}
-
 			if (ret) {
-				CVI_TRACE_RGN(RGN_ERR, "Region(%d) OSDC failed!. ret is %X.\n", Handle, ret);
+				CVI_TRACE_RGN(RGN_ERR, "Region(%d) OSDC failed!.\n", Handle);
 				return CVI_ERR_RGN_SYS_NOTREADY;
 			}
 

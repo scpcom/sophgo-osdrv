@@ -537,7 +537,7 @@ void ispblk_tnr_rgbmap_chg(struct isp_ctx *ctx, enum cvi_isp_raw raw_num, const 
 	//if raw_num > ISP_PRERAW_MAX - 1, means use vir raw;
 	raw = find_hw_raw_num(raw_num);
 
-	if (g_rgbmap_chg_pre[raw_num][chn_num] == false && !ctx->isp_pipe_cfg[raw].is_mux)
+	if (g_rgbmap_chg_pre[raw_num][chn_num] == false)
 		return;
 
 	if (raw == ISP_PRERAW_A) {

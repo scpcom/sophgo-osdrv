@@ -1230,32 +1230,12 @@ long vi_sdk_ctrl(struct cvi_vi_dev *vdev, struct vi_ext_control *p)
 	}
 	case VI_SDK_ENABLE_CHN:
 	{
-		rc = vi_get_ion_buf(vdev);
-		if (rc != CVI_SUCCESS) {
-			vi_pr(VI_ERR, "VI getIonBuf is failed\n");
-			break;
-		}
-
 		rc = vi_enable_chn(0);
-		if (rc != CVI_SUCCESS) {
-			vi_pr(VI_ERR, "VI enable chn is failed\n");
-		}
-
 		break;
 	}
 	case VI_SDK_DISABLE_CHN:
 	{
 		rc = vi_disable_chn(0);
-		if (rc != CVI_SUCCESS) {
-			vi_pr(VI_ERR, "VI disable chn is failed\n");
-			break;
-		}
-
-		rc = vi_free_ion_buf(vdev);
-		if (rc != CVI_SUCCESS) {
-			vi_pr(VI_ERR, "VI freeIonBuf is failed\n");
-		}
-
 		break;
 	}
 	case VI_SDK_SET_MOTION_LV:
@@ -1330,20 +1310,6 @@ long vi_sdk_ctrl(struct cvi_vi_dev *vdev, struct vi_ext_control *p)
 		}
 
 		rc = vi_set_dev_timing_attr(p->sdk_cfg.dev, &dev_timing_attr);
-		break;
-	}
-	case VI_SDK_GET_DEV_STATUS:
-	{
-		CVI_BOOL bStatus = gViCtx->isDevEnable[p->sdk_cfg.dev];
-
-		if (copy_to_user(p->sdk_cfg.ptr, &bStatus, sizeof(bStatus)) != 0) {
-			vi_pr(VI_ERR, "VI_SDK_GET_DEV_STATUS copy to user fail.\n");
-			rc = -1;
-			break;
-		}
-
-		rc = CVI_SUCCESS;
-
 		break;
 	}
 	case VI_SDK_GET_CHN_FRAME:

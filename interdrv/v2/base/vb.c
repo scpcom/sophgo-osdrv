@@ -310,7 +310,7 @@ static int32_t _vb_create_ex_pool(struct cvi_vb_pool_ex_cfg *config)
 	return 0;
 }
 
-static int32_t _vb_destroy_pool(VB_POOL poolId)
+static void _vb_destroy_pool(VB_POOL poolId)
 {
 	struct vb_pool *pstPool = &vbPool[poolId];
 	struct vb_s *vb, *tmp_vb;
@@ -320,7 +320,7 @@ static int32_t _vb_destroy_pool(VB_POOL poolId)
 		, poolId, FIFO_CAPACITY(&pstPool->freeList), FIFO_SIZE(&pstPool->freeList));
 	if (FIFO_CAPACITY(&pstPool->freeList) != FIFO_SIZE(&pstPool->freeList)) {
 		CVI_TRACE_BASE(CVI_BASE_DBG_INFO, "pool(%d) blk should be all released before destroy pool\n", poolId);
-		return -1;
+		return;
 	}
 
 	mutex_lock(&pstPool->lock);
@@ -347,8 +347,6 @@ static int32_t _vb_destroy_pool(VB_POOL poolId)
 	mutex_destroy(&pstPool->reqQ_lock);
 
 	memset(&vbPool[poolId], 0, sizeof(vbPool[poolId]));
-
-	return 0;
 }
 
 static int32_t _vb_init(void)
@@ -651,7 +649,8 @@ int32_t vb_destroy_pool(VB_POOL poolId)
 {
 	CHECK_VB_POOL_VALID_STRONG(poolId);
 
-	return _vb_destroy_pool(poolId);
+	_vb_destroy_pool(poolId);
+	return 0;
 }
 EXPORT_SYMBOL_GPL(vb_destroy_pool);
 

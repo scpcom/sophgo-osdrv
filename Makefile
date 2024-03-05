@@ -28,7 +28,7 @@ endef
 
 define MAKE_KO
 	( cd $(1) && $(MAKE) KERNEL_DIR=$(KERNEL_DIR) all -j$(shell nproc))
-	( cd $(1) && cp -f *.ko $(INSTALL_DIR); )
+	$(call COPY_KO, $(1))
 endef
 
 MAKE_EXT_KO_CP :=
@@ -69,6 +69,10 @@ else ifeq ($(CHIP_ARCH), $(filter $(CHIP_ARCH), CV180X))
 	KO_LIST += sys vi snsr_i2c cif vpss dwa rgn rtos_cmdqu fast_image cvi_vc_drv
 	BASE_DEP = sys
 	FB_DEP = vpss
+else ifeq ($(CHIP_ARCH), $(filter $(CHIP_ARCH), SG200X))
+	KO_LIST += sys vi snsr_i2c cif vpss dwa rgn vo rtos_cmdqu fast_image cvi_vc_drv ive
+	BASE_DEP = sys
+	FB_DEP = vpss
 endif
 
 ifeq (, ${CONFIG_NO_FB})
@@ -105,6 +109,9 @@ fb: base $(FB_DEP)
 base: $(BASE_DEP)
 	@$(call MAKE_KO, ${INTERDRV_PATH}/${@})
 
+audio:
+	@$(call MAKE_KO, ${INTERDRV_PATH}/${@})
+
 vcodec:
 	@$(call MAKE_KO, ${INTERDRV_PATH}/${@})
 
@@ -115,7 +122,7 @@ fast_image: rtos_cmdqu
 	@$(call MAKE_KO, ${INTERDRV_PATH}/${@})
 
 jpeg:
-	$(call COPY_KO, ${INTERDRV_PATH}/${@}/$(shell echo $(CHIP_ARCH) | tr A-Z a-z)/${SDK_VER})
+	@$(call COPY_KO, ${INTERDRV_PATH}/${@}/${CHIP_CODE}_${ARCH})
 
 pwm:
 	@$(call MAKE_KO, ${INTERDRV_PATH}/${@})
@@ -174,8 +181,8 @@ vo: base
 ive:
 	@$(call MAKE_KO, ${INTERDRV_PATH}/${@})
 
-cvi_vc_drv: sys base vcodec jpeg
-	@$(call COPY_KO, ${INTERDRV_PATH}/${@}/$(shell echo $(CHIP_ARCH) | tr A-Z a-z)/${SDK_VER})
+cvi_vc_drv:
+	@$(call COPY_KO, ${INTERDRV_PATH}/${@}/${CHIP_CODE}_${ARCH})
 
 rtos_cmdqu:
 	@$(call MAKE_KO, ${INTERDRV_PATH}/${@})

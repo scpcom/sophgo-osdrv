@@ -362,8 +362,8 @@ static void _cif_ttl_config(struct cif_ctx *ctx,
 		break;
 	case TTL_VSDE_11B_BT601:
 		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_FMT_IN,
-				     TTL_VSDE_11B_BT601);
+		     REG_10, TTL_FMT_IN,
+		     TTL_VSDE_11B_BT601);
 		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
 				     REG_10, TTL_BT_FMT_OUT,
 				     param->fmt_out);
@@ -420,84 +420,6 @@ static void _cif_ttl_config(struct cif_ctx *ctx,
 		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
 				     REG_30, VI_V_SEL_VS,
 				     1);
-		break;
-	case TTL_VSDE_SENSOR:
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_FMT_IN,
-				     TTL_VSDE_SENSOR);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_BT_FMT_OUT,
-				     param->fmt_out);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_VS_INV,
-				     0);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_HS_INV,
-				     0);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_18, TTL_IMG_WD,
-				     param->width);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_18, TTL_IMG_HT,
-				     param->height);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_30, VI_SEL,
-				     param->vi_sel);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_30, VI_V_SEL_VS,
-				     1);
-		break;
-	case TTL_VHS_SENSOR:
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_FMT_IN,
-				     TTL_VHS_SENSOR);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_BT_FMT_OUT,
-				     param->fmt_out);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_VS_INV,
-				     0);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_HS_INV,
-				     0);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_18, TTL_IMG_WD,
-				     param->width);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_18, TTL_IMG_HT,
-				     param->height);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_30, VI_SEL,
-				     param->vi_sel);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_30, VI_V_SEL_VS,
-				     1);
-		break;
-	case TTL_VDE_SENSOR:
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_FMT_IN,
-				     TTL_VDE_SENSOR);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_BT_FMT_OUT,
-				     param->fmt_out);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_VS_INV,
-				     0);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_10, TTL_HS_INV,
-				     0);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_18, TTL_IMG_WD,
-				     param->width);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_18, TTL_IMG_HT,
-				     param->height);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_30, VI_SEL,
-				     param->vi_sel);
-		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
-				     REG_30, VI_V_SEL_VS,
-				     0);
 		break;
 	case TTL_SYNC_PAT_9B_BT656:
 		CIF_WR_BITS(mac_top, REG_SENSOR_MAC_T,
