@@ -122,7 +122,7 @@ fast_image: rtos_cmdqu
 	@$(call MAKE_KO, ${INTERDRV_PATH}/${@})
 
 jpeg:
-	@$(call COPY_KO, ${INTERDRV_PATH}/${@}/${CHIP_CODE})
+	@$(call COPY_KO, ${INTERDRV_PATH}/${@}/${CHIP_CODE}_${ARCH})
 
 pwm:
 	@$(call MAKE_KO, ${INTERDRV_PATH}/${@})
@@ -182,7 +182,7 @@ ive:
 	@$(call MAKE_KO, ${INTERDRV_PATH}/${@})
 
 cvi_vc_drv:
-	@$(call COPY_KO, ${INTERDRV_PATH}/${@}/${CHIP_CODE})
+	@$(call COPY_KO, ${INTERDRV_PATH}/${@}/${CHIP_CODE}_${ARCH})
 
 rtos_cmdqu:
 	@$(call MAKE_KO, ${INTERDRV_PATH}/${@})

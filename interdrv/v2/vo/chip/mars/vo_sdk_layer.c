@@ -536,7 +536,7 @@ CVI_S32 vo_set_pub_attr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr)
 		cfg.lvds_cfg.enable = 1;
 		cfg.lvds_cfg.pixelclock = pstPubAttr->stLvdsAttr.pixelclock;
 		//skip u64 devide
-		cfg.lvds_cfg.pixelclock = dv_timings.bt.pixelclock / 1000;
+		cfg.lvds_cfg.pixelclock = div_u64(dv_timings.bt.pixelclock, 1000);
 		cfg.lvds_cfg.backlight_gpio_num = pstPubAttr->stLvdsAttr.backlight_pin.gpio_num;
 
 		for (i = 0; i < VO_LVDS_LANE_MAX; ++i) {
@@ -621,7 +621,7 @@ CVI_S32 vo_set_pub_attr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr)
 		cfg.mcu_cfg.backlight_avtive = McuCfg->backlight_avtive;
 		cfg.mcu_cfg.reset_gpio_num = McuCfg->reset_gpio_num;
 		cfg.mcu_cfg.reset_avtive = McuCfg->reset_avtive;
-		cfg.mcu_cfg.pixelclock = dv_timings.bt.pixelclock / 1000;
+		cfg.mcu_cfg.pixelclock = div_u64(dv_timings.bt.pixelclock, 1000);
 		memcpy(&cfg.mcu_cfg.pins, &pstPubAttr->stMcuCfg.pins, sizeof(struct vo_pins));
 		memcpy(&cfg.mcu_cfg.instrs, &pstPubAttr->stMcuCfg.instrs, sizeof(struct VO_MCU_INSTRS));
 		if (vo_set_interface(gvdev, &cfg) != 0) {
@@ -631,7 +631,7 @@ CVI_S32 vo_set_pub_attr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr)
 	} else if (pstPubAttr->enIntfType == VO_INTF_BT656) {
 		cfg.intf_type = CVI_VIP_DISP_INTF_BT;
 		cfg.bt_cfg.mode = BT_MODE_656;
-		cfg.bt_cfg.pixelclock = dv_timings.bt.pixelclock / 1000;
+		cfg.bt_cfg.pixelclock = div_u64(dv_timings.bt.pixelclock, 1000);
 		memcpy(&cfg.bt_cfg.pins, &pstPubAttr->stBtAttr.pins, sizeof(struct vo_pins));
 
 		if (vo_set_interface(gvdev, &cfg) != 0) {
@@ -641,7 +641,7 @@ CVI_S32 vo_set_pub_attr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr)
 	} else if (pstPubAttr->enIntfType == VO_INTF_BT1120) {
 		cfg.intf_type = CVI_VIP_DISP_INTF_BT;
 		cfg.bt_cfg.mode = BT_MODE_1120;
-		cfg.bt_cfg.pixelclock = dv_timings.bt.pixelclock / 1000;
+		cfg.bt_cfg.pixelclock = div_u64(dv_timings.bt.pixelclock, 1000);
 		memcpy(&cfg.bt_cfg.pins, &pstPubAttr->stBtAttr.pins, sizeof(struct vo_pins));
 
 		if (vo_set_interface(gvdev, &cfg) != 0) {

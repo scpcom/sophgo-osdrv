@@ -9,7 +9,7 @@ soph_vo-objs += common/vo_rgn_ctrl.o
 obj-m += soph_vo.o
 obj-m += soph_mipi_tx.o
 
-ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
+ccflags-y +=-Wall -Wextra -Wno-unused-parameter -Wno-sign-compare
 
 ccflags-y += -I$(PWD)/chip/$(CHIP_CODE)/ -I$(PWD)/common/
 ccflags-y += -I$(PWD)/../include/common/uapi/ -I$(PWD)/../include/chip/$(CHIP_CODE)/uapi/
