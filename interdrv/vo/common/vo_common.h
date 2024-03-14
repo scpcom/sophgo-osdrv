@@ -14,10 +14,10 @@ extern u32 vo_log_lv;
 #define _reg_write(addr, data) writel(data, (void __iomem *)addr)
 
 #define CVI_DBG_ERR        1   /* error conditions                     */
-#define CVI_DBG_WARN       2   /* warning conditions                   */
-#define CVI_DBG_NOTICE     3   /* normal but significant condition     */
-#define CVI_DBG_INFO       4   /* informational                        */
-#define CVI_DBG_DEBUG      5   /* debug-level messages                 */
+#define CVI_DBG_WARN       5   /* warning conditions                   */
+#define CVI_DBG_NOTICE     0xf   /* normal but significant condition     */
+#define CVI_DBG_INFO       0xff  /* informational                        */
+#define CVI_DBG_DEBUG      0xfff /* debug-level messages                 */
 
 #if defined(CONFIG_CVI_LOG)
 #define CVI_TRACE_VO(level, fmt, ...) \
