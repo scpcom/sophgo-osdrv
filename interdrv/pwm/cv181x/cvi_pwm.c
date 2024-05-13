@@ -291,6 +291,8 @@ static int pwm_cv_probe(struct platform_device *pdev)
 	chip->chip.ops = &pwm_cv_ops;
 	chip->chip.base = -1;
 	chip->polarity_mask = 0;
+	chip->chip.of_xlate = of_pwm_xlate_with_flags;
+	chip->chip.of_pwm_n_cells = 3;
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	chip->base = devm_ioremap_resource(&pdev->dev, res);
