@@ -9,6 +9,7 @@ obj-$(CONFIG_WLAN_VENDOR_MEDIATEK) += mediatek/
 obj-$(CONFIG_WLAN_VENDOR_ICOMMSEMI) += icommsemi/
 obj-$(CONFIG_WLAN_VENDOR_BOUFFALOLAB) += bouffalolab/
 obj-y += rtl8733bs/
+obj-y += rtl8733bs_bt_sdio/
 
 all:
 	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KERNEL_DIR) M=$(shell pwd) modules
