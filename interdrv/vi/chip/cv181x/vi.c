@@ -4522,19 +4522,19 @@ int vi_create_thread(struct cvi_vi_dev *vdev, enum E_VI_TH th_id)
 	if (vdev->vi_th[th_id].w_thread == NULL) {
 		switch (th_id) {
 		case E_VI_TH_PRERAW:
-			memcpy(vdev->vi_th[th_id].th_name, "cvitask_isp_pre", sizeof(vdev->vi_th[th_id].th_name));
+			strncpy(vdev->vi_th[th_id].th_name, "cvitask_isp_pre", sizeof(vdev->vi_th[th_id].th_name));
 			vdev->vi_th[th_id].th_handler = _vi_preraw_thread;
 			break;
 		case E_VI_TH_VBLANK_HANDLER:
-			memcpy(vdev->vi_th[th_id].th_name, "cvitask_isp_blank", sizeof(vdev->vi_th[th_id].th_name));
+			strncpy(vdev->vi_th[th_id].th_name, "cvitask_isp_blank", sizeof(vdev->vi_th[th_id].th_name));
 			vdev->vi_th[th_id].th_handler = _vi_vblank_handler_thread;
 			break;
 		case E_VI_TH_ERR_HANDLER:
-			memcpy(vdev->vi_th[th_id].th_name, "cvitask_isp_err", sizeof(vdev->vi_th[th_id].th_name));
+			strncpy(vdev->vi_th[th_id].th_name, "cvitask_isp_err", sizeof(vdev->vi_th[th_id].th_name));
 			vdev->vi_th[th_id].th_handler = _vi_err_handler_thread;
 			break;
 		case E_VI_TH_EVENT_HANDLER:
-			memcpy(vdev->vi_th[th_id].th_name, "vi_event_handler", sizeof(vdev->vi_th[th_id].th_name));
+			strncpy(vdev->vi_th[th_id].th_name, "vi_event_handler", sizeof(vdev->vi_th[th_id].th_name));
 			vdev->vi_th[th_id].th_handler = _vi_event_handler_thread;
 			break;
 		default:
