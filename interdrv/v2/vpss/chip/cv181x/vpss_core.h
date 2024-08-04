@@ -56,7 +56,7 @@ enum cvi_sc_type {
 	CVI_VIP_SC_D = 0,
 	CVI_VIP_SC_V1,
 	CVI_VIP_SC_V2,
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 	CVI_VIP_SC_V3,
 #endif
 	CVI_VIP_SC_MAX,

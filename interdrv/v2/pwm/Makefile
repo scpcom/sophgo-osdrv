@@ -1,10 +1,8 @@
 include $(PWD)/../Makefile.interdrv.param
 
-PWM_PATH = $(CVIARCH_L)
+soph_pwm-objs = pwm.o
 
-$(CVIARCH_L)_pwm-objs = $(PWM_PATH)/cvi_pwm.o
-
-obj-m += $(CVIARCH_L)_pwm.o
+obj-m += soph_pwm.o
 
 all:
 	$(MAKE) ARCH=${ARCH} -C $(KERNEL_DIR) M=$(PWD) modules

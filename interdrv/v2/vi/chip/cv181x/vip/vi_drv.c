@@ -31,7 +31,7 @@ extern struct vi_fbc_cfg fbc_cfg;
  * SLICE_BUFFER_CONFIG
  ****************************************************************************/
 enum W_RING_BUF_ID {
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 	RGBMAP_LE = 2,
 	BE_WDMA_LE = 3,
 #else
@@ -482,7 +482,7 @@ void isp_pre_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num, const u8 chn_nu
 	}
 }
 
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 static void _isp_cmdq_post_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num, u32 sw_ctrl_1, u32 sw_ctrl_0)
 {
 	uintptr_t cmqd = ctx->phys_regs[ISP_BLK_ID_CMDQ];
@@ -514,7 +514,7 @@ static void _isp_cmdq_post_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num, u
 
 void isp_post_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num)
 {
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 	uintptr_t isptopb = ctx->phys_regs[ISP_BLK_ID_ISPTOP];
 #endif
 	union REG_ISP_TOP_SW_CTRL_0 sw_ctrl_0;
@@ -533,7 +533,7 @@ void isp_post_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num)
 		sw_ctrl_0.bits.TRIG_STR_POST	= 1;
 		sw_ctrl_1.bits.PQ_UP_POST	= 1;
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 		ISP_WR_REG(isptopb, REG_ISP_TOP_T, SW_CTRL_1, sw_ctrl_1.raw);
 		ISP_WR_REG(isptopb, REG_ISP_TOP_T, SW_CTRL_0, sw_ctrl_0.raw);
 #else
@@ -574,7 +574,7 @@ void isp_post_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num)
 			sw_ctrl_1.bits.PQ_UP_POST	= 1;
 		}
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 		ISP_WR_REG(isptopb, REG_ISP_TOP_T, SW_CTRL_1, sw_ctrl_1.raw);
 		ISP_WR_REG(isptopb, REG_ISP_TOP_T, SW_CTRL_0, sw_ctrl_0.raw);
 #else
@@ -815,7 +815,7 @@ void ispblk_dma_set_sw_mode(struct isp_ctx *ctx, uint32_t dmaid, bool is_sw_mode
 	uintptr_t dmab = ctx->phys_regs[dmaid];
 	union REG_ISP_DMA_CTL_SYS_CONTROL sys_ctrl;
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 	switch (dmaid) {
 	case ISP_BLK_ID_DMA_CTL5://be_se_rdma_ctl
 	case ISP_BLK_ID_DMA_CTL11://fe0 rgbmap SE
@@ -1201,7 +1201,7 @@ int ccm_find_hwid(int id)
 	case ISP_CCM_ID_0:
 		ccm_id = ISP_BLK_ID_CCM0;
 		break;
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	case ISP_CCM_ID_1:
 		ccm_id = ISP_BLK_ID_CCM1;
 		break;
@@ -1221,7 +1221,7 @@ int blc_find_hwid(int id)
 	case ISP_BLC_ID_FE0_LE:
 		blc_id = ISP_BLK_ID_BLC0;
 		break;
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	case ISP_BLC_ID_FE0_SE:
 		blc_id = ISP_BLK_ID_BLC1;
 		break;
@@ -1238,7 +1238,7 @@ int blc_find_hwid(int id)
 	case ISP_BLC_ID_BE_LE:
 		blc_id = ISP_BLK_ID_BLC5;
 		break;
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	case ISP_BLC_ID_BE_SE:
 		blc_id = ISP_BLK_ID_BLC6;
 		break;
@@ -1354,7 +1354,7 @@ int wbg_find_hwid(int id)
 	case ISP_WBG_ID_FE0_RGBMAP_LE:
 		wbg_id = ISP_BLK_ID_WBG2;
 		break;
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	case ISP_WBG_ID_FE0_RGBMAP_SE:
 		wbg_id = ISP_BLK_ID_WBG3;
 		break;
@@ -1371,7 +1371,7 @@ int wbg_find_hwid(int id)
 	case ISP_WBG_ID_RAW_TOP_LE:
 		wbg_id = ISP_BLK_ID_WBG0;
 		break;
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	case ISP_WBG_ID_RAW_TOP_SE:
 		wbg_id = ISP_BLK_ID_WBG1;
 		break;
@@ -1511,7 +1511,7 @@ void _ispblk_rawtop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_n
 	uintptr_t lsc = ctx->phys_regs[ISP_BLK_ID_LSC];
 	uintptr_t hist_v = ctx->phys_regs[ISP_BLK_ID_HIST_V];
 	uintptr_t ltm = ctx->phys_regs[ISP_BLK_ID_HDRLTM];
-#if (defined(__CV181X__) && !defined(PORTING_TEST))
+#if (defined(__SOC_MARS__) && !defined(PORTING_TEST))
 	union REG_RAW_TOP_PATGEN1 patgen1;
 #endif
 	if (ctx->isp_pipe_cfg[raw_num].is_yuv_bypass_path) { //YUV sensor
@@ -1546,7 +1546,7 @@ void _ispblk_rawtop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_n
 		if (_is_be_post_online(ctx)) //fe->dram->be->post
 			ISP_WR_BITS(rawtop, REG_RAW_TOP_T, RDMI_ENABLE, RDMI_EN, 0);
 		else if (_is_fe_be_online(ctx)) {//fe->be->dram->post
-#if (defined(__CV181X__) && !defined(PORTING_TEST))
+#if (defined(__SOC_MARS__) && !defined(PORTING_TEST))
 			patgen1.raw = ISP_RD_REG(rawtop, REG_RAW_TOP_T, PATGEN1);
 			patgen1.bits.PG_ENABLE = ctx->isp_pipe_cfg[raw_num].is_hdr_on ? 0 : ctx->is_slice_buf_on;
 			ISP_WR_REG(rawtop, REG_RAW_TOP_T, PATGEN1, patgen1.raw);
@@ -1872,7 +1872,7 @@ int isp_frm_err_handler(struct isp_ctx *ctx, const enum cvi_isp_raw err_raw_num,
 
 		while (--cnt > 0) {
 			if ((ISP_RD_REG(fe0, REG_PRE_RAW_FE_T, FE_IDLE_INFO) == 0x3F) &&
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 				(ISP_RD_REG(fe1, REG_PRE_RAW_FE_T, FE_IDLE_INFO) == 0x3F) &&
 #endif
 				((ISP_RD_REG(be, REG_PRE_RAW_BE_T, BE_IP_IDLE_INFO) & 0x1F003F) == 0x1F003F) &&
@@ -2056,7 +2056,7 @@ void _ispblk_dma_slice_config(struct isp_ctx *ctx, int dmaid, int en)
 {
 	uintptr_t dmab = ctx->phys_regs[dmaid];
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 	switch (dmaid) {
 	case ISP_BLK_ID_DMA_CTL29://raw crop SE
 	case ISP_BLK_ID_DMA_CTL23://be_se_wdma_ctl
@@ -2160,7 +2160,7 @@ void ispblk_slice_buf_config(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num
 			r_ring_buf_en.raw |= ((is_sub_slice_en) ? ((1 << MANR_CUR_SE) | (1 << MANR_PREV_SE)) : 0);
 		}
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 		ISP_WR_REG(wdma_com_0, REG_WDMA_CORE_T, RING_BUFFER_EN, w_ring_buf_en.raw);
 		ISP_WR_REG(wdma_com_0, REG_WDMA_CORE_T, RING_BUFFER_SIZE2, slc_b_cfg.sub_path.le_buf_size);
 		ISP_WR_REG(wdma_com_0, REG_WDMA_CORE_T, RING_BUFFER_SIZE3, slc_b_cfg.main_path.le_buf_size);

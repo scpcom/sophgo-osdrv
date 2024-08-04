@@ -158,7 +158,7 @@ void ispblk_rawtop_config(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 	union REG_RAW_TOP_RDMI_ENABLE rdmi_enable;
 	union REG_RAW_TOP_LE_LMAP_GRID_NUMBER   le_lmap_size;
 	union REG_RAW_TOP_SE_LMAP_GRID_NUMBER   se_lmap_size;
-#if (defined(__CV181X__) && !defined(PORTING_TEST))
+#if (defined(__SOC_MARS__) && !defined(PORTING_TEST))
 	union REG_RAW_TOP_PATGEN1 patgen1;
 #endif
 
@@ -171,7 +171,7 @@ void ispblk_rawtop_config(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 
 	rdmi_enable.raw = ISP_RD_REG(rawtop, REG_RAW_TOP_T, RDMI_ENABLE);
 	rdmi_enable.bits.CH_NUM = ctx->isp_pipe_cfg[raw_num].is_hdr_on;
-#if (defined(__CV181X__) && !defined(PORTING_TEST))
+#if (defined(__SOC_MARS__) && !defined(PORTING_TEST))
 	if (!(ctx->isp_pipe_cfg[raw_num].is_hdr_on)
 	    && (_is_fe_be_online(ctx) && ctx->is_slice_buf_on)) {
 		//In order for linearMode use guideWeight
@@ -449,7 +449,7 @@ void ispblk_isptop_config(struct isp_ctx *ctx)
 	scene_ctrl.bits.RGBMP_ONLINE_S_ENABLE	= 0;
 	scene_ctrl.bits.RAW2YUV_422_ENABLE	= 0;
 	scene_ctrl.bits.HDR_ENABLE		= ctx->is_hdr_on;
-#if (defined(__CV181X__) && !defined(PORTING_TEST))
+#if (defined(__SOC_MARS__) && !defined(PORTING_TEST))
 	if (!(ctx->is_hdr_on)
 	    && (_is_fe_be_online(ctx) && ctx->is_slice_buf_on)) {
 		//In order for linearMode use guideWeight

@@ -508,7 +508,7 @@ static int sclr_size_test(void)
 	int i;
 	struct sclr_scale_cfg cfg;
 	u8 inst;
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 	int max_size[SCL_MAX_INST] = {1920, 2880, 1920, 1280};
 #else
 	int max_size[SCL_MAX_INST] = {1920, 2880, 1920};

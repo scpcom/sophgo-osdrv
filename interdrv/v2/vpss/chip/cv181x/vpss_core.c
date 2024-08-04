@@ -1232,7 +1232,7 @@ static irqreturn_t scl_isr(int irq, void *_dev)
 	sclr_intr_clr(intr_status);
 
 	CVI_TRACE_VPSS(CVI_DBG_DEBUG, "status(0x%x)\n", intr_status.raw);
-#if defined(__CV181X__)
+#if defined(__SOC_MARS__)
 	if (vpss_vo_cb_status)
 		_vpss_call_cb(E_MODULE_VO, VO_CB_IRQ_HANDLER, &intr_status);
 #endif

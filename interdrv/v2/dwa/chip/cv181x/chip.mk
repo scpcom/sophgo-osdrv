@@ -1,6 +1,6 @@
-$(CVIARCH_L)_dwa-y += chip/$(CVIARCH_L)/cmdq.o
-$(CVIARCH_L)_dwa-y += chip/$(CVIARCH_L)/cvi_vip_dwa.o
-$(CVIARCH_L)_dwa-y += chip/$(CVIARCH_L)/gdc.o
-$(CVIARCH_L)_dwa-y += chip/$(CVIARCH_L)/ldc.o
-$(CVIARCH_L)_dwa-y += chip/$(CVIARCH_L)/mesh.o
-$(CVIARCH_L)_dwa-y += chip/$(CVIARCH_L)/ldc_test.o
+soph_dwa-y += chip/$(CHIP_CODE)/cmdq.o \
+					chip/$(CHIP_CODE)/cvi_vip_dwa.o \
+					chip/$(CHIP_CODE)/gdc.o \
+					chip/$(CHIP_CODE)/ldc.o \
+					chip/$(CHIP_CODE)/mesh.o \
+					chip/$(CHIP_CODE)/ldc_test.o

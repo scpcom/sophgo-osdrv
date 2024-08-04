@@ -2438,7 +2438,7 @@ void _vi_ctrl_init(enum cvi_isp_raw raw_num, struct cvi_vi_dev *vdev)
 		vi_pr(VI_INFO, "patgen csibdg_w_h(%d:%d)\n",
 			ictx->isp_pipe_cfg[raw_num].csibdg_width, ictx->isp_pipe_cfg[raw_num].csibdg_height);
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 /**
  * the hardware limit is clk_mac <= clk_be * 2
  * cv180x's clk_mac is 594M, but clk_be just 198M(ND)/250M(OD)
@@ -3789,7 +3789,7 @@ static inline void _post_lmap_update(struct isp_ctx *ctx, const enum cvi_isp_raw
 		ispblk_dma_setaddr(ctx, ISP_BLK_ID_DMA_CTL31, lmap_se);
 	} else {
 		ispblk_dma_setaddr(ctx, ISP_BLK_ID_DMA_CTL40, lmap_le);
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 		ispblk_dma_setaddr(ctx, ISP_BLK_ID_DMA_CTL31, lmap_le);
 #endif
 	}
@@ -4796,7 +4796,7 @@ static long _vi_s_ctrl(struct cvi_vi_dev *vdev, struct vi_ext_control *p)
 
 	case VI_IOCTL_HDR:
 	{
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 		if (p->value == true) {
 			vi_pr(VI_ERR, "only support linear mode.\n");
 			break;
@@ -5045,7 +5045,7 @@ static long _vi_s_ctrl(struct cvi_vi_dev *vdev, struct vi_ext_control *p)
 
 		if (copy_from_user(&snr_info, p->ptr, sizeof(struct cvi_isp_snr_info)) != 0)
 			break;
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 		if (snr_info.raw_num >= ISP_PRERAW_VIRT_MAX) {
 			vi_pr(VI_ERR, "only support single sensor.\n");
 			break;

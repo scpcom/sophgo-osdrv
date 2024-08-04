@@ -4,16 +4,16 @@ CONFIG_REG_DUMP = 1
 CONFIG_TILE_MODE = 0
 CONFIG_RGN_EX = 0
 
-$(CVIARCH_L)_vpss-objs += chip/$(CVIARCH_L)/cvi_vip_img.o
-$(CVIARCH_L)_vpss-objs += chip/$(CVIARCH_L)/cvi_vip_sc.o
-$(CVIARCH_L)_vpss-objs += chip/$(CVIARCH_L)/dsi_phy.o
-$(CVIARCH_L)_vpss-objs += chip/$(CVIARCH_L)/scaler.o
-$(CVIARCH_L)_vpss-objs += chip/$(CVIARCH_L)/vpss_core.o
+soph_vpss-objs += chip/$(CHIP_CODE)/cvi_vip_img.o \
+				chip/$(CHIP_CODE)/cvi_vip_sc.o \
+				chip/$(CHIP_CODE)/dsi_phy.o \
+				chip/$(CHIP_CODE)/scaler.o \
+				chip/$(CHIP_CODE)/vpss_core.o
 
 
 ifeq ($(CONFIG_SCLR_TEST), 1)
 ccflags-y += -DCONFIG_SCLR_TEST
-$(CVIARCH_L)_vpss-objs += chip/$(CVIARCH_L)/sclr_test.o
+soph_vpss-objs += chip/$(CHIP_CODE)/sclr_test.o
 endif
 
 ifeq ($(CONFIG_CVI_LOG), 1)
@@ -30,5 +30,5 @@ endif
 
 ifeq ($(CONFIG_RGN_EX), 1)
 ccflags-y += -DCONFIG_RGN_EX
-$(CVIARCH_L)_vpss-objs += chip/$(CVIARCH_L)/cmdq.o
+soph_vpss-objs += chip/$(CHIP_CODE)/cmdq.o
 endif

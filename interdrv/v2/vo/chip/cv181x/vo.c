@@ -21,7 +21,7 @@
 #include "vo_mipi_tx.h"
 #include <proc/vo_proc.h>
 #include <proc/vo_disp_proc.h>
-#include "pinctrl-cv181x.h"
+#include "pinctrl-mars.h"
 //#include "mw/vpu_base.h"
 #include <base_cb.h>
 #include <vpss_cb.h>

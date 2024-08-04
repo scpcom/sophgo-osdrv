@@ -1,4 +1,3 @@
-$(CVIARCH_L)_rgn-objs += chip/$(CVIARCH_L)/rgn.o
-$(CVIARCH_L)_rgn-objs += chip/$(CVIARCH_L)/vip/rgn_drv.o
-$(CVIARCH_L)_rgn-objs += chip/$(CVIARCH_L)/proc/rgn_proc.o
-
+soph_rgn-objs += chip/$(CHIP_CODE)/rgn.o \
+				chip/$(CHIP_CODE)/vip/rgn_drv.o \
+				chip/$(CHIP_CODE)/proc/rgn_proc.o

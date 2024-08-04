@@ -4125,7 +4125,7 @@ int sclr_dsi_config(u8 lane_num, enum sclr_dsi_fmt fmt, u16 width)
 }
 EXPORT_SYMBOL_GPL(sclr_dsi_config);
 
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 void i80_set_cmd0(u32 cmd)
 {
 	_reg_write(reg_base + REG_SCL_DISP_MCU_HW_CMD0, cmd);
@@ -7210,7 +7210,7 @@ void sclr_check_overflow_reg(struct cvi_vpss_info *vpss_info)
 	sc_en[0] = (val & SC_TOP_REG_SC_D_EN_MASK) >> SC_TOP_REG_SC_D_EN_OFFSET;
 	sc_en[1] = (val & SC_TOP_REG_SC_V1_EN_MASK) >> SC_TOP_REG_SC_V1_EN_OFFSET;
 	sc_en[2] = (val & SC_TOP_REG_SC_V2_EN_MASK) >> SC_TOP_REG_SC_V2_EN_OFFSET;
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 	sc_en[3] = (val & SC_TOP_REG_SC_V3_EN_MASK) >> SC_TOP_REG_SC_V3_EN_OFFSET;
 #endif
 

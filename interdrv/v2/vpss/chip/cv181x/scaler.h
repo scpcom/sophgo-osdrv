@@ -6,7 +6,7 @@
 #include <vpss_cb.h>
 
 #define SCL_INTR_SCL_NUM 139
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 #define SCL_MAX_INST 4
 #define SCL_V_MAX_INST 3	// sc_v1, sc_v2, sc_v3
 #else
@@ -20,7 +20,7 @@
 #define SCL_MAX_DSI_LP 16
 #define SCL_MAX_DSI_SP 2
 #define SCL_MAX_GOP_OW_INST 8
-#ifdef __CV180X__
+#ifdef __SOC_PHOBOS__
 #define SCL_MAX_GOP_INST 1
 #define SCL_MAX_GOP_FB_INST 1
 #else

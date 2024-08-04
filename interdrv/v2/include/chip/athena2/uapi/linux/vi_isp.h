@@ -27,7 +27,7 @@ enum IP_INFO_GRP {
 	IP_INFO_ID_CSIBDG0,
 	IP_INFO_ID_DMA_CTL6,
 	IP_INFO_ID_DMA_CTL7,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_DMA_CTL8,
 	IP_INFO_ID_DMA_CTL9,
 #endif
@@ -36,7 +36,7 @@ enum IP_INFO_GRP {
 	IP_INFO_ID_RGBMAP0,
 	IP_INFO_ID_WBG2,
 	IP_INFO_ID_DMA_CTL10,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_RGBMAP1,
 	IP_INFO_ID_WBG3,
 	IP_INFO_ID_DMA_CTL11,
@@ -69,17 +69,17 @@ enum IP_INFO_GRP {
 	IP_INFO_ID_CROP0,
 	IP_INFO_ID_CROP1,
 	IP_INFO_ID_BLC5,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_BLC6,
 #endif
 	IP_INFO_ID_AF,
 	IP_INFO_ID_DMA_CTL21,
 	IP_INFO_ID_DPC0,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_DPC1,
 #endif
 	IP_INFO_ID_DMA_CTL22,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_DMA_CTL23,
 #endif
 	IP_INFO_ID_PRE_WDMA,
@@ -94,12 +94,12 @@ enum IP_INFO_GRP {
 	IP_INFO_ID_DMA_CTL25,
 	IP_INFO_ID_AEHIST0,
 	IP_INFO_ID_DMA_CTL26,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_AEHIST1,
 	IP_INFO_ID_DMA_CTL27,
 #endif
 	IP_INFO_ID_DMA_CTL28,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_DMA_CTL29,
 #endif
 	IP_INFO_ID_RAW_RDMA,
@@ -108,12 +108,12 @@ enum IP_INFO_GRP {
 	IP_INFO_ID_CROP3,
 	IP_INFO_ID_LMAP0,
 	IP_INFO_ID_DMA_CTL30,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_LMAP1,
 	IP_INFO_ID_DMA_CTL31,
 #endif
 	IP_INFO_ID_WBG0,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_WBG1,
 #endif
 	// IP_INFO_ID_PCHK2,
@@ -123,22 +123,22 @@ enum IP_INFO_GRP {
 
 	IP_INFO_ID_RGBTOP,
 	IP_INFO_ID_CCM0,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_CCM1,
 #endif
 	IP_INFO_ID_RGBGAMMA,
 	IP_INFO_ID_YGAMMA,
 	IP_INFO_ID_MMAP,
 	IP_INFO_ID_DMA_CTL32,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_DMA_CTL33,
 #endif
 	IP_INFO_ID_DMA_CTL34,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_DMA_CTL35,
 #endif
 	IP_INFO_ID_DMA_CTL36,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_DMA_CTL37,
 #endif
 	IP_INFO_ID_CLUT,
@@ -152,7 +152,7 @@ enum IP_INFO_GRP {
 	IP_INFO_ID_HDRFUSION,
 	IP_INFO_ID_HDRLTM,
 	IP_INFO_ID_DMA_CTL39,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_DMA_CTL40,
 #endif
 
@@ -196,7 +196,7 @@ enum IP_INFO_GRP {
 	IP_INFO_ID_WDMA_CORE1,
 	IP_INFO_ID_PRE_RAW_VI_SEL,
 	IP_INFO_ID_DMA_CTL4,
-#if !defined(__CV180X__)
+#if !defined(__SOC_PHOBOS__)
 	IP_INFO_ID_DMA_CTL5,
 #endif
 	// IP_INFO_ID_CMDQ,

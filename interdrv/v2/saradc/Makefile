@@ -1,10 +1,8 @@
 include $(PWD)/../Makefile.interdrv.param
 
-SARADC_PATH = $(CVIARCH_L)
+soph_saradc-objs = saradc.o
 
-$(CVIARCH_L)_saradc-objs = $(SARADC_PATH)/cvi_saradc.o
-
-obj-m += $(CVIARCH_L)_saradc.o
+obj-m += soph_saradc.o
 
 ccflags-y += -I$(PWD)/common/
 

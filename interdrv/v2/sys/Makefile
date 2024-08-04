@@ -6,21 +6,21 @@ ccflags-y += -I$(src)/../base/mw/ \
              -I$(src)/common/uapi \
              -I$(src)/common/kapi \
              -I$(src)/common \
-             -I$(src)/hal/$(CVIARCH_L)/uapi \
-             -I$(src)/hal/$(CVIARCH_L) \
+             -I$(src)/hal/$(CHIP_CODE)/uapi \
+             -I$(src)/hal/$(CHIP_CODE) \
              -I$(srctree)/drivers/staging/android \
-             -I$(src)/../include/chip/$(CVIARCH_L)/uapi
+             -I$(src)/../include/chip/$(CHIP_CODE)/uapi
 
 ccflags-y += $(INTRERDRV_FLAGS)
 
 ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
 
-obj-m += $(CVIARCH_L)_sys.o
-$(CVIARCH_L)_sys-y += common/sys.o \
-                    common/sys_context.o
+obj-m += soph_sys.o
+soph_sys-y += common/sys.o \
+              common/sys_context.o
 
 ifneq ($(INTRERDRV_FLAGS), )
-$(CVIARCH_L)_sys-y += common/sys_test.o
+soph_sys-y += common/sys_test.o
 endif
 
 all:

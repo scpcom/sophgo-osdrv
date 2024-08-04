@@ -40,7 +40,7 @@ static void _patgen_config_timing(struct isp_ctx *ctx, enum cvi_isp_raw raw_num)
 	ISP_WR_BITS(csibdg, REG_ISP_CSI_BDG_T, CSI_VSYNC_CTRL, VS_STR, 4);
 	ISP_WR_BITS(csibdg, REG_ISP_CSI_BDG_T, CSI_VSYNC_CTRL, VS_STP, 5);
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 /**
  * cv180x's clk_mac is 594M, after division frequency = 204M
  * htt * vtt * fps <= clk_mac * divider ratio
@@ -477,7 +477,7 @@ void ispblk_rgbmap_dma_mode(struct isp_ctx *ctx, uint32_t dmaid)
 	uintptr_t dmab = ctx->phys_regs[dmaid];
 	union REG_ISP_DMA_CTL_SYS_CONTROL sys_ctrl;
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 	if (dmaid != ISP_BLK_ID_DMA_CTL10)//only fe0 rgbmap_le need
 		return;
 #endif
@@ -495,7 +495,7 @@ void ispblk_rgbmap_config(struct isp_ctx *ctx, int map_id, bool en, enum cvi_isp
 {
 	uintptr_t map = ctx->phys_regs[map_id];
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 	if (map_id == ISP_BLK_ID_RGBMAP1)
 		return;
 #endif

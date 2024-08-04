@@ -13,10 +13,10 @@
 #include <linux/io.h>
 #include <linux/clk.h>
 #include <linux/cvi_defines.h>
-#ifdef __CV181X__
-#include "pinctrl-cv181x.h"
-#elif defined(__CV180X__)
-#include "pinctrl-cv180x.h"
+#ifdef __SOC_MARS__
+#include "pinctrl-mars.h"
+#elif defined(__SOC_PHOBOS__)
+#include "pinctrl-phobos.h"
 #endif
 #include <linux/ctype.h>
 #include <linux/version.h>
@@ -40,7 +40,7 @@
 #define BT601_IF
 #define BT656_IF
 
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 #define SUBLVDS_IF
 #define HISPI_IF
 #define BT1120_IF
@@ -1168,7 +1168,7 @@ const struct vi_pin_info vi_pin[TTL_VI_SRC_NUM][MAX_PAD_NUM] = {
 			1,
 		},
 	},
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 	[TTL_VI_SRC_VI1] = {
 		{
 			FMUX_GPIO_FUNCSEL_VIVO_D0,
@@ -1368,7 +1368,7 @@ static int _cif_set_attr_cmos(struct cvi_cif_dev *dev,
 	}
 	if (vi == TTL_VI_SRC_VI0)
 		PINMUX_CONFIG(PAD_MIPIRX4N, VI0_CLK);
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 	else if (vi == TTL_VI_SRC_VI1)
 		PINMUX_CONFIG(VIVO_CLK, VI1_CLK);
 	else
@@ -1440,7 +1440,7 @@ static int _cif_set_attr_bt1120(struct cvi_cif_dev *dev,
 	}
 	if (vi == TTL_VI_SRC_VI0)
 		PINMUX_CONFIG(PAD_MIPIRX4N, VI0_CLK);
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 	else if (vi == TTL_VI_SRC_VI1)
 		PINMUX_CONFIG(VIVO_CLK, VI1_CLK);
 	else
@@ -1489,7 +1489,7 @@ static int _cif_set_attr_bt601(struct cvi_cif_dev *dev,
 	}
 	if (vi == TTL_VI_SRC_VI0)
 		PINMUX_CONFIG(PAD_MIPIRX4N, VI0_CLK);
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 	else if (vi == TTL_VI_SRC_VI1)
 		PINMUX_CONFIG(VIVO_CLK, VI1_CLK);
 	else
@@ -1633,7 +1633,7 @@ static int _cif_set_attr_bt656_9b(struct cvi_cif_dev *dev,
 	}
 	if (vi == TTL_VI_SRC_VI0)
 		PINMUX_CONFIG(PAD_MIPIRX4N, VI0_CLK);
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 	else if (vi == TTL_VI_SRC_VI1)
 		PINMUX_CONFIG(VIVO_CLK, VI1_CLK);
 	else

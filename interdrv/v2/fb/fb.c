@@ -80,7 +80,7 @@ struct cvifb_par {
 
 static void _fb_enable(bool enable)
 {
-#if defined(__CV181X__) || defined(__CV180X__)
+#if defined(__SOC_MARS__) || defined(__SOC_PHOBOS__)
 	u8 layer = 1;
 	struct sclr_gop_cfg *cfg = sclr_gop_get_cfg(SCL_GOP_DISP, layer);
 #else
@@ -93,7 +93,7 @@ static void _fb_enable(bool enable)
 
 	cfg->gop_ctrl.raw &= ~0xff;
 	cfg->gop_ctrl.b.ow0_en = enable;
-#if defined(__CV181X__) || defined(__CV180X__)
+#if defined(__SOC_MARS__) || defined(__SOC_PHOBOS__)
 	sclr_gop_set_cfg(SCL_GOP_DISP, layer, cfg, true);
 #else
 	sclr_gop_set_cfg(SCL_GOP_DISP, cfg, true);
@@ -103,7 +103,7 @@ static void _fb_enable(bool enable)
 static void _fb_update_mode(struct fb_info *info)
 {
 	struct cvifb_par *par = info->par;
-#if defined(__CV181X__) || defined(__CV180X__)
+#if defined(__SOC_MARS__) || defined(__SOC_PHOBOS__)
 	u8 layer = 1;
 	struct sclr_gop_cfg *cfg = sclr_gop_get_cfg(SCL_GOP_DISP, layer);
 #else
@@ -134,7 +134,7 @@ static void _fb_update_mode(struct fb_info *info)
 	ow_cfg.addr = par->mem_base + par->mem_offset;
 
 	ow_number = 0;
-#if defined(__CV181X__) || defined(__CV180X__)
+#if defined(__SOC_MARS__) || defined(__SOC_PHOBOS__)
 	sclr_gop_ow_set_cfg(SCL_GOP_DISP, layer, ow_number, &ow_cfg, true);
 #else
 	sclr_gop_ow_set_cfg(SCL_GOP_DISP, ow_number, &ow_cfg, true);
@@ -442,7 +442,7 @@ static int _fb_dosetcolreg(u16 regno, u16 red, u16 green, u16 blue, u16 transp)
 
 	// ARGB4444 only
 	data = ((transp >> 12) << 12) | ((red >> 12) << 8) | ((green >> 12) << 4) | blue >> 12;
-#if defined(__CV181X__) || defined(__CV180X__)
+#if defined(__SOC_MARS__) || defined(__SOC_PHOBOS__)
 	return sclr_gop_update_256LUT(SCL_GOP_DISP, 1, regno, data);
 #else
 	return sclr_gop_update_LUT(SCL_GOP_DISP, regno, data);
@@ -452,7 +452,7 @@ static int _fb_dosetcolreg(u16 regno, u16 red, u16 green, u16 blue, u16 transp)
 static int cvifb_setcolreg(u32 regno, u32 red, u32 green,
 		u32 blue, u32 transp, struct fb_info *info)
 {
-#if defined(__CV181X__) || defined(__CV180X__)
+#if defined(__SOC_MARS__) || defined(__SOC_PHOBOS__)
 	u8 layer = 1;
 	struct sclr_gop_cfg *cfg = sclr_gop_get_cfg(SCL_GOP_DISP, layer);
 #else
@@ -496,7 +496,7 @@ static int cvifb_setcolreg(u32 regno, u32 red, u32 green,
 
 static int cvifb_setcmap(struct fb_cmap *cmap, struct fb_info *info)
 {
-#if defined(__CV181X__) || defined(__CV180X__)
+#if defined(__SOC_MARS__) || defined(__SOC_PHOBOS__)
 	u8 layer = 1;
 	struct sclr_gop_cfg *cfg = sclr_gop_get_cfg(SCL_GOP_DISP, layer);
 #else
@@ -529,7 +529,7 @@ static int cvifb_setcmap(struct fb_cmap *cmap, struct fb_info *info)
 static int cvifb_pan_display(struct fb_var_screeninfo *var, struct fb_info *info)
 {
 	struct cvifb_par *par = info->par;
-#if defined(__CV181X__) || defined(__CV180X__)
+#if defined(__SOC_MARS__) || defined(__SOC_PHOBOS__)
 	u8 layer = 1;
 	struct sclr_gop_cfg *cfg = sclr_gop_get_cfg(SCL_GOP_DISP, layer);
 #else
@@ -556,7 +556,7 @@ static int cvifb_pan_display(struct fb_var_screeninfo *var, struct fb_info *info
 
 	smp_mb();	/*memory barrier*/
 	ow_number = 0;
-#if defined(__CV181X__) || defined(__CV180X__)
+#if defined(__SOC_MARS__) || defined(__SOC_PHOBOS__)
 	sclr_gop_ow_set_cfg(SCL_GOP_DISP, layer, ow_number, &cfg->ow_cfg[0], true);
 #else
 	sclr_gop_ow_set_cfg(SCL_GOP_DISP, ow_number, &cfg->ow_cfg[0], true);

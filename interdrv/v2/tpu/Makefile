@@ -4,16 +4,16 @@ PWD := $(shell pwd)
 
 ccflags-y +=	-I$(src)/../include/uapi \
 				-I$(src)/common \
-				-I$(src)/hal/$(CVIARCH_L) \
+				-I$(src)/hal/$(CHIP_CODE) \
 				-I$(srctree)/drivers/tee \
 				-I$(srctree)/arch/arm64/include \
 				-I$(srctree)/drivers/staging/android/ion \
 				-I$(src)/../include/common/uapi/linux
 
-obj-m += $(CVIARCH_L)_tpu.o
-$(CVIARCH_L)_tpu-y += common/cvi_tpu_interface.o
-$(CVIARCH_L)_tpu-y += hal/$(CVIARCH_L)/tpu_platform.o
-$(CVIARCH_L)_tpu-y += hal/$(CVIARCH_L)/tpu_pmu.o
+obj-m += soph_tpu.o
+soph_tpu-y += common/cvi_tpu_interface.o
+soph_tpu-y += hal/$(CHIP_CODE)/tpu_platform.o
+soph_tpu-y += hal/$(CHIP_CODE)/tpu_pmu.o
 
 all:
 	$(MAKE) ARCH=${ARCH} -C $(KERNEL_DIR) M=$(PWD) modules

@@ -1,7 +1,7 @@
 include $(PWD)/../Makefile.interdrv.param
 
-$(CVIARCH_L)_base-objs = base.o \
-				chip/$(CVIARCH_L)/vip_sys.o \
+soph_base-objs = base.o \
+				chip/$(CHIP_CODE)/vip_sys.o \
 				reg.o \
 				cvi_vb_proc.o \
 				cvi_log_proc.o \
@@ -10,20 +10,20 @@ $(CVIARCH_L)_base-objs = base.o \
 				vb.o
 
 ifneq ($(INTRERDRV_FLAGS), )
-$(CVIARCH_L)_base-objs += vb_test.o
+soph_base-objs += vb_test.o
 endif
 
-obj-m += $(CVIARCH_L)_base.o
+obj-m += soph_base.o
 
 ccflags-y += -I$(srctree)/drivers/tee \
              -I$(PWD)/../include/common/uapi/ \
              -I$(PWD)/../include/common/kapi/ \
              -I$(PWD)/../base/ \
-             -I$(PWD)/../include/chip/$(CVIARCH_L)/uapi/ \
+             -I$(PWD)/../include/chip/$(CHIP_CODE)/uapi/ \
              -I$(PWD)/../sys/common/ \
              -I$(PWD)/../sys/common/uapi \
              -I$(srctree)/drivers/staging/android \
-             -I$(PWD)/chip/$(CVIARCH_L)
+             -I$(PWD)/chip/$(CHIP_CODE)
 
 
 ifeq ($(SUBTYPE), fpga)

@@ -736,7 +736,7 @@ void ispblk_ygamma_tun_cfg(
 		return;
 
 	prog_ctrl.raw = ISP_RD_REG(gamma, REG_YGAMMA_T, GAMMA_PROG_CTRL);
-#ifndef __CV180X__
+#ifndef __SOC_PHOBOS__
 	prog_ctrl.bits.GAMMA_WSEL		= 0;
 #else
 	prog_ctrl.bits.GAMMA_WSEL		= prog_ctrl.bits.GAMMA_WSEL ^ 1;
@@ -781,7 +781,7 @@ void ispblk_gamma_tun_cfg(
 		return;
 
 	prog_ctrl.raw = ISP_RD_REG(gamma, REG_ISP_GAMMA_T, GAMMA_PROG_CTRL);
-#ifndef __CV180X__
+#ifndef __SOC_PHOBOS__
 	prog_ctrl.bits.GAMMA_WSEL		= 0;
 #else
 	prog_ctrl.bits.GAMMA_WSEL		= prog_ctrl.bits.GAMMA_WSEL ^ 1;
@@ -998,7 +998,7 @@ void ispblk_clut_tun_cfg(
 	if (cfg->is_update_partial) { //partail update table
 		ispblk_clut_partial_update(ctx, cfg, raw_num);
 	} else {
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 		ispblk_clut_config(ctx, cfg->enable, cfg->r_lut, cfg->g_lut, cfg->b_lut);
 #else
 		ispblk_clut_cmdq_config(ctx, raw_num, cfg->enable, cfg->r_lut, cfg->g_lut, cfg->b_lut);
@@ -1023,7 +1023,7 @@ void ispblk_drc_tun_cfg(
 	if (!cfg->update)
 		return;
 
-#if (defined(__CV181X__) && !defined(PORTING_TEST))
+#if (defined(__SOC_MARS__) && !defined(PORTING_TEST))
 	if (!(ctx->isp_pipe_cfg[raw_num].is_hdr_on)
 	    && (_is_fe_be_online(ctx) && ctx->is_slice_buf_on))
 		isp_runtime_hdr_patgen(ctx, raw_num, cfg->hdr_pattern);
@@ -1683,7 +1683,7 @@ void ispblk_ycur_tun_cfg(
 
 	if (cfg->enable) {
 		prog_ctrl.raw = ISP_RD_REG(ycur, REG_ISP_YCURV_T, YCUR_PROG_CTRL);
-#ifndef __CV180X__
+#ifndef __SOC_PHOBOS__
 		prog_ctrl.bits.YCUR_WSEL = 0;
 #else
 		prog_ctrl.bits.YCUR_WSEL = prog_ctrl.bits.YCUR_WSEL ^ 1;
@@ -1733,7 +1733,7 @@ void ispblk_dci_tun_cfg(
 	ISP_WR_REG(dci, REG_ISP_DCI_T, DCI_DEMO_MODE, cfg->demo_mode);
 
 	dci_gamma_ctrl.raw = ISP_RD_REG(dci, REG_ISP_DCI_T, GAMMA_PROG_CTRL);
-#ifndef __CV180X__
+#ifndef __SOC_PHOBOS__
 	dci_gamma_ctrl.bits.GAMMA_WSEL = 0;
 #else
 	dci_gamma_ctrl.bits.GAMMA_WSEL = dci_gamma_ctrl.bits.GAMMA_WSEL ^ 1;

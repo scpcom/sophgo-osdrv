@@ -6,7 +6,8 @@ ccflags-y += -I$(src)
 
 ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
 
-obj-m += cvi_wiegand.o
+soph_wiegand-objs = wiegand.o
+obj-m += soph_wiegand.o
 
 all:
 	$(MAKE) ARCH=${ARCH} -C $(KERNEL_DIR) M=$(PWD) modules

@@ -7,9 +7,9 @@ ccflags-y += -I$(PWD)/../include/common/kapi/
 
 ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
 
-$(CVIARCH_L)_rtos_cmdqu-objs =  rtos_cmdqu.o rtos_cmdqu_cb.o cvi_spinlock.o
+soph_rtos_cmdqu-objs =  rtos_cmdqu.o rtos_cmdqu_cb.o cvi_spinlock.o
 
-obj-m += $(CVIARCH_L)_rtos_cmdqu.o
+obj-m += soph_rtos_cmdqu.o
 
 KBUILD_EXTRA_SYMBOLS += $(PWD)/../base/Module.symvers
 

@@ -204,7 +204,7 @@ void ispblk_aehist_config(struct isp_ctx *ctx, int blk_id, bool enable)
 	uint8_t sub_window_w = 0, sub_window_h = 0;
 	union REG_ISP_AE_HIST_STS_AE0_HIST_ENABLE ae_enable;
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 	if (blk_id == ISP_BLK_ID_AEHIST1)
 		return;
 #endif
@@ -262,7 +262,7 @@ void ispblk_lmap_config(struct isp_ctx *ctx, int map_id, bool en)
 	uintptr_t map = ctx->phys_regs[map_id];
 	union REG_ISP_LMAP_LMP_0 reg0;
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 	if (map_id == ISP_BLK_ID_LMAP1)
 		return;
 #endif

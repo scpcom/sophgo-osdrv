@@ -1,9 +1,8 @@
 SHELL=/bin/bash
 -include $(BUILD_PATH)/.config
 #
-export CVIARCH_L := $(shell echo $(CVIARCH) | tr A-Z a-z)
+export CHIP_CODE := $(shell echo $(CHIP_CODE) | tr A-Z a-z)
 #
-export CHIP_ARCH_L := $(shell echo $(CHIP_ARCH) | tr A-Z a-z)
 INTERDRV_PATH := interdrv/$(shell echo $(MW_VER))
 
 ifeq ($(KERNEL_DIR), )
@@ -62,11 +61,11 @@ ifeq ($(CHIP_ARCH), $(filter $(CHIP_ARCH), CV183X CV182X))
 	FB_DEP = vip
 endif
 
-ifeq ($(CVIARCH), $(filter $(CVIARCH), CV181X))
+ifeq ($(CHIP_ARCH), $(filter $(CHIP_ARCH), CV181X))
 	KO_LIST += sys vi snsr_i2c cif vpss dwa rgn vo rtos_cmdqu fast_image cvi_vc_drv ive
 	BASE_DEP = sys
 	FB_DEP = vpss
-else ifeq ($(CVIARCH), $(filter $(CVIARCH), CV180X))
+else ifeq ($(CHIP_ARCH), $(filter $(CHIP_ARCH), CV180X))
 	KO_LIST += sys vi snsr_i2c cif vpss dwa rgn rtos_cmdqu fast_image cvi_vc_drv
 	BASE_DEP = sys
 	FB_DEP = vpss

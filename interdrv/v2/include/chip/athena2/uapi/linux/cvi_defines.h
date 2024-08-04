@@ -20,8 +20,8 @@ extern "C" {
 
 #define CVI_CHIP_NAME "CV181X"
 
-#ifndef __CV181X__
-#define __CV181X__
+#ifndef __SOC_MARS__
+#define __SOC_MARS__
 #endif
 
 #define CVI_CHIP_TEST  0x0
@@ -340,7 +340,7 @@ extern "C" {
 #define VPSS_ONLINE_GRP_1        1
 #define VPSS_ONLINE_GRP_2        2
 
-#ifdef __CV181X__
+#ifdef __SOC_MARS__
 #define VPSS_MAX_PHY_CHN_NUM     4	/* sc_d, sc_v1, sc_v2, sc_v3 */
 #else
 #define VPSS_MAX_PHY_CHN_NUM     3	/* sc_d, sc_v1, sc_v2 */

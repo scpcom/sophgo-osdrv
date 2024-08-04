@@ -8,7 +8,7 @@
 extern uint8_t g_w_bit[ISP_PRERAW_VIRT_MAX], g_h_bit[ISP_PRERAW_VIRT_MAX];
 extern struct lmap_cfg g_lmp_cfg[ISP_PRERAW_VIRT_MAX];
 
-#if defined(__CV180X__)
+#if defined(__SOC_PHOBOS__)
 #define LTM_DARK_TONE_LUT_SIZE   0x100
 #define LTM_BRIGHT_TONE_LUT_SIZE 0x100
 #define LTM_GLOBAL_LUT_SIZE      0x100
