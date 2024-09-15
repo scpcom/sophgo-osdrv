@@ -2,10 +2,10 @@ include $(PWD)/../Makefile.interdrv.param
 
 ifneq ($(KERNELRELEASE),)
 include $(PWD)/chip/$(CVIARCH_L)/chip.mk
-$(CVIARCH_L)_dwa-y += common/cvi_vip_gdc_proc.o
-$(CVIARCH_L)_dwa-y += common/dwa_platform.o
+soph_dwa-y += common/cvi_vip_gdc_proc.o
+soph_dwa-y += common/dwa_platform.o
 
-obj-m += $(CVIARCH_L)_dwa.o
+obj-m += soph_dwa.o
 #ccflags-y += -DPORTING_TEST
 ccflags-y += -I$(PWD)/chip/$(CVIARCH_L)/ -I$(PWD)/common/
 ccflags-y += -I$(PWD)/../include/common/uapi/ -I$(PWD)/../include/chip/$(CVIARCH_L)/uapi/

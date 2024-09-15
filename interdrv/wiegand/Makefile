@@ -6,7 +6,8 @@ ccflags-y += -I$(src)
 
 ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
 
-obj-m += cvi_wiegand.o
+soph_wiegand-objs := cvi_wiegand.o
+obj-m += soph_wiegand.o
 
 all:
 	$(MAKE) ARCH=${ARCH} -C $(KERNEL_DIR) M=$(PWD) modules
@@ -14,7 +15,7 @@ all:
 clean:
 	rm -f *.o* *.ko
 	rm -f Module.symvers modules.order
-	rm -f cvi_wiegand.mod.c
+	rm -f soph_wiegand.mod.c
 	rm -rf .tmp_versions
 	rm -f .*cmd
 	rm -f $(CHIP)/*.o*

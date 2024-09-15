@@ -1,10 +1,10 @@
 include $(PWD)/../Makefile.interdrv.param
 
-obj-m += cvi_fb.o
-cvi_fb-y += cvifb.o
+obj-m += soph_fb.o
+soph_fb-y += cvifb.o
 
-#cvi_fb-objs := cvifb.o
-#obj-$(CONFIG_FB_CVITEK) += cvi_fb.o
+#soph_fb-objs := cvifb.o
+#obj-$(CONFIG_FB_CVITEK) += soph_fb.o
 ccflags-y += -I$(srctree)/drivers/staging/android/
 ccflags-y += -I$(PWD)/../base/
 ccflags-y += -I$(PWD)/../base/chip/$(CVIARCH_L)/

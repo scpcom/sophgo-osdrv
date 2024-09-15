@@ -10,10 +10,10 @@ ccflags-y +=	-I$(src)/../include/uapi \
 				-I$(srctree)/drivers/staging/android/ion \
 				-I$(src)/../include/chip/$(CVIARCH_L)/uapi/linux
 
-obj-m += $(CVIARCH_L)_tpu.o
-$(CVIARCH_L)_tpu-y += common/cvi_tpu_interface.o
-$(CVIARCH_L)_tpu-y += hal/$(CVIARCH_L)/tpu_platform.o
-$(CVIARCH_L)_tpu-y += hal/$(CVIARCH_L)/tpu_pmu.o
+obj-m += soph_tpu.o
+soph_tpu-y += common/cvi_tpu_interface.o
+soph_tpu-y += hal/$(CVIARCH_L)/tpu_platform.o
+soph_tpu-y += hal/$(CVIARCH_L)/tpu_pmu.o
 
 all:
 	$(MAKE) ARCH=${ARCH} -C $(KERNEL_DIR) M=$(PWD) modules

@@ -4,9 +4,9 @@ PWD := $(shell pwd)
 
 ccflags-y += -I$(src)/common -I$(src)/hal/$(CVIARCH_L)
 
-obj-m += $(CVIARCH_L)_mon.o
-$(CVIARCH_L)_mon-y += common/cvi_mon_interface.o
-$(CVIARCH_L)_mon-y += hal/$(CVIARCH_L)/mon_platform.o
+obj-m += soph_mon.o
+soph_mon-y += common/cvi_mon_interface.o
+soph_mon-y += hal/$(CVIARCH_L)/mon_platform.o
 
 all:
 	$(MAKE) ARCH=${ARCH} -C $(KERNEL_DIR) M=$(PWD) modules

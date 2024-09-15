@@ -3,9 +3,9 @@ include $(PWD)/../Makefile.interdrv.param
 ifneq ($(KERNELRELEASE),)
 include $(PWD)/chip/$(CVIARCH_L)/chip.mk
 
-$(CVIARCH_L)_vi-objs += common/vi_core.o
+soph_vi-objs += common/vi_core.o
 
-obj-m += $(CVIARCH_L)_vi.o
+obj-m += soph_vi.o
 
 ccflags-y += -I$(PWD)/chip/$(CVIARCH_L)/ -I$(PWD)/common/
 ccflags-y += -I$(PWD)/../include/common/uapi/ -I$(PWD)/../include/chip/$(CVIARCH_L)/uapi/

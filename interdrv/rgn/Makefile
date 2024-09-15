@@ -5,9 +5,9 @@ ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
 ifneq ($(KERNELRELEASE),)
 include $(PWD)/chip/$(CVIARCH_L)/chip.mk
 
-$(CVIARCH_L)_rgn-objs += common/rgn_core.o
+soph_rgn-objs += common/rgn_core.o
 
-obj-m += $(CVIARCH_L)_rgn.o
+obj-m += soph_rgn.o
 
 ccflags-y += -I$(PWD)/common/ \
              -I$(PWD)/../base/ \

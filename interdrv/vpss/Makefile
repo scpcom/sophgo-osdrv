@@ -2,13 +2,13 @@ include $(PWD)/../Makefile.interdrv.param
 
 ifneq ($(KERNELRELEASE),)
 include $(PWD)/chip/$(CVIARCH_L)/chip.mk
-$(CVIARCH_L)_vpss-objs += common/cvi_vip_vpss_proc.o
-$(CVIARCH_L)_vpss-objs += common/reg.o
-$(CVIARCH_L)_vpss-objs += common/vpss.o
-$(CVIARCH_L)_vpss-objs += common/vpss_rgn_ctrl.o
-$(CVIARCH_L)_vpss-objs += common/vpss_ioctl.o
+soph_vpss-objs += common/cvi_vip_vpss_proc.o
+soph_vpss-objs += common/reg.o
+soph_vpss-objs += common/vpss.o
+soph_vpss-objs += common/vpss_rgn_ctrl.o
+soph_vpss-objs += common/vpss_ioctl.o
 
-obj-m += $(CVIARCH_L)_vpss.o
+obj-m += soph_vpss.o
 
 ccflags-y += -I$(PWD)/chip/$(CVIARCH_L)/ -I$(PWD)/common/
 ccflags-y += -I$(PWD)/../include/common/uapi/ -I$(PWD)/../include/chip/$(CVIARCH_L)/uapi/

@@ -1,7 +1,7 @@
 include $(PWD)/../Makefile.interdrv.param
 
-$(CVIARCH_L)_fast_image-objs = fast_image.o
-obj-m += $(CVIARCH_L)_fast_image.o
+soph_fast_image-objs = fast_image.o
+obj-m += soph_fast_image.o
 
 ccflags-y += -I$(src)
 ccflags-y += -I$(PWD)/../rtos_cmdqu/

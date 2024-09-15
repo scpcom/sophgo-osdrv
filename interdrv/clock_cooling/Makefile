@@ -6,9 +6,9 @@ ccflags-y += -I$(src) -I$(src)/$(CVIARCH_L)
 
 ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
 
-$(CVIARCH_L)_clock_cooling-objs = $(CVIARCH_L)/clock_cooling.o
+soph_clock_cooling-objs = $(CVIARCH_L)/clock_cooling.o
 
-obj-m += $(CVIARCH_L)_clock_cooling.o
+obj-m += soph_clock_cooling.o
 
 all:
 	$(MAKE) ARCH=${ARCH} -C $(KERNEL_DIR) M=$(PWD) modules

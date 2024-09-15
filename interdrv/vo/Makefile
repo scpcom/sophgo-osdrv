@@ -3,11 +3,11 @@ include $(PWD)/../Makefile.interdrv.param
 ifneq ($(KERNELRELEASE),)
 include $(PWD)/chip/$(CVIARCH_L)/chip.mk
 
-$(CVIARCH_L)_vo-objs += common/vo_core.o
-$(CVIARCH_L)_vo-objs += common/vo_rgn_ctrl.o
+soph_vo-objs += common/vo_core.o
+soph_vo-objs += common/vo_rgn_ctrl.o
 
-obj-m += $(CVIARCH_L)_vo.o
-obj-m += $(CVIARCH_L)_mipi_tx.o
+obj-m += soph_vo.o
+obj-m += soph_mipi_tx.o
 
 ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
 

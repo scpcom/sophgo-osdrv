@@ -1,9 +1,9 @@
 include $(PWD)/../Makefile.interdrv.param
 
 ifneq ($(KERNELRELEASE),)
-snsr_i2c-objs += common/snsr_i2c.o
+soph_snsr_i2c-objs += common/snsr_i2c.o
 
-obj-m += snsr_i2c.o
+obj-m += soph_snsr_i2c.o
 
 ccflags-y += -I$(PWD)/chip/$(CVIARCH_L)/ -I$(PWD)/common/ -I$(PWD)/../include/chip/$(CVIARCH_L)/uapi
 ccflags-y += -I$(PWD)/../include/common/kapi/

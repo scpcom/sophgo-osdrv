@@ -2,9 +2,9 @@ include $(PWD)/../Makefile.interdrv.param
 
 RTC_PATH = $(CVIARCH_L)
 
-$(CVIARCH_L)_rtc-objs = $(RTC_PATH)/cvi_rtc.o
+soph_rtc-objs = $(RTC_PATH)/cvi_rtc.o
 
-obj-m += $(CVIARCH_L)_rtc.o
+obj-m += soph_rtc.o
 
 ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
 

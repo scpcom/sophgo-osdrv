@@ -2,9 +2,9 @@ include $(PWD)/../Makefile.interdrv.param
 
 WDT_PATH = $(CVIARCH_L)
 
-$(CVIARCH_L)_wdt-objs = $(WDT_PATH)/cvi_wdt.o
+soph_wdt-objs = $(WDT_PATH)/cvi_wdt.o
 
-obj-m += $(CVIARCH_L)_wdt.o
+obj-m += soph_wdt.o
 
 ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
 

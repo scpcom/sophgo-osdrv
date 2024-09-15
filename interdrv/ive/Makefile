@@ -2,10 +2,10 @@ include $(PWD)/../Makefile.interdrv.param
 
 ifneq ($(KERNELRELEASE),)
 
-obj-m += $(CVIARCH_L)_ive.o
-$(CVIARCH_L)_ive-y += common/cvi_ive_interface.o
-$(CVIARCH_L)_ive-y += hal/$(CVIARCH_L)/cvi_reg.o
-$(CVIARCH_L)_ive-y += hal/$(CVIARCH_L)/cvi_ive_platform.o
+obj-m += soph_ive.o
+soph_ive-y += common/cvi_ive_interface.o
+soph_ive-y += hal/$(CVIARCH_L)/cvi_reg.o
+soph_ive-y += hal/$(CVIARCH_L)/cvi_ive_platform.o
 
 ccflags-y += -I$(PWD)/../include/common/uapi -I$(PWD)/../include/chip/$(CVIARCH_L)/uapi/
 ccflags-y += -I$(PWD)/../include/common/kapi -I$(PWD)/../sys/common/uapi/

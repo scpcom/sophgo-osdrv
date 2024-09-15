@@ -7,9 +7,9 @@ ccflags-y += -I$(PWD)/../include/common/kapi/
 ccflags-y += -I$(PWD) -I$(LDDINCDIR) -DCNM_FPGA_PLATFORM -DCNM_FPGA_PCI_INTERFACE -DCVI_H26X_USE_ION_FW_BUFFER -DUSE_KERNEL_MODE -Wno-date-time -Werror
 
 PWD	:= $(shell pwd)
-obj-m += $(CVIARCH_L)_vcodec.o
-$(CVIARCH_L)_vcodec-y += cvi_vcodec.o vcodec_common.o
-$(CVIARCH_L)_vcodec-y += hal/$(CVIARCH_L)/cvi_vcodec_cfg.o
+obj-m += soph_vcodec.o
+soph_vcodec-y += cvi_vcodec.o vcodec_common.o
+soph_vcodec-y += hal/$(CVIARCH_L)/cvi_vcodec_cfg.o
 
 all:
 	$(MAKE) ARCH=${ARCH} -C $(KERNEL_DIR) M=$(PWD) modules
