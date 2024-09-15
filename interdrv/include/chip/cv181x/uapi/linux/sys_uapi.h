@@ -7,11 +7,13 @@
 
 #include <linux/version.h>
 
+#if 0
 struct sys_ion_mm_statics {
 	__u64 total_size;
 	__u64 free_size;
 	__u64 max_avail_size;
 };
+#endif
 
 #define SYS_IOC_MAGIC		'S'
 #define SYS_ION_ALLOC     _IOWR(SYS_IOC_MAGIC, 0x01, unsigned long long)
@@ -31,7 +33,9 @@ struct sys_ion_mm_statics {
 #define SYS_IOC_G_CTRL    _IOWR(SYS_IOC_MAGIC, 0x10, unsigned long long)
 #define SYS_IOC_S_CTRL    _IOWR(SYS_IOC_MAGIC, 0x11, unsigned long long)
 
+#if 0
 #define SYS_ION_G_ION_MM_STATICS _IOWR(SYS_IOC_MAGIC, 0x12, struct sys_ion_mm_statics)
+#endif
 
 enum SYS_IOCTL {
 	SYS_IOCTL_SET_VIVPSSMODE,
