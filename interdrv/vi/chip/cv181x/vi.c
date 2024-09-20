@@ -6027,6 +6027,7 @@ int vi_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
 		rc = 0;
 		break;
 	}
+#ifdef WANT_VI_MOTION_LEVEL_CALC
 	case VI_CB_MOTION_CALC:
 	{
 		struct mlv_wrap_i_s *mlv = (struct mlv_wrap_i_s *)arg;
@@ -6038,6 +6039,7 @@ int vi_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
 		}
 		break;
 	}
+#endif
 	default:
 		break;
 	}
@@ -6063,6 +6065,7 @@ static void _vi_timeout_chk(struct cvi_vi_dev *vdev)
 	}
 }
 
+#ifdef WANT_VI_MOTION_LEVEL_CALC
 #define VC_GRID_SIZE	(64)
 #define MAX_MOTION_LEVEL	(255)
 
@@ -6198,6 +6201,7 @@ static void vi_dci_calc(struct cvi_vi_dev *vdev, enum cvi_isp_raw raw_num, uint3
 	if (dci_means)
 		*dci_lv = 511 - *dci_lv / dci_means;
 }
+#endif
 
 #ifdef VI_PROFILE
 static void _vi_update_chnRealFrameRate(VI_CHN_STATUS_S *pstViChnStatus)
@@ -6296,10 +6300,16 @@ static int _vi_event_handler_thread(void * arg)
 			}
 
 			if (!gViCtx->pipeAttr[chn.s32ChnId].bYuvBypassPath) {
+#ifdef WANT_VI_MOTION_LEVEL_CALC
 				vi_motion_level_calc(vdev, b.raw_id, vb->buf.motion_table, &vb->buf.motion_lv);
 				vi_dci_calc(vdev, b.raw_id, &vb->buf.dci_lv);
+#else
+				vi_fill_mlv_info(vb, 0, NULL, true);
+#endif
 				vi_fill_dis_info(vb);
+#ifdef WANT_VI_MOTION_LEVEL_CALC
 				vi_motion_dbg(vdev, vb);
+#endif
 			}
 
 			// TODO: extchn only support works on original frame without GDC effect.

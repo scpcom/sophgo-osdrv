@@ -148,7 +148,9 @@ static int init_ldc_param(const struct vb_s *vb_in, struct vb_s *vb_out,
 	vb_out->buf.u64PTS = stTask->stImgOut.stVFrame.u64PTS;
 	vb_out->buf.frm_num = vb_in->buf.frm_num;
 	vb_out->buf.motion_lv = vb_in->buf.motion_lv;
+#ifdef WANT_VI_MOTION_LEVEL_CALC
 	vb_out->buf.dci_lv = vb_in->buf.dci_lv;
+#endif
 	memcpy(vb_out->buf.motion_table, vb_in->buf.motion_table,
 	       MO_TBL_SIZE);
 
