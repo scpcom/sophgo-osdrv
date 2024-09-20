@@ -2725,6 +2725,8 @@ void _vi_scene_ctrl(struct cvi_vi_dev *vdev, enum cvi_isp_raw *raw_max)
 
 	vi_pr(VI_INFO, "Total_chn_num=%d, rawb_chnstr_num=%d\n",
 			ctx->total_chn_num, ctx->rawb_chnstr_num);
+
+	ctx->is_slice_buf_on = false;
 }
 
 void _viBWCalSet(struct cvi_vi_dev *vdev)
