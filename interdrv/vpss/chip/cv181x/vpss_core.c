@@ -441,6 +441,7 @@ static void cvi_img_device_run(struct cvi_img_vdev *idev, bool sc_need_check[])
 	idev->job_flags |= TRANS_RUNNING;
 	//spin_unlock_irqrestore(&dev->job_lock, flags);
 
+#if defined(CONFIG_TILE_MODE)
 	if (idev->is_tile) {
 		is_left_tile = !idev->is_work_on_r_tile;
 		if (!idev->is_work_on_r_tile) {
@@ -474,6 +475,7 @@ static void cvi_img_device_run(struct cvi_img_vdev *idev, bool sc_need_check[])
 			}
 		}
 	}
+#endif
 
 
 	sclr_img_checksum_en(idev->img_type, true);
