@@ -6303,8 +6303,6 @@ static int _vi_event_handler_thread(void * arg)
 #ifdef WANT_VI_MOTION_LEVEL_CALC
 				vi_motion_level_calc(vdev, b.raw_id, vb->buf.motion_table, &vb->buf.motion_lv);
 				vi_dci_calc(vdev, b.raw_id, &vb->buf.dci_lv);
-#else
-				vi_fill_mlv_info(vb, 0, NULL, true);
 #endif
 				vi_fill_dis_info(vb);
 #ifdef WANT_VI_MOTION_LEVEL_CALC
