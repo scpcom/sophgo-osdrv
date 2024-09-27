@@ -278,6 +278,7 @@ static int cv180x_cooling_remove(struct platform_device *pdev)
 
 static const struct of_device_id cv180x_cooling_match[] = {
 	{.compatible = "cvitek,cv180x-cooling"},
+	{.compatible = "sophgo,cooling"},
 	{},
 };
 MODULE_DEVICE_TABLE(of, cv180x_cooling_match);
