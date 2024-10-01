@@ -391,7 +391,9 @@ struct _isp_cfg {
 	enum _VI_YUV_DATA_SEQ_E enDataSeq;
 	struct isp_cmdq_buf	cmdq_buf;
 
+#ifdef WANT_VI_MOTION_TH
 	uint8_t			motion_th;
+#endif
 
 	uint32_t		is_patgen_en		: 1;
 	uint32_t		is_offline_preraw	: 1;

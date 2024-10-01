@@ -213,8 +213,15 @@ struct vi_event {
  * Configure the structure of motion information.
  */
 struct mlv_info_s {
+#ifdef WANT_VI_MOTION_TH
 	__u8	raw_num;	/*raw num*/
 	__u8	motion_th;	/*motion threshold*/
+#else
+	__u8	sensor_num;
+	__u32	frm_num;
+	__u8	mlv;
+	__u8	mtable[MO_TBL_SIZE];
+#endif
 };
 
 /*

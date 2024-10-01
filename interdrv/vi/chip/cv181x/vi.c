@@ -3704,6 +3704,9 @@ void _pre_hw_enque(
 					post_para->snr_num = raw_num;
 					post_para->is_tile = false;
 					post_para->bypass_num = gViCtx->bypass_frm[raw_num];
+#ifndef WANT_VI_MOTION_TH
+					vi_fill_mlv_info(NULL, raw_num, &post_para->m_lv_i, false);
+#endif
 					if (_vi_call_cb(E_MODULE_VPSS, VPSS_CB_VI_ONLINE_TRIGGER, post_para) != 0) {
 						vi_pr(VI_DBG, "snr_num_%d, SC is running\n", raw_num);
 						atomic_set(&vdev->pre_be_state[ISP_BE_CH0], ISP_PRE_BE_IDLE);
@@ -4145,6 +4148,9 @@ static void _post_hw_enque(
 			post_para->snr_num = raw_num;
 			post_para->is_tile = false;
 			post_para->bypass_num = gViCtx->bypass_frm[raw_num];
+#ifndef WANT_VI_MOTION_TH
+			vi_fill_mlv_info(NULL, raw_num, &post_para->m_lv_i, false);
+#endif
 			if (_vi_call_cb(E_MODULE_VPSS, VPSS_CB_VI_ONLINE_TRIGGER, post_para) != 0) {
 				atomic_set(&vdev->postraw_state, ISP_POSTRAW_IDLE);
 				kfree(post_para);
@@ -4218,6 +4224,9 @@ YUV_POSTRAW_TILE:
 			post_para->snr_num = raw_num;
 			post_para->is_tile = false;
 			post_para->bypass_num = gViCtx->bypass_frm[raw_num];
+#ifndef WANT_VI_MOTION_TH
+			vi_fill_mlv_info(NULL, raw_num, &post_para->m_lv_i, false);
+#endif
 			if (_vi_call_cb(E_MODULE_VPSS, VPSS_CB_VI_ONLINE_TRIGGER, post_para) != 0) {
 				vi_pr(VI_DBG, "snr_num_%d, SC is running\n", raw_num);
 				atomic_set(&vdev->pre_be_state[ISP_BE_CH0], ISP_PRE_BE_IDLE);
@@ -4286,6 +4295,9 @@ YUV_POSTRAW:
 			post_para->snr_num = raw_num;
 			post_para->is_tile = false;
 			post_para->bypass_num = gViCtx->bypass_frm[raw_num];
+#ifndef WANT_VI_MOTION_TH
+			vi_fill_mlv_info(NULL, raw_num, &post_para->m_lv_i, false);
+#endif
 			if (_vi_call_cb(E_MODULE_VPSS, VPSS_CB_VI_ONLINE_TRIGGER, post_para) != 0) {
 				vi_pr(VI_DBG, "snr_num_%d, SC is running\n", raw_num);
 				atomic_set(&vdev->postraw_state, ISP_POSTRAW_IDLE);
@@ -4348,6 +4360,9 @@ YUV_POSTRAW:
 					post_para->snr_num = raw_num;
 					post_para->is_tile = false;
 					post_para->bypass_num = gViCtx->bypass_frm[raw_num];
+#ifndef WANT_VI_MOTION_TH
+					vi_fill_mlv_info(NULL, raw_num, &post_para->m_lv_i, false);
+#endif
 					if (_vi_call_cb(E_MODULE_VPSS, VPSS_CB_VI_ONLINE_TRIGGER, post_para) != 0) {
 						vi_pr(VI_DBG, "snr_num_%d, SC is not ready\n", raw_num);
 						atomic_set(&vdev->pre_be_state[ISP_BE_CH0], ISP_PRE_BE_IDLE);
@@ -6116,7 +6131,11 @@ static void vi_motion_level_calc(struct cvi_vi_dev *vdev, enum cvi_isp_raw raw_n
 	CVI_U16 x, y, idxX, idxY;
 	CVI_U32 motion_cnt, i, idx, motion_value_vc, motion_cnt_vc;
 	CVI_U32 total_grid = grid_w_num * grid_h_num;
+#ifdef WANT_VI_MOTION_TH
 	CVI_U8 u8MotionTh = ctx->isp_pipe_cfg[raw_num].motion_th;
+#else
+	CVI_U8 u8MotionTh = 64;//maybe modify
+#endif
 	CVI_U8 u8VcNum = VC_GRID_SIZE / grid_w;
 	CVI_U16 vc_grid_w_num = grid_w_num / u8VcNum;
 	CVI_U16 vc_grid_h_num = grid_h_num / u8VcNum;
@@ -6303,6 +6322,10 @@ static int _vi_event_handler_thread(void * arg)
 #ifdef WANT_VI_MOTION_LEVEL_CALC
 				vi_motion_level_calc(vdev, b.raw_id, vb->buf.motion_table, &vb->buf.motion_lv);
 				vi_dci_calc(vdev, b.raw_id, &vb->buf.dci_lv);
+#else
+#ifndef WANT_VI_MOTION_TH
+				vi_fill_mlv_info(vb, 0, NULL, true);
+#endif
 #endif
 				vi_fill_dis_info(vb);
 #ifdef WANT_VI_MOTION_LEVEL_CALC
