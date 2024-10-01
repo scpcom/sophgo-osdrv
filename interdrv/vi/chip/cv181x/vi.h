@@ -96,6 +96,7 @@ struct _membuf {
 	uint8_t pre_be_sts_in_use;
 	spinlock_t post_sts_lock;
 	uint8_t post_sts_in_use;
+	uint8_t mem_sts_in_use[2];
 } isp_bufpool[ISP_PRERAW_VIRT_MAX] = {0};
 
 struct isp_queue pre_out_queue[ISP_PRERAW_VIRT_MAX], pre_out_se_queue[ISP_PRERAW_VIRT_MAX],

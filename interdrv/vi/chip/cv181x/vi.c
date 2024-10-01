@@ -3793,7 +3793,7 @@ static inline void _swap_post_sts_buf(struct isp_ctx *ctx, const enum cvi_isp_ra
 	if (pool->post_sts_in_use == 1) {
 		if (_is_be_post_online(ctx)) {
 			//swap buffer
-			idx = pool->sts_mem[0].mem_sts_in_use & 0x1;
+			idx = pool->mem_sts_in_use[0] & 0x1;
 			pool->post_sts_busy_idx = idx ^ 0x1;
 		} else {
 			spin_unlock_irqrestore(&pool->post_sts_lock, flags);
@@ -5059,8 +5059,8 @@ static long _vi_s_ctrl(struct cvi_vi_dev *vdev, struct vi_ext_control *p)
 			break;
 
 		spin_lock_irqsave(&isp_bufpool[raw_num].post_sts_lock, flags);
-		isp_bufpool[raw_num].sts_mem[0].mem_sts_in_use = 0;
-		isp_bufpool[raw_num].sts_mem[1].mem_sts_in_use = 0;
+		isp_bufpool[raw_num].mem_sts_in_use[0] = 0;
+		isp_bufpool[raw_num].mem_sts_in_use[1] = 0;
 		isp_bufpool[raw_num].post_sts_in_use = 0;
 		spin_unlock_irqrestore(&isp_bufpool[raw_num].post_sts_lock, flags);
 
@@ -5447,7 +5447,7 @@ static long _vi_g_ctrl(struct cvi_vi_dev *vdev, struct vi_ext_control *p)
 		spin_lock_irqsave(&isp_bufpool[raw_num].post_sts_lock, flags);
 		isp_bufpool[raw_num].post_sts_in_use = 1;
 		p->value = isp_bufpool[raw_num].post_sts_busy_idx ^ 1;
-		isp_bufpool[raw_num].sts_mem[p->value].mem_sts_in_use = 1;
+		isp_bufpool[raw_num].mem_sts_in_use[p->value] = 1;
 		spin_unlock_irqrestore(&isp_bufpool[raw_num].post_sts_lock, flags);
 
 		rc = 0;

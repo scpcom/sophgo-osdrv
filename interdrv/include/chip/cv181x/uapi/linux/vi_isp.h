@@ -251,7 +251,6 @@ struct cvi_vip_isp_smooth_raw_param {
 /*ISP parameter related state memory*/
 struct cvi_isp_sts_mem {
     __u8 raw_num;                     // Number of raw data entries.
-    __u8 mem_sts_in_use;             // Memory status in use flag.
     struct cvi_vip_memblock af;      // Memory block for autofocus.
     struct cvi_vip_memblock gms;     // Memory block for gain mapping structure.
     struct cvi_vip_memblock ae_le;   // Memory block for auto exposure low end.
