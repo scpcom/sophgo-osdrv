@@ -99,7 +99,7 @@ static int _rgn_call_cb(u32 m_id, u32 cmd_id, void *data)
 	return base_exe_module_cb(&exe_cb);
 }
 
-int32_t _rgn_init(void)
+CVI_S32 _rgn_init(void)
 {
 	// Only init once until exit.
 	// It is guarantueed in rgn_open
@@ -114,7 +114,7 @@ int32_t _rgn_init(void)
 	return CVI_SUCCESS;
 }
 
-int32_t _rgn_exit(void)
+CVI_S32 _rgn_exit(void)
 {
 	unsigned int bkt;
 	struct cvi_rgn_ctx *obj;
