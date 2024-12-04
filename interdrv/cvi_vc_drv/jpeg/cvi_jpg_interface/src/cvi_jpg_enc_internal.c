@@ -40,9 +40,9 @@
 #define STD_JPEG	14
 
 static int JpgEncParamSet_size;
-uint32_t maxIQp = 1;
+CVI_U32 maxIQp = 1;
 module_param(maxIQp, uint, 0644);
-uint32_t minIQp = 100;
+CVI_U32 minIQp = 100;
 module_param(minIQp, uint, 0644);
 extern void jpu_set_channel_num(int chnIdx);
 
@@ -924,7 +924,7 @@ ERR_ENC_INIT:
 
 static int cviJpgGetEnv(char *envVar)
 {
-	extern uint32_t cviRcEn;
+	extern CVI_U32 cviRcEn;
 
 	if (strcmp(envVar, "maxIQp") == 0)
 		return maxIQp;
