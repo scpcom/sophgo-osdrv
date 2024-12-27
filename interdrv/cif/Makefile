@@ -16,7 +16,7 @@ export FPGA_PORTING := true
 ccflags-y += -DFPGA_PORTING
 endif
 
-ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
+ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-type-limits
 
 KBUILD_EXTRA_SYMBOLS = $(PWD)/../base/Module.symvers
 else

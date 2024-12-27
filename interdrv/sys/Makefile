@@ -13,7 +13,7 @@ ccflags-y += -I$(src)/../base/mw/ \
 
 ccflags-y += $(INTRERDRV_FLAGS)
 
-ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
+ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-type-limits
 
 obj-m += soph_sys.o
 soph_sys-y += common/sys.o \

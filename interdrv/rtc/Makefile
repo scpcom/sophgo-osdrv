@@ -6,7 +6,7 @@ soph_rtc-objs = $(RTC_PATH)/cvi_rtc.o
 
 obj-m += soph_rtc.o
 
-ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
+ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-type-limits
 
 all:
 	$(MAKE) ARCH=${ARCH} -C $(KERNEL_DIR) M=$(PWD) modules

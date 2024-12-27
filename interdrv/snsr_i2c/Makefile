@@ -8,7 +8,7 @@ obj-m += soph_snsr_i2c.o
 ccflags-y += -I$(PWD)/chip/$(CVIARCH_L)/ -I$(PWD)/common/ -I$(PWD)/../include/chip/$(CVIARCH_L)/uapi
 ccflags-y += -I$(PWD)/../include/common/kapi/
 
-ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
+ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-type-limits
 
 KBUILD_EXTRA_SYMBOLS = $(PWD)/../base/Module.symvers
 else

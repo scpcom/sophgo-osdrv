@@ -24,7 +24,7 @@ endif
 # for isp porting test
 # ccflags-y += -DPORTING_TEST
 
-ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
+ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-type-limits
 
 KBUILD_EXTRA_SYMBOLS = $(PWD)/../base/Module.symvers
 KBUILD_EXTRA_SYMBOLS += $(PWD)/../sys/Module.symvers

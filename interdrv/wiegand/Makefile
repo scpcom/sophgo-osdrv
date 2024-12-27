@@ -4,7 +4,7 @@ PWD := $(shell pwd)
 
 ccflags-y += -I$(src)
 
-ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
+ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-type-limits
 
 soph_wiegand-objs := cvi_wiegand.o
 obj-m += soph_wiegand.o

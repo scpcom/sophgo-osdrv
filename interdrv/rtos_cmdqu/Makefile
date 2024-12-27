@@ -5,7 +5,7 @@ include $(PWD)/../Makefile.interdrv.param
 ccflags-y += -I$(src)
 ccflags-y += -I$(PWD)/../include/common/kapi/
 
-ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
+ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-type-limits
 
 soph_rtos_cmdqu-objs =  rtos_cmdqu.o rtos_cmdqu_cb.o cvi_spinlock.o
 

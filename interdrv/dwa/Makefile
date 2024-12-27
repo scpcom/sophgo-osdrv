@@ -17,7 +17,7 @@ ccflags-y += -I$(PWD)/../sys/common/ -I$(PWD)/../sys/common/uapi
 ccflags-y += -I$(srctree)/drivers/tee
 ccflags-y += -I$(srctree)/drivers/staging/android
 
-ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
+ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-type-limits
 
 KBUILD_EXTRA_SYMBOLS = $(PWD)/../base/Module.symvers
 KBUILD_EXTRA_SYMBOLS += $(PWD)/../sys/Module.symvers

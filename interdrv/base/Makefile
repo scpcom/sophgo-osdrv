@@ -28,7 +28,7 @@ endif
 
 ccflags-y += $(INTRERDRV_FLAGS)
 
-ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare
+ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-type-limits
 
 KBUILD_EXTRA_SYMBOLS += $(PWD)/../sys/Module.symvers
 
