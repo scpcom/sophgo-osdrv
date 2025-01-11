@@ -106,6 +106,7 @@ static int pwm_cv_config(struct pwm_chip *chip, struct pwm_device *pwm_dev,
 	struct cv_pwm_channel *channel = &our_chip->channel[pwm_dev->hwpwm];
 #endif
 	u64 cycles;
+	unsigned long value;
 
 	cycles = clk_get_rate(our_chip->base_clk);
 	pr_debug("clk_get_rate=%llu\n", cycles);
@@ -124,9 +125,23 @@ static int pwm_cv_config(struct pwm_chip *chip, struct pwm_device *pwm_dev,
 
 	channel->hlperiod = channel->period - cycles;
 
-	pr_debug("period_ns=%d, duty_ns=%d, period=%d, hlperiod=%d\n",
-			period_ns, duty_ns, channel->period, channel->hlperiod);
+	pr_debug("%s: period_ns=%d, duty_ns=%d\n", __func__, period_ns, duty_ns);
 
+	writel(channel->period, our_chip->base + REG_GROUP * pwm_dev->hwpwm + REG_PERIOD);
+	if (channel->hlperiod != 0)
+		writel(channel->hlperiod, our_chip->base + REG_GROUP * pwm_dev->hwpwm + REG_HLPERIOD);
+	pr_debug("%s: REG_PERIOD = 0x%x, REG_HLPERIOD = 0x%x\n", __func__,
+			 readl(our_chip->base + REG_GROUP * pwm_dev->hwpwm + REG_PERIOD),
+			 readl(our_chip->base + REG_GROUP * pwm_dev->hwpwm + REG_HLPERIOD));
+
+	value = readl(our_chip->base + REG_PWMSTART);
+	set_bit(pwm_dev->hwpwm, &value);
+	writel(value, our_chip->base + REG_PWMUPDATE);
+	pr_debug("%s: REG_PWMUPDATE = 0x%lx\n", __func__, value);
+
+	clear_bit(pwm_dev->hwpwm, &value);
+	writel(value, our_chip->base + REG_PWMUPDATE);
+	pr_debug("%s: REG_PWMUPDATE = 0x%lx\n", __func__, value);
 	return 0;
 }
 
@@ -140,10 +155,6 @@ static int pwm_cv_enable(struct pwm_chip *chip, struct pwm_device *pwm_dev)
 #endif
 	uint32_t pwm_start_value;
 	uint32_t value;
-
-	writel(channel->period, our_chip->base + REG_GROUP * pwm_dev->hwpwm + REG_PERIOD);
-	if (channel->hlperiod != 0)
-		writel(channel->hlperiod, our_chip->base + REG_GROUP * pwm_dev->hwpwm + REG_HLPERIOD);
 
 	pwm_start_value = readl(our_chip->base + REG_PWMSTART);
 
@@ -194,7 +205,6 @@ static int pwm_cv_set_polarity(struct pwm_chip *chip,
 		our_chip->polarity_mask |= 1 << pwm_dev->hwpwm;
 
 	writel(our_chip->polarity_mask, our_chip->base + REG_POLARITY);
-
 	return 0;
 }
 
@@ -304,7 +314,7 @@ static const struct pwm_ops pwm_cv_ops = {
 	.enable		= pwm_cv_enable,
 	.disable	= pwm_cv_disable,
 	.config		= pwm_cv_config,
-	/* .set_polarity	= pwm_cv_set_polarity, */
+	.set_polarity	= pwm_cv_set_polarity,
 #endif
 	.apply		= pwm_cv_apply,
 	.capture	= pwm_cv_capture,
