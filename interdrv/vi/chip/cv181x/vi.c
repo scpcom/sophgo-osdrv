@@ -191,6 +191,16 @@ static CVI_S32 _mesh_gdc_do_op_cb(enum GDC_USAGE usage, const CVI_VOID *pUsagePa
 	return base_exe_module_cb(&exe_cb);
 }
 
+static void _vi_release_ext_buf(uint64_t u64PhyAddr)
+{
+	VB_BLK blk = 0;
+
+	blk = vb_physAddr2Handle(u64PhyAddr);
+	if (blk != VB_INVALID_HANDLE) {
+		vb_release_block(blk);
+	}
+}
+
 static void _isp_snr_cfg_enq(struct cvi_isp_snr_update *snr_node, const enum cvi_isp_raw raw_num)
 {
 	unsigned long flags;
@@ -663,6 +673,7 @@ void _isp_preraw_fe_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_num)
 			b->addr = bufaddr;
 			b->raw_num = raw_num;
 			b->ir_idx = i;
+			b->is_ext = INTERNAL_BUFFER;
 			isp_bufpool[raw_num].bayer_le[i] = b->addr;
 			isp_buf_queue(&pre_out_queue[b->raw_num], b);
 		}
@@ -688,6 +699,7 @@ void _isp_preraw_fe_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_num)
 				b->addr = bufaddr;
 				b->raw_num = raw_num;
 				b->ir_idx = i;
+				b->is_ext = INTERNAL_BUFFER;
 				isp_bufpool[raw_num].bayer_se[i] = b->addr;
 				isp_buf_queue(&pre_out_se_queue[b->raw_num], b);
 			}
@@ -782,6 +794,7 @@ void _isp_preraw_be_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 				b->addr = bufaddr;
 				b->raw_num = raw_num;
 				b->ir_idx = buf_num;
+				b->is_ext = INTERNAL_BUFFER;
 				isp_bufpool[raw_num].prebe_le[buf_num] = b->addr;
 				isp_buf_queue(&pre_be_out_q, b);
 			}
@@ -801,6 +814,7 @@ void _isp_preraw_be_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 					b->addr = bufaddr;
 					b->raw_num = raw_num;
 					b->ir_idx = buf_num;
+					b->is_ext = INTERNAL_BUFFER;
 					isp_bufpool[raw_num].prebe_se[buf_num] = b->addr;
 					isp_buf_queue(&pre_be_out_se_q, b);
 				}
@@ -1848,10 +1862,9 @@ static void _snr_i2c_update(
 		if (ctx->isp_pipe_cfg[raw_num].is_hdr_on && ctx->is_synthetic_hdr_on)
 			fe_frm_equal = (vdev->pre_fe_frm_num[raw_num][ISP_FE_CH0] ==
 					vdev->pre_fe_frm_num[raw_num][ISP_FE_CH1]) ? CVI_TRUE : CVI_FALSE;
-		fe_frm_num = vdev->pre_fe_frm_num[raw_num][ISP_FE_CH0] - vdev->dump_frame_number[raw_num];
-	} else {
-		fe_frm_num = vdev->pre_fe_frm_num[raw_num][ISP_FE_CH0];
 	}
+
+	fe_frm_num = vdev->pre_fe_frm_num[raw_num][ISP_FE_CH0];
 
 	vi_pr(VI_DBG, "raw_num=%d, fe_frm_num=%d, is_vblank_update=%d, fe_frm_equal=%d\n",
 			raw_num, fe_frm_num, is_vblank_update, fe_frm_equal);
@@ -3057,6 +3070,7 @@ int vi_start_streaming(struct cvi_vi_dev *vdev)
 		isp_streaming(ctx, true, raw_num);
 	}
 
+	isp_raw_dump_init();
 
 	return rc;
 }
@@ -3195,8 +3209,15 @@ int vi_stop_streaming(struct cvi_vi_dev *vdev)
 			vfree(isp_b);
 	}
 
-	while ((isp_b = isp_buf_remove(&pre_be_in_q)) != NULL)
-		vfree(isp_b);
+	while ((isp_b = isp_buf_remove(&pre_be_in_q)) != NULL) {
+		if (unlikely(isp_b->is_ext == EXTERNAL_BUFFER)) {
+			_vi_release_ext_buf(isp_b->addr);
+			kfree(isp_b);
+		} else {
+			vfree(isp_b);
+		}
+	}
+
 	while ((isp_b = isp_buf_remove(&pre_be_out_q)) != NULL)
 		vfree(isp_b);
 	while ((isp_b = isp_buf_remove(&pre_be_out_se_q)) != NULL)
@@ -3219,6 +3240,8 @@ int vi_stop_streaming(struct cvi_vi_dev *vdev)
 		kfree(isp_bufpool[i].fswdr_rpt);
 		isp_bufpool[i].fswdr_rpt = 0;
 	}
+
+	isp_raw_dump_deinit();
 
 	// reset at stop for next run.
 	isp_reset(&vdev->ctx);
@@ -6906,6 +6929,18 @@ static int _vi_err_handler_thread(void *arg)
 
 static inline void vi_err_wake_up_th(struct cvi_vi_dev *vdev, enum cvi_isp_raw err_raw)
 {
+	if (atomic_read(&vdev->isp_err_handle_flag) == 1) {
+		vi_pr(VI_WARN, "work on err_handler\n");
+		if (vdev->vi_th[E_VI_TH_ERR_HANDLER].flag != err_raw + 1) {
+			atomic_set(&vdev->pre_fe_state[err_raw][ISP_FE_CH0], ISP_PRERAW_IDLE);
+			atomic_set(&vdev->pre_fe_state[err_raw][ISP_FE_CH1], ISP_PRERAW_IDLE);
+		}
+		return;
+	}
+
+	//Stop pre/postraw trigger go
+	atomic_set(&vdev->isp_err_handle_flag, 1);
+
 	vdev->vi_th[E_VI_TH_ERR_HANDLER].flag = err_raw + 1;
 
 	wake_up(&vdev->vi_th[E_VI_TH_ERR_HANDLER].wq);
@@ -7575,7 +7610,7 @@ static inline void _isp_pre_fe_done_handler(
 			ctx->isp_pipe_cfg[raw_num].lmap_i.h_bit = m_info.h_bit;
 		}
 	} else if (_is_be_post_online(ctx)) { //fe->dram->be->post
-		struct isp_buffer *b = NULL;
+		struct isp_buffer *b = NULL, *b_dup = NULL;
 		struct isp_grid_s_info m_info;
 		struct isp_queue *fe_out_q = (chn_num == ISP_FE_CH0) ?
 						&pre_out_queue[raw_num] : &pre_out_se_queue[raw_num];
@@ -7583,6 +7618,8 @@ static inline void _isp_pre_fe_done_handler(
 		struct isp_queue *raw_d_q = (chn_num == ISP_FE_CH0) ?
 					    &raw_dump_b_dq[cur_raw] :
 					    &raw_dump_b_se_dq[cur_raw];
+		VB_BLK blk = 0;
+		struct vb_s *vb = NULL;
 
 		if (atomic_read(&vdev->isp_raw_dump_en[cur_raw]) == 3) //raw dump enable
 			fe_out_q = (chn_num == ISP_FE_CH0) ? &raw_dump_b_q[cur_raw] : &raw_dump_b_se_q[cur_raw];
@@ -7592,6 +7629,17 @@ static inline void _isp_pre_fe_done_handler(
 			vi_pr(VI_ERR, "Pre_fe_%d chn_num_%d outbuf is empty\n", raw_num, chn_num);
 			return;
 		}
+
+		m_info = ispblk_rgbmap_info(ctx, raw_num);
+		b->rgbmap_i.w_bit = m_info.w_bit;
+		b->rgbmap_i.h_bit = m_info.h_bit;
+
+		m_info = ispblk_lmap_info(ctx, raw_num);
+		b->lmap_i.w_bit = m_info.w_bit;
+		b->lmap_i.h_bit = m_info.h_bit;
+
+		b->is_yuv_frm	= 0;
+		b->chn_num	= 0;
 
 		if (atomic_read(&vdev->isp_raw_dump_en[cur_raw]) == 3) { //raw dump enable
 			u32 w = (chn_num == ISP_FE_CH0) ?
@@ -7620,19 +7668,24 @@ static inline void _isp_pre_fe_done_handler(
 			b->byr_size = ispblk_dma_get_size(ctx, dmaid, w, h);
 			b->frm_num = vdev->pre_fe_frm_num[cur_raw][chn_num];
 
+			b_dup = kzalloc(sizeof(struct isp_buffer), GFP_ATOMIC);
+
+			if (b_dup) {
+				*b_dup = *b;
+
+				b_dup->is_ext = EXTERNAL_BUFFER;
+				blk = vb_physAddr2Handle(b_dup->addr);
+				vb = (struct vb_s *)blk;
+				atomic_fetch_add(1, &vb->usr_cnt);
+				((struct vb_s *)blk)->mod_ids |= BIT(CVI_ID_ISP);
+
+				isp_buf_queue(be_in_q, b_dup);
+			} else {
+				vi_pr(VI_WARN, "fail to malloc isp_buffer\n");
+			}
+
 			isp_buf_queue(raw_d_q, b);
 		} else {
-			m_info = ispblk_rgbmap_info(ctx, raw_num);
-			b->rgbmap_i.w_bit = m_info.w_bit;
-			b->rgbmap_i.h_bit = m_info.h_bit;
-
-			m_info = ispblk_lmap_info(ctx, raw_num);
-			b->lmap_i.w_bit = m_info.w_bit;
-			b->lmap_i.h_bit = m_info.h_bit;
-
-			b->is_yuv_frm	= 0;
-			b->chn_num	= 0;
-
 			// for mux dev we change raw_num
 			if (ctx->isp_pipe_cfg[raw_num].is_mux)
 				b->raw_num	= cur_raw;
@@ -7767,9 +7820,13 @@ static inline void _isp_pre_be_done_handler(
 				raw_num, chn_num, vdev->pre_be_frm_num[raw_num][chn_num]);
 
 		if (!ctx->isp_pipe_cfg[ISP_PRERAW_A].is_offline_preraw) {
-			pre_out_q = (chn_num == ISP_BE_CH0) ?
-				&pre_out_queue[hw_raw] : &pre_out_se_queue[hw_raw];
-			isp_buf_queue(pre_out_q, b);
+			if (unlikely(b->is_ext == EXTERNAL_BUFFER)) {
+				isp_raw_dump_vb_queue(b);
+			} else {
+				pre_out_q = (chn_num == ISP_BE_CH0) ?
+					&pre_out_queue[hw_raw] : &pre_out_se_queue[hw_raw];
+				isp_buf_queue(pre_out_q, b);
+			}
 		}
 
 		atomic_set(&vdev->pre_be_state[chn_num], ISP_PRE_BE_IDLE);

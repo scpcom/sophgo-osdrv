@@ -23,6 +23,11 @@
 #include <vip/vi_drv.h>
 #include <vi_defines.h>
 
+enum cvi_isp_buf_status {
+	INTERNAL_BUFFER,
+	EXTERNAL_BUFFER,
+};
+
 struct isp_buffer {
 	enum cvi_isp_raw  raw_num;
 	enum cvi_isp_chn_num chn_num;
@@ -36,6 +41,7 @@ struct isp_buffer {
 	uint32_t          frm_num;
 	uint32_t          ir_idx;
 	uint32_t          is_yuv_frm : 1;
+	uint32_t          is_ext : 1;
 };
 
 struct isp_queue {
