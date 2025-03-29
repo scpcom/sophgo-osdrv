@@ -16,6 +16,7 @@
 #include <linux/sched.h>
 #include <linux/fs.h>
 #include <linux/mm.h>
+#include <linux/freezer.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/reset.h>
@@ -569,7 +570,6 @@ static int cvi_tpu_run_dmabuf(struct cvi_tpu_device *ndev, struct cvi_list_node 
 #endif
 
 	mutex_lock(&ndev->dev_lock);
-	platform_tpu_init(ndev);
 
 	if (info.enable_usage_profiling) {
 		//get start time
@@ -609,8 +609,6 @@ static int cvi_tpu_run_dmabuf(struct cvi_tpu_device *ndev, struct cvi_list_node 
 
 	if (ret == -ETIMEDOUT) {
 		platform_tpu_reset(ndev);
-	} else {
-		platform_tpu_deinit(ndev);
 	}
 	mutex_unlock(&ndev->dev_lock);
 
@@ -792,6 +790,7 @@ static void work_thread_run(struct cvi_tpu_device *ndev)
 
 	//before tpu inference
 	tpu_suspend.running_cnt = 1;
+	platform_tpu_init(ndev);
 
 	//tpu inference HW running process
 	ret = cvi_tpu_run_dmabuf(ndev, first_node);
@@ -800,6 +799,7 @@ static void work_thread_run(struct cvi_tpu_device *ndev)
 
 	//after tpu inference
 	tpu_suspend.running_cnt = 0;
+	platform_tpu_deinit(ndev);
 
 	spin_lock(&kernel_work->done_list_lock);
 	list_add_tail(&first_node->list, &kernel_work->done_list);
@@ -848,8 +848,9 @@ static int work_thread_main(void *data)
 
 	dev_dbg(ndev->dev, "enter work thread\n");
 
+	set_freezable();
 	while (!kthread_should_stop()) {
-		wait_event_interruptible(kernel_work->task_wait_queue,
+		wait_event_freezable(kernel_work->task_wait_queue,
 					 !task_list_empty(kernel_work) ||
 						 kthread_should_stop());
 
