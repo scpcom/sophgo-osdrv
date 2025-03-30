@@ -381,7 +381,7 @@ static int _vo_proc_show(struct seq_file *m, void *v)
 				i,
 				"#",
 				j,
-				(pvoCtx->is_chn_enable[j]) ? "Y" : "N",
+				(pvoCtx->is_chn_enable[i][j]) ? "Y" : "N",
 				pvoCtx->stChnAttr.u32Priority,
 				pvoCtx->stChnAttr.stRect.s32X,
 				pvoCtx->stChnAttr.stRect.s32Y,
