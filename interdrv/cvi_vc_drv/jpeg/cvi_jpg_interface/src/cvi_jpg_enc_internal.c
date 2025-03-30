@@ -1474,7 +1474,7 @@ int cviJpgEncGetInputDataBuf(CVIJpgHandle jpgHandle, void *data)
 	pJpgInst = (JpgEncHandle)jpgHandle;
 	pEncInfo = &pJpgInst->JpgInfo.encInfo;
 
-	if (NULL == pEncInfo->pFrame)
+	if (NULL == pEncInfo->pFrame[0])
 		return JPG_RET_WRONG_CALL_SEQUENCE;
 	if (NULL == data)
 		return JPG_RET_INVALID_PARAM;
