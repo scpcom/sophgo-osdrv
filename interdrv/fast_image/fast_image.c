@@ -343,7 +343,7 @@ static long cvi_fast_image_ioctl(struct file *filp, unsigned int cmd, unsigned l
 		pr_debug("FAST_IMAGE_QUERY_IMG_PADDR %llx\n", addr);
 		ret = copy_to_user((phys_addr_t __user *)arg,
 		&addr,
-		sizeof(struct cmdqu_t));
+		sizeof(phys_addr_t));
 		break;
 	case FAST_IMAGE_QUERY_IMG_VADDR:
 		addr = cvi_fast_image_encode_img_va();
