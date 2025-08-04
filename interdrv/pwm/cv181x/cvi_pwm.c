@@ -18,7 +18,11 @@
 #define REG_FREQNUM			0x20
 #define REG_FREQDATA		0x24
 #define REG_POLARITY		0x40
+#define PWM_MODE_OFFSET		0x8
+#define PWM_SHIFTMODE_MASK	0x10000
 
+#define REG_PULSECOUNT			0x50
+#define REG_OUTCOUNT			0x60
 #define REG_PWMSTART			0x44
 #define REG_PWMUPDATE			0x4C
 #define REG_SHIFTCOUNT			0x80
@@ -96,6 +100,14 @@ static void pwm_cv_free(struct pwm_chip *chip, struct pwm_device *pwm_dev)
 }
 #endif
 
+static u64 ns_to_count(struct cv_pwm_chip *chip, int ns)
+{
+	/* HZ / NSEC_PER_SEC = count per nanosecond */
+	u64 hz = chip->clk_rate * ns;
+	do_div(hz, NSEC_PER_SEC);
+	return hz;
+}
+
 static int pwm_cv_config(struct pwm_chip *chip, struct pwm_device *pwm_dev,
 			     int duty_ns, int period_ns)
 {
@@ -117,13 +129,16 @@ static int pwm_cv_config(struct pwm_chip *chip, struct pwm_device *pwm_dev,
 	channel->period = cycles;
 	cycles = cycles * duty_ns;
 	do_div(cycles, period_ns);
+	u64 period_count = ns_to_count(our_chip, period_ns);
+	u64 duty_count = ns_to_count(our_chip, duty_ns);
 
-	if (cycles == 0)
-		cycles = 1;
-	if (cycles == channel->period)
-		cycles = channel->period - 1;
+	if (duty_count == 0)
+		duty_count = 1;
+	if (duty_count == period_count)
+		duty_count = period_count - 1;
 
-	channel->hlperiod = channel->period - cycles;
+	channel->period = period_count;
+	channel->hlperiod = channel->period - duty_count;
 
 	pr_debug("%s: period_ns=%d, duty_ns=%d\n", __func__, period_ns, duty_ns);
 
@@ -153,35 +168,109 @@ static int pwm_cv_enable(struct pwm_chip *chip, struct pwm_device *pwm_dev)
 #else
 	struct cv_pwm_channel *channel = &our_chip->channel[pwm_dev->hwpwm];
 #endif
-	uint32_t pwm_start_value;
 	uint32_t value;
 
-	pwm_start_value = readl(our_chip->base + REG_PWMSTART);
+	/* stop pwm output */
+	value = readl(our_chip->base + REG_PWMSTART);
+	writel(value & (~(1 << (pwm_dev->hwpwm))), our_chip->base + REG_PWMSTART);
 
-	writel(pwm_start_value & (~(1 << (pwm_dev->hwpwm))), our_chip->base + REG_PWMSTART);
+	/* set duty */
+	writel(channel->period, our_chip->base + REG_GROUP * pwm_dev->hwpwm + REG_PERIOD);
+	if (channel->hlperiod != 0)
+		writel(channel->hlperiod, our_chip->base + REG_GROUP * pwm_dev->hwpwm + REG_HLPERIOD);
 
-	value = pwm_start_value | (1 << pwm_dev->hwpwm);
-	pr_debug("pwm_cv_enable: value = %x\n", value);
+	/* apply count mode setting */
+	value = readl(our_chip->base + REG_POLARITY);
+	if (channel->count_mode) {
+		writel((1 << (pwm_dev->hwpwm + PWM_MODE_OFFSET)) | value,
+		       our_chip->base + REG_POLARITY);
+		writel(channel->out_count,
+		       our_chip->base + REG_PULSECOUNT + pwm_dev->hwpwm * 4);
+	} else {
+		writel(~(1 << (pwm_dev->hwpwm + PWM_MODE_OFFSET)) & value,
+		       our_chip->base + REG_POLARITY);
+	}
 
+	pr_debug("%s: mode value = 0x%x, out_count = %d\n", __func__,
+		 readl(our_chip->base + REG_POLARITY), channel->out_count);
+
+	/* start pwm output */
+	value = readl(our_chip->base + REG_PWMSTART);
+	value = value | (1 << pwm_dev->hwpwm);
 	writel(value, our_chip->base + REG_PWM_OE);
 	writel(value, our_chip->base + REG_PWMSTART);
 
 	return 0;
 }
 
-static void pwm_cv_disable(struct pwm_chip *chip,
-			       struct pwm_device *pwm_dev)
+static int pwm_get_out_count(struct pwm_chip *chip, struct pwm_device *pwm)
 {
 	struct cv_pwm_chip *our_chip = to_cv_pwm_chip(chip);
-	uint32_t value;
 
-	value = readl(our_chip->base + REG_PWMSTART) & (~(1 << (pwm_dev->hwpwm)));
+	return readl(our_chip->base + REG_OUTCOUNT + pwm->hwpwm * 4);
+}
+
+static void pwm_shift_config(struct pwm_chip *chip)
+{
+	struct cv_pwm_chip *our_chip = to_cv_pwm_chip(chip);
+	uint32_t	    value, i;
+
+	value = readl(our_chip->base + REG_POLARITY);
+
+	if (!our_chip->shift_mode) {
+		writel(0x0, our_chip->base + REG_SHIFTSTART);
+		writel(~PWM_SHIFTMODE_MASK & value,
+		       our_chip->base + REG_POLARITY);
+		return;
+	}
+
+	writel(PWM_SHIFTMODE_MASK | value, our_chip->base + REG_POLARITY);
+	/* apply shift setting */
+	for (i = 0; i < 4; ++i)
+		writel(ns_to_count(our_chip, our_chip->shift[i]),
+		       our_chip->base + REG_SHIFTCOUNT + i * 4);
+
+	pr_debug("%s: shif mode value = 0x%x, shift start: 0x%x\n", __func__,
+		 readl(our_chip->base + REG_POLARITY),
+		 readl(our_chip->base + REG_SHIFTSTART));
+}
+
+static int pwm_shift_enable(struct pwm_chip *chip)
+{
+	struct cv_pwm_chip *our_chip = to_cv_pwm_chip(chip);
+
+	if (!our_chip->shift_mode)
+		return -EIO;
+
+	writel(0x0, our_chip->base + REG_SHIFTSTART);
+	pwm_shift_config(chip);
+	mdelay(5);
+	writel(0x1, our_chip->base + REG_SHIFTSTART);
+
+	return 0;
+}
+
+static void pwm_shift_disable(struct pwm_chip *chip)
+{
+	struct cv_pwm_chip *our_chip = to_cv_pwm_chip(chip);
+
+	writel(0x0, our_chip->base + REG_SHIFTSTART);
+}
+
+static void pwm_cv_disable(struct pwm_chip *chip, struct pwm_device *pwm_dev)
+{
+	struct cv_pwm_chip *our_chip = to_cv_pwm_chip(chip);
+	uint32_t	    value;
+
+	value = readl(our_chip->base + REG_PWMSTART) &
+		(~(1 << (pwm_dev->hwpwm)));
 	pr_debug("pwm_cv_disable: value = %x\n", value);
 	writel(value, our_chip->base + REG_PWM_OE);
 	writel(value, our_chip->base + REG_PWMSTART);
 
-	writel(1, our_chip->base + REG_GROUP * pwm_dev->hwpwm + REG_PERIOD);
-	writel(2, our_chip->base + REG_GROUP * pwm_dev->hwpwm + REG_HLPERIOD);
+	// writel(1, our_chip->base + REG_GROUP * pwm_dev->hwpwm + REG_PERIOD);
+	// writel(2, our_chip->base + REG_GROUP * pwm_dev->hwpwm +
+	// REG_HLPERIOD);
 }
 
 static int pwm_cv_set_polarity(struct pwm_chip *chip,
@@ -189,6 +278,7 @@ static int pwm_cv_set_polarity(struct pwm_chip *chip,
 				    enum pwm_polarity polarity)
 {
 	struct cv_pwm_chip *our_chip = to_cv_pwm_chip(chip);
+	uint32_t value = readl(our_chip->base + REG_POLARITY);
 
 	if (our_chip->no_polarity) {
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
@@ -200,11 +290,10 @@ static int pwm_cv_set_polarity(struct pwm_chip *chip,
 	}
 
 	if (polarity == PWM_POLARITY_NORMAL)
-		our_chip->polarity_mask &= ~(1 << pwm_dev->hwpwm);
+		writel(value & ~(1 << pwm_dev->hwpwm), our_chip->base + REG_POLARITY);
 	else
-		our_chip->polarity_mask |= 1 << pwm_dev->hwpwm;
+		writel(value | (1 << pwm_dev->hwpwm), our_chip->base + REG_POLARITY);
 
-	writel(our_chip->polarity_mask, our_chip->base + REG_POLARITY);
 	return 0;
 }
 
@@ -291,7 +380,7 @@ static int pwm_cv_capture(struct pwm_chip *chip, struct pwm_device *pwm_dev,
 	pr_debug("pwm_cv_capture: cycle_cnt = %llu\n", cycle_cnt);
 
 	// Convert from cycle count to period ns
-	cycles = clk_get_rate(our_chip->base_clk);
+	cycles = our_chip->clk_rate;
 	cycle_cnt *= NSEC_PER_SEC;
 	do_div(cycle_cnt, cycles);
 
@@ -314,10 +403,14 @@ static const struct pwm_ops pwm_cv_ops = {
 	.enable		= pwm_cv_enable,
 	.disable	= pwm_cv_disable,
 	.config		= pwm_cv_config,
-	.set_polarity	= pwm_cv_set_polarity,
+	// .set_polarity	= pwm_cv_set_polarity,
 #endif
 	.apply		= pwm_cv_apply,
 	.capture	= pwm_cv_capture,
+	.shift_config = pwm_shift_config,
+	.get_out_count = pwm_get_out_count,
+	.shift_enable = pwm_shift_enable,
+	.shift_disable = pwm_shift_disable,
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	.owner		= THIS_MODULE,
 #endif
@@ -369,7 +462,6 @@ static int pwm_cv_probe(struct platform_device *pdev)
         pchip->of_xlate = of_pwm_xlate_with_flags;
         //pchip->of_pwm_n_cells = 3;
 #endif
-	chip->polarity_mask = 0;
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	chip->base = devm_ioremap_resource(&pdev->dev, res);
@@ -387,6 +479,7 @@ static int pwm_cv_probe(struct platform_device *pdev)
 		dev_err(dev, "failed to enable base clock\n");
 		return ret;
 	}
+	chip->clk_rate = clk_get_rate(chip->base_clk);
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	chip->chip.npwm = num_pwms;
