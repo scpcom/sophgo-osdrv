@@ -8,6 +8,10 @@ ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-t
 ifneq ($(KERNELRELEASE),)
 include $(PWD)/chip/$(CVIARCH_L)/chip.mk
 
+ifeq ($(CONFIG_SUSPEND), y)
+CFLAGS += -DCONFIG_SUSPEND
+endif
+
 soph_rgn-objs += common/rgn_core.o
 
 obj-m += soph_rgn.o
