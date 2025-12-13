@@ -67,6 +67,9 @@ char saved_sdk_ver[64];
 module_param_string(saved_sdk_ver, saved_sdk_ver,64, 0660);
 #endif
 
+int feature_sdio_clock = 0;
+module_param(feature_sdio_clock, int, 0660);
+
 extern int testmode;
 
 

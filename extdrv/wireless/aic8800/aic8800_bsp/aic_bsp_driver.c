@@ -34,6 +34,7 @@
 extern int adap_test;
 extern char aic_fw_path[FW_PATH_MAX];
 extern struct aic_sdio_dev *aicbsp_sdiodev;
+extern int feature_sdio_clock;
 
 static void cmd_dump(const struct rwnx_cmd *cmd)
 {
@@ -2125,6 +2126,9 @@ int aicbsp_get_feature(struct aicbsp_feature_t *feature, char *fw_path)
 	    feature->sdio_clock = FEATURE_SDIO_CLOCK;
 	}else if (aicbsp_sdiodev->chipid == PRODUCT_ID_AIC8800D80 || aicbsp_sdiodev->chipid == PRODUCT_ID_AIC8800D80X2){
         feature->sdio_clock = FEATURE_SDIO_CLOCK_V3;
+	}
+	if (feature_sdio_clock > 0 && feature_sdio_clock <= 150000000) {
+		feature->sdio_clock = feature_sdio_clock;
 	}
 	feature->sdio_phase = FEATURE_SDIO_PHASE;
 	feature->hwinfo     = aicbsp_info.hwinfo;
