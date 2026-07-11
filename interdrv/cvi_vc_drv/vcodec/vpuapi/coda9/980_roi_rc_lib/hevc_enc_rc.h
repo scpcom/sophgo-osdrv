@@ -6,8 +6,13 @@
 #define MAX_GOP_SIZE 8
 #define PARA_CHANGE_RC_SEQ_INIT
 
+#ifndef MAX
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+
 #define CLIP3(a, b, c) (MIN(b, MAX(a, c)))
 #define ABS(a) ((a >= 0) ? a : -a)
 
