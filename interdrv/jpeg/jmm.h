@@ -140,7 +140,10 @@ struct jpu_mm_struct {
 			JPU_DBG_MEM("VMEM_ASSERT at %s:%d\n", __FILE__, __LINE__);	\
 	} while (0)
 #define VMEM_HEIGHT(_tree) (_tree == NULL ? -1 : _tree->height)
+
+#ifndef MAX
 #define MAX(_a, _b) (_a >= _b ? _a : _b)
+#endif
 
 struct avl_node_data_struct {
 	int key;
