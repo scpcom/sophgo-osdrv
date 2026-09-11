@@ -379,7 +379,11 @@ out_disable_clk:
 	return ret;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int dw_wdt_drv_remove(struct platform_device *pdev)
+#else
+static void dw_wdt_drv_remove(struct platform_device *pdev)
+#endif
 {
 	struct dw_wdt *dw_wdt = platform_get_drvdata(pdev);
 
@@ -387,7 +391,9 @@ static int dw_wdt_drv_remove(struct platform_device *pdev)
 	reset_control_assert(dw_wdt->rst);
 	clk_disable_unprepare(dw_wdt->clk);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 #ifdef CONFIG_OF
