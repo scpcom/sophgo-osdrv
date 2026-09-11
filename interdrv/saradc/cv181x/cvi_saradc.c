@@ -36,6 +36,7 @@
 #include <linux/delay.h>
 #include <linux/of.h>
 #include <linux/io.h>
+#include <linux/version.h>
 
 #include "cvi_saradc.h"
 #include "cvi_saradc_ioctl.h"
@@ -121,7 +122,7 @@ static void cvi_saradc_cyc_setting(struct cvi_saradc_device *ndev)
 	writel(value, ndev->saradc_vaddr + SARADC_CYC_SET);
 }
 
-ssize_t cvi_saradc_read(struct file *filp, char *buff, size_t count, loff_t *offp)
+static ssize_t cvi_saradc_read(struct file *filp, char *buff, size_t count, loff_t *offp)
 {
 	struct cvi_saradc_device *ndev = filp->private_data;
 	uint32_t value;
@@ -158,7 +159,7 @@ ssize_t cvi_saradc_read(struct file *filp, char *buff, size_t count, loff_t *off
 	return 0;
 }
 
-ssize_t cvi_saradc_write(struct file *filp, const char *buff, size_t count, loff_t *offp)
+static ssize_t cvi_saradc_write(struct file *filp, const char *buff, size_t count, loff_t *offp)
 {
 	struct cvi_saradc_device *ndev = filp->private_data;
 	uint32_t value;
@@ -338,12 +339,16 @@ static const struct attribute_group tee_dev_group = {
 	.attrs = tee_dev_attrs,
 };
 
-int cvi_saradc_register_cdev(struct cvi_saradc_device *ndev)
+static int cvi_saradc_register_cdev(struct cvi_saradc_device *ndev)
 {
 	int ret;
 	int rc;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	saradc_class = class_create(THIS_MODULE, CVI_SARADC_CLASS_NAME);
+#else
+	saradc_class = class_create(CVI_SARADC_CLASS_NAME);
+#endif
 	if (IS_ERR(saradc_class)) {
 		pr_err("create class failed\n");
 		return PTR_ERR(saradc_class);
@@ -470,7 +475,11 @@ static int cvi_saradc_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_saradc_remove(struct platform_device *pdev)
+#else
+static void cvi_saradc_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_saradc_device *ndev = platform_get_drvdata(pdev);
 
@@ -488,7 +497,9 @@ static int cvi_saradc_remove(struct platform_device *pdev)
 
 	pr_debug("cvi_saradc_remove\n");
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static const struct of_device_id cvi_saradc_match[] = {
