@@ -29,6 +29,7 @@ void vb_cleanup(void);
 int32_t vb_get_config(struct cvi_vb_cfg *pstVbConfig);
 
 int32_t vb_create_pool(struct cvi_vb_pool_cfg *config);
+CVI_S32 vb_create_ex_pool(struct cvi_vb_pool_ex_cfg *config);
 int32_t vb_destroy_pool(uint32_t poolId);
 
 VB_BLK vb_physAddr2Handle(uint64_t u64PhyAddr);

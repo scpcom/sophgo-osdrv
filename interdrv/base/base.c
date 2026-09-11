@@ -53,6 +53,10 @@
 #define RTC_REG_BANK_SIZE 0x140
 #define RTC_ST_ON_REASON 0xF8
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 struct base_device {
 	struct device *dev;
 	struct miscdevice miscdev;
@@ -95,9 +99,13 @@ static void __exit base_exit(void);
 CVI_U32 base_log_lv = CVI_BASE_DBG_ERR;
 module_param(base_log_lv, int, 0644);
 
-
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static ssize_t base_efuse_shadow_show(struct class *class,
 				      struct class_attribute *attr, char *buf)
+#else
+static ssize_t base_efuse_shadow_show(const struct class *class,
+				      const struct class_attribute *attr, char *buf)
+#endif
 {
 	int ret = 0;
 	UNUSED(class);
@@ -108,9 +116,15 @@ static ssize_t base_efuse_shadow_show(struct class *class,
 	return ret;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static ssize_t base_efuse_shadow_store(struct class *class,
 				       struct class_attribute *attr,
 				       const char *buf, size_t count)
+#else
+static ssize_t base_efuse_shadow_store(const struct class *class,
+				       const struct class_attribute *attr,
+				       const char *buf, size_t count)
+#endif
 {
 	unsigned long addr;
 	CVI_U32 value = 0xDEAFBEEF;
@@ -130,8 +144,13 @@ static ssize_t base_efuse_shadow_store(struct class *class,
 	return count;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static ssize_t base_efuse_prog_show(struct class *class,
 				    struct class_attribute *attr, char *buf)
+#else
+static ssize_t base_efuse_prog_show(const struct class *class,
+				    const struct class_attribute *attr, char *buf)
+#endif
 {
 	UNUSED(class);
 	UNUSED(attr);
@@ -139,9 +158,15 @@ static ssize_t base_efuse_prog_show(struct class *class,
 	return scnprintf(buf, PAGE_SIZE, "%s\n", "PROG_SHOW");
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static ssize_t base_efuse_prog_store(struct class *class,
 				     struct class_attribute *attr,
 				     const char *buf, size_t count)
+#else
+static ssize_t base_efuse_prog_store(const struct class *class,
+				     const struct class_attribute *attr,
+				     const char *buf, size_t count)
+#endif
 {
 	int err;
 	CVI_U32 addr = 0, value = 0;
@@ -159,8 +184,13 @@ static ssize_t base_efuse_prog_store(struct class *class,
 	return count;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static ssize_t base_uid_show(struct class *class,
 			     struct class_attribute *attr, char *buf)
+#else
+static ssize_t base_uid_show(const struct class *class,
+			     const struct class_attribute *attr, char *buf)
+#endif
 {
 	CVI_U32 uid_3 = 0xDEAFBEEF;
 	CVI_U32 uid_4 = 0xDEAFBEEF;
@@ -173,8 +203,13 @@ static ssize_t base_uid_show(struct class *class,
 	return scnprintf(buf, PAGE_SIZE, "UID: %08x_%08x\n", uid_3, uid_4);
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static ssize_t base_rosc_show(struct class *class,
 			      struct class_attribute *attr, char *buf)
+#else
+static ssize_t base_rosc_show(const struct class *class,
+			      const struct class_attribute *attr, char *buf)
+#endif
 {
 	int count = 0;
 	void __iomem *rosc_base;
@@ -201,9 +236,15 @@ static ssize_t base_rosc_show(struct class *class,
 	return count;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static ssize_t base_rosc_store(struct class *class,
 			       struct class_attribute *attr,
 			       const char *buf, size_t count)
+#else
+static ssize_t base_rosc_store(const struct class *class,
+			       const struct class_attribute *attr,
+			       const char *buf, size_t count)
+#endif
 {
 	CVI_U32 chip_id;
 	void __iomem *rosc_base;
@@ -418,7 +459,11 @@ static int base_open(struct inode *inode, struct file *filp)
 	INIT_LIST_HEAD(&ps->list);
 	ps->state_pid = get_pid(task_pid(current));
 	ps->cred = get_current_cred();
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 13, 0))
 	security_task_getsecid(current, &ps->secid);
+#else
+	security_task_getsecid_obj(current, &ps->secid);
+#endif
 	/* memory barrier in smp case. */
 	smp_wmb();
 	/* replace the private data with base state */
@@ -882,7 +927,11 @@ static int base_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int base_remove(struct platform_device *pdev)
+#else
+static void base_remove(struct platform_device *pdev)
+#endif
 {
 	struct base_device *ndev = platform_get_drvdata(pdev);
 
@@ -900,7 +949,9 @@ static int base_remove(struct platform_device *pdev)
 	platform_set_drvdata(pdev, NULL);
 	CVI_TRACE_BASE(CVI_BASE_DBG_DEBUG, "%s DONE\n", __func__);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static const struct of_device_id cvi_base_dt_match[] = { { .compatible = "cvitek,base" }, {} };
@@ -931,7 +982,11 @@ static int __init base_init(void)
 
 	top_base = ioremap(TOP_BASE, TOP_REG_BANK_SIZE);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	pbase_class = class_create(THIS_MODULE, BASE_CLASS_NAME);
+#else
+	pbase_class = class_create(BASE_CLASS_NAME);
+#endif
 	if (IS_ERR(pbase_class)) {
 		CVI_TRACE_BASE(CVI_BASE_DBG_ERR, "create class failed\n");
 		rc = PTR_ERR(pbase_class);

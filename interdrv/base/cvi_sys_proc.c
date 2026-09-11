@@ -61,7 +61,11 @@ static void _show_sys_status(struct seq_file *m)
 	mmfVersion = (MMF_VERSION_S *)(shared_mem + BASE_VERSION_INFO_OFFSET);
 	bindNodes = bind_nodes;
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	seq_printf(m, "\nModule: [SYS], Version[%s], Build Time[%s]\n", mmfVersion->version, UTS_VERSION);
+#else
+	seq_printf(m, "\nModule: [SYS], Version[%s]\n", mmfVersion->version);
+#endif
 	seq_puts(m, "-----BIND RELATION TABLE-----------------------------------------------------------------------------------------------------------\n");
 	seq_printf(m, "%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
 		"1stMod", "1stDev", "1stChn", "2ndMod", "2ndDev", "2ndChn", "3rdMod", "3rdDev", "3rdChn");

@@ -34,7 +34,11 @@ static void _show_vb_status(struct seq_file *m)
 
 	show_cnt = sizeof(show_mod_ids) / sizeof(show_mod_ids[0]);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	seq_printf(m, "\nModule: [VB], Build Time[%s]\n", UTS_VERSION);
+#else
+	seq_printf(m, "\nModule: [VB]\n");
+#endif
 	seq_puts(m, "-----VB PUB CONFIG-----------------------------------------------------------------------------------------------------------------\n");
 	seq_printf(m, "%10s(%3d), %10s(%3d)\n", "MaxPoolCnt", vb_max_pools, "MaxBlkCnt", vb_pool_max_blk);
 	ret = vb_get_pool_info(&pstVbPool);

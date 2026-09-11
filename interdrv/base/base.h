@@ -5,6 +5,8 @@
 #include "base_debug.h"
 
 unsigned int cvi_base_read_chip_id(void);
+unsigned int cvi_base_read_chip_version(void);
+unsigned int cvi_base_read_chip_pwr_on_reason(void);
 void vip_set_base_addr(void *base);
 
 #endif

@@ -148,6 +148,8 @@ enum vip_sys_axi_bus {
 void vip_set_base_addr(void *base);
 union vip_sys_clk vip_get_clk_lp(void);
 void vip_set_clk_lp(union vip_sys_clk clk);
+union vip_sys_clk_ctrl0 vip_get_clk_ctrl0(void);
+void vip_set_clk_ctrl0(union vip_sys_clk_ctrl0 cfg);
 union vip_sys_reset vip_get_reset(void);
 void vip_set_reset(union vip_sys_reset reset);
 void vip_toggle_reset(union vip_sys_reset mask);
