@@ -1098,6 +1098,8 @@ u32 sclr_top_get_shd_reg(void);
 void sclr_top_bld_set_cfg(struct sclr_bld_cfg *cfg);
 void sclr_top_get_sb_default(struct sclr_top_sb_cfg *cfg);
 void sclr_top_set_sb(struct sclr_top_sb_cfg *cfg);
+void sclr_top_set_vo_type_sel(enum sclr_vo_sel vo_sel);
+void sclr_top_set_vo_data_mux(u8 vodata_selID, u8 value);
 void sclr_top_vo_mux_sel(int vo_sel, int vo_mux);
 #ifdef __CV181X__
 void ext_vo_pinmux_set(int vo_sel);
@@ -1128,6 +1130,7 @@ void sclr_set_opencv_scale(u8 inst);
 void sclr_read_2tap_nor(u8 inst, u16 *resize_hnor, u16 *resize_vnor);
 
 void sclr_img_reg_shadow_sel(u8 inst, bool read_shadow);
+bool sclr_img_reg_shadow_mask(u8 inst, bool mask);
 void sclr_img_set_cfg(u8 inst, struct sclr_img_cfg *cfg);
 struct sclr_img_cfg *sclr_img_get_cfg(u8 inst);
 void sclr_img_reg_force_up(u8 inst);
@@ -1141,6 +1144,7 @@ void sclr_img_set_csc(u8 inst, struct sclr_csc_matrix *cfg);
 union sclr_img_dbg_status sclr_img_get_dbg_status(u8 inst, bool clr);
 void sclr_img_checksum_en(u8 inst, bool enable);
 void sclr_img_get_checksum_status(u8 inst, struct sclr_img_checksum_status *status);
+int sclr_img_validate_sb_cfg(struct sclr_img_in_sb_cfg *cfg);
 void sclr_oenc_set_cfg(struct sclr_oenc_cfg *oenc_cfg);
 struct sclr_oenc_cfg *sclr_oenc_get_cfg(void);
 void sclr_cover_set_cfg(u8 inst, u8 cover_w_inst, struct sclr_cover_cfg *cover_cfg);
@@ -1159,6 +1163,8 @@ void sclr_odma_get_sb_default(struct sclr_odma_sb_cfg *cfg);
 void sclr_odma_set_sb(u8 inst, struct sclr_odma_sb_cfg *cfg);
 void sclr_odma_clear_sb(u8 inst);
 void sclr_set_out_mode(u8 inst, enum sclr_out_mode mode);
+void sclr_set_csc_ctrl(u8 inst, struct sclr_csc_cfg *cfg);
+struct sclr_csc_cfg *sclr_get_csc_ctrl(u8 inst);
 void sclr_set_quant(u8 inst, struct sclr_quant_formula *cfg);
 void sclr_set_quant_drop_mode(u8 inst, enum sclr_quant_rounding mode);
 void sclr_border_set_cfg(u8 inst, struct sclr_border_cfg *cfg);
@@ -1176,6 +1182,8 @@ void sclr_cmdq_intr_clr(u8 intr_mask);
 u8 sclr_cmdq_intr_status(void);
 
 void sclr_disp_reg_shadow_sel(bool read_shadow);
+bool sclr_disp_reg_shadow_mask(bool mask);
+void sclr_disp_reg_set_shadow_mask(bool shadow_mask);
 void sclr_disp_set_cfg(struct sclr_disp_cfg *cfg);
 struct sclr_disp_cfg *sclr_disp_get_cfg(void);
 void sclr_disp_set_timing(struct sclr_disp_timing *timing);
@@ -1235,6 +1243,7 @@ int sclr_gop_setup_16LUT(u8 inst, u8 layer, u8 length, u16 *data);
 int sclr_gop_update_16LUT(u8 inst, u8 layer, u8 index, u16 data);
 void sclr_gop_fb_set_cfg(u8 inst, u8 layer, u8 fb_inst, struct sclr_gop_fb_cfg *cfg);
 u32 sclr_gop_fb_get_record(u8 inst, u8 layer, u8 fb_inst);
+void sclr_gop_odec_set_cfg_from_oenc(u8 inst, u8 layer, struct sclr_gop_odec_cfg *odec_cfg);
 
 void sclr_pri_set_cfg(u8 inst, struct sclr_privacy_cfg *cfg);
 

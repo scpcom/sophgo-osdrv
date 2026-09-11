@@ -14,6 +14,7 @@
 #include "vpss_core.h"
 #include "vpss_grp_hw_cfg.h"
 #include "scaler.h"
+#include "vpss_rgn_ctrl.h"
 
 
 CVI_S32 vpss_get_rgn_hdls(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, CVI_U32 layer,

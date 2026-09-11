@@ -1,7 +1,7 @@
 #ifndef _VPSS_RGN_CTRL_H_
 #define _VPSS_RGN_CTRL_H_
 
-CVI_S32 vpss_get_rgn_hdls(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, CVI_U8 layer,
+CVI_S32 vpss_get_rgn_hdls(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, CVI_U32 layer,
 	RGN_TYPE_E enType, RGN_HANDLE hdls[]);
 CVI_S32 vpss_set_rgn_hdls(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, CVI_U32 layer,
 		RGN_TYPE_E enType, RGN_HANDLE hdls[]);

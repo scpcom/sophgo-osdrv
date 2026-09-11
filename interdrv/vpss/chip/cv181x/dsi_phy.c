@@ -234,7 +234,7 @@ void dphy_init(enum sclr_vo_intf intf)
 				(intf == SCLR_VO_INTF_LVDS) ? 0xFFFFF : 0);
 }
 
-void _cal_pll_reg(u32 clkkHz, u32 VCORx10000, u32 *reg_txpll, u32 *reg_set, u32 factor)
+static void _cal_pll_reg(u32 clkkHz, u32 VCORx10000, u32 *reg_txpll, u32 *reg_set, u32 factor)
 {
 	u8 gain = 1 << ilog2(MAX(1, 25000000UL / VCORx10000));
 	u32 VCOCx1000 = VCORx10000 * gain / 10;

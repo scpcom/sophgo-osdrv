@@ -290,7 +290,7 @@ CVI_VOID vpss_notify_vi_err_evt(CVI_U8 img_idx)
 
 }
 
-CVI_U8 sc_index_to_chn_id(CVI_U8 sc_idx)
+static CVI_U8 sc_index_to_chn_id(CVI_U8 sc_idx)
 {
 	if ((vpss_get_mode() != VPSS_MODE_SINGLE) && sc_idx)
 		return sc_idx - 1;
@@ -1394,7 +1394,7 @@ static void _vpss_over_crop_resize
  * @param ctx: VPSS ctx which records settings of this grp
  * @param pstGrpHwCfg: cfg to be updated
  */
-void _vpss_chn_hw_cfg_update(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, struct cvi_vpss_ctx *ctx,
+static void _vpss_chn_hw_cfg_update(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, struct cvi_vpss_ctx *ctx,
 	struct VPSS_GRP_HW_CFG *pstGrpHwCfg, bool online_from_isp)
 {
 	struct VPSS_CHN_CFG *stChnCfg = &ctx->stChnCfgs[VpssChn];
@@ -1764,7 +1764,7 @@ void _vpss_chn_hw_cfg_update(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, struct cvi_vpss
  * @param ctx: VPSS ctx which records settings of this grp
  * @param pstGrpHwCfg: cfg to be updated
  */
-void _vpss_grp_hw_cfg_update(VPSS_GRP VpssGrp, struct cvi_vpss_ctx *ctx, struct VPSS_GRP_HW_CFG *pstGrpHwCfg)
+static void _vpss_grp_hw_cfg_update(VPSS_GRP VpssGrp, struct cvi_vpss_ctx *ctx, struct VPSS_GRP_HW_CFG *pstGrpHwCfg)
 {
 	VB_CAL_CONFIG_S stVbCalConfig;
 	//struct sclr_csc_matrix *mtrx;
@@ -2275,7 +2275,7 @@ static CVI_S32 IS_VENC_BIND_VPSS(MMF_CHN_S *pchn)
 	return CVI_SUCCESS;
 }
 
-CVI_BOOL is_online_hw_run(CVI_U8 img_idx)
+static CVI_BOOL is_online_hw_run(CVI_U8 img_idx)
 {
 	CVI_U8 i;
 	bool sc_need_check[CVI_VIP_SC_MAX] = { [0 ... CVI_VIP_SC_MAX - 1] = false };
@@ -3162,7 +3162,7 @@ static int vpss_event_handler(void *arg)
 }
 
 
-void _vpss_GrpParamInit(VPSS_GRP VpssGrp)
+static void _vpss_GrpParamInit(VPSS_GRP VpssGrp)
 {
 	CVI_U8 i, j, k;
 	PROC_AMP_CTRL_S ctrl;
@@ -3221,7 +3221,7 @@ static CVI_S32 _vpss_update_rotation_mesh(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, RO
 	return CVI_SUCCESS;
 }
 
-CVI_S32 _vpss_update_ldc_mesh(VPSS_GRP VpssGrp, VPSS_CHN VpssChn,
+static CVI_S32 _vpss_update_ldc_mesh(VPSS_GRP VpssGrp, VPSS_CHN VpssChn,
 	const VPSS_LDC_ATTR_S *pstLDCAttr, ROTATION_E enRotation, CVI_U64 paddr)
 {
 	CVI_U64 paddr_old;
@@ -3255,7 +3255,7 @@ CVI_S32 _vpss_update_ldc_mesh(VPSS_GRP VpssGrp, VPSS_CHN VpssChn,
 	return CVI_SUCCESS;
 }
 
-CVI_VOID _clean_chn_vb_jobs(VPSS_GRP VpssGrp, VPSS_CHN VpssChn,
+static CVI_VOID _clean_chn_vb_jobs(VPSS_GRP VpssGrp, VPSS_CHN VpssChn,
 			const VPSS_CHN_ATTR_S *pstChnAttrOld, const VPSS_CHN_ATTR_S *pstChnAttrNew)
 {
 	MMF_CHN_S chn = {.enModId = CVI_ID_VPSS, .s32DevId = VpssGrp, .s32ChnId = VpssChn};
@@ -5121,7 +5121,11 @@ static void vpss_start_handler(void)
 	char thread_name[32];
 
 	// Same as sched_set_fifo in linux 5.x
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 	tsk.sched_priority = MAX_USER_RT_PRIO - 10;
+#else
+	tsk.sched_priority = MAX_RT_PRIO - 10;
+#endif
 
 	for (u8VpssDev = 0; u8VpssDev < VPSS_IP_NUM; u8VpssDev++) {
 		handler_ctx[u8VpssDev].u8VpssDev = u8VpssDev;

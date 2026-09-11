@@ -14,6 +14,10 @@
 #define VPSS_SHARE_MEM_SIZE     (0x8000)
 #define VPSS_PROC_NAME          "cvitek/vpss"
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 // for proc info
 static int proc_vpss_mode;
 static const char * const str_src[] = {"ISP", "DWA", "MEM"};
@@ -161,7 +165,7 @@ static void _pixFmt_to_String(enum _PIXEL_FORMAT_E PixFmt, char *str, int len)
 	}
 }
 
-int vpss_ctx_proc_show(struct seq_file *m, void *v)
+static int vpss_ctx_proc_show(struct seq_file *m, void *v)
 {
 	int i, j;
 	char c[32];
@@ -171,7 +175,11 @@ int vpss_ctx_proc_show(struct seq_file *m, void *v)
 	struct cvi_vpss_ctx **pVpssCtx = vpss_get_shdw_ctx();
 
 	// Module Param
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	seq_printf(m, "\nModule: [VPSS], Build Time[%s]\n", UTS_VERSION);
+#else
+	seq_printf(m, "\nModule: [VPSS]\n");
+#endif
 	seq_puts(m, "\n-------------------------------MODULE PARAM-------------------------------\n");
 	seq_printf(m, "%25s%25s\n", "vpss_vb_source", "vpss_split_node_num");
 	seq_printf(m, "%18d%25d\n", 0, 1);

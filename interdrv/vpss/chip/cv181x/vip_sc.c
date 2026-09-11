@@ -20,7 +20,7 @@
 
 static const char *const CLK_SC_NAME[] = {"clk_sc_d", "clk_sc_v1", "clk_sc_v2", "clk_sc_v3"};
 
-int cvi_sc_buf_queue(struct cvi_sc_vdev *vdev, struct vpss_sc_buffer *list_buf)
+static int cvi_sc_buf_queue(struct cvi_sc_vdev *vdev, struct vpss_sc_buffer *list_buf)
 {
 	unsigned long flags;
 	struct vpss_sc_buffer *b = NULL;
@@ -43,7 +43,7 @@ int cvi_sc_buf_queue(struct cvi_sc_vdev *vdev, struct vpss_sc_buffer *list_buf)
 	return 0;
 }
 
-struct vpss_sc_buffer *cvi_sc_next_buf(struct cvi_sc_vdev *vdev, const u8 grp_id)
+static struct vpss_sc_buffer *cvi_sc_next_buf(struct cvi_sc_vdev *vdev, const u8 grp_id)
 {
 	unsigned long flags;
 	struct vpss_sc_buffer *b = NULL;
@@ -56,7 +56,7 @@ struct vpss_sc_buffer *cvi_sc_next_buf(struct cvi_sc_vdev *vdev, const u8 grp_id
 	return b;
 }
 
-int cvi_sc_buf_num(struct cvi_sc_vdev *vdev, const u8 grp_id)
+static int cvi_sc_buf_num(struct cvi_sc_vdev *vdev, const u8 grp_id)
 {
 	unsigned long flags;
 	int num;
@@ -68,7 +68,7 @@ int cvi_sc_buf_num(struct cvi_sc_vdev *vdev, const u8 grp_id)
 	return num;
 }
 
-int cvi_sc_buf_remove(struct cvi_sc_vdev *vdev, const u8 grp_id)
+static int cvi_sc_buf_remove(struct cvi_sc_vdev *vdev, const u8 grp_id)
 {
 	unsigned long flags;
 	struct vpss_sc_buffer *b = NULL;

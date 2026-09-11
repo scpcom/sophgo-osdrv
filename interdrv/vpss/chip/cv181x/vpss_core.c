@@ -491,7 +491,7 @@ static void cvi_img_device_run(struct cvi_img_vdev *idev, bool sc_need_check[])
 		idev->dev_idx, idev->job_grp);
 }
 
-u8 _gop_get_bpp(enum sclr_gop_format fmt)
+static u8 _gop_get_bpp(enum sclr_gop_format fmt)
 {
 	return (fmt == SCL_GOP_FMT_ARGB8888) ? 4 :
 		(fmt == SCL_GOP_FMT_256LUT) ? 1 : 2;
@@ -618,7 +618,7 @@ int cvi_vip_set_rgn_cfg(const u8 inst, u8 layer, const struct cvi_rgn_cfg *rgn_c
 	return 0;
 }
 
-bool cvi_vip_online_check_sc_rdy(struct cvi_img_vdev *idev, u8 grp_id)
+static bool cvi_vip_online_check_sc_rdy(struct cvi_img_vdev *idev, u8 grp_id)
 {
 	struct cvi_vip_dev *bdev = NULL;
 	unsigned long flags_out[4], flags_job;
@@ -994,7 +994,7 @@ void close_clk(struct cvi_vip_dev *pdev)
 		clk_disable_unprepare(pdev->sc_vdev[i].clk);
 }
 
-u32 cvi_sc_cfg_cb(struct sc_cfg_cb *post_para, struct cvi_vip_dev *dev)
+static u32 cvi_sc_cfg_cb(struct sc_cfg_cb *post_para, struct cvi_vip_dev *dev)
 {
 	u32 ret = -1;
 	int i;
@@ -1046,7 +1046,7 @@ u32 cvi_sc_cfg_cb(struct sc_cfg_cb *post_para, struct cvi_vip_dev *dev)
 	return ret;
 }
 
-void cvi_sc_vi_err_cb(struct sc_err_handle_cb *err_cb_para, struct cvi_vip_dev *dev)
+static void cvi_sc_vi_err_cb(struct sc_err_handle_cb *err_cb_para, struct cvi_vip_dev *dev)
 {
 	int i;
 	u8 grp_id = err_cb_para->snr_num;
@@ -1087,7 +1087,7 @@ void cvi_sc_frm_done_cb(struct cvi_vip_dev *dev)
 		return;
 }
 
-int vpss_core_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
+static int vpss_core_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
 {
 	struct cvi_vip_dev *vdev = (struct cvi_vip_dev *)dev;
 	int rc = -1;
@@ -1705,13 +1705,21 @@ err_irq:
  * bmd_remove - device remove method.
  * @pdev: Pointer of platform device.
  */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 static int cvi_vpss_remove(struct platform_device *pdev)
+#else
+static void cvi_vpss_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_vip_dev *dev;
 
 	if (!pdev) {
 		dev_err(&pdev->dev, "invalid param");
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 		return -EINVAL;
+#else
+		return;
+#endif
 	}
 
 	/* scaler rm cb */
@@ -1722,7 +1730,11 @@ static int cvi_vpss_remove(struct platform_device *pdev)
 	dev = dev_get_drvdata(&pdev->dev);
 	if (!dev) {
 		dev_err(&pdev->dev, "Can not get cvi_vpss drvdata");
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 		return -EINVAL;
+#else
+		return;
+#endif
 	}
 
 #if defined(CONFIG_SCLR_TEST)
@@ -1736,7 +1748,9 @@ static int cvi_vpss_remove(struct platform_device *pdev)
 	misc_deregister(&dev->miscdev);
 	dev_set_drvdata(&pdev->dev, NULL);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 	return 0;
+#endif
 }
 
 #ifdef CONFIG_PM_SLEEP

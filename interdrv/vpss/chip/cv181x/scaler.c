@@ -1297,7 +1297,7 @@ void sclr_get_2tap_scale(struct sclr_scale_2tap_cfg *cfg)
 	cfg->v_ph = v_ph;
 }
 
-void sclr_set_scale_2tap(u8 inst)
+static void sclr_set_scale_2tap(u8 inst)
 {
 	u32 tmp;
 	bool isFacOver4 = false;
@@ -3795,7 +3795,7 @@ int sclr_dsi_chk_mode_done(enum sclr_dsi_mode mode)
 }
 EXPORT_SYMBOL_GPL(sclr_dsi_chk_mode_done);
 
-int _dsi_chk_and_clean_mode(enum sclr_dsi_mode mode)
+static int _dsi_chk_and_clean_mode(enum sclr_dsi_mode mode)
 {
 	int i, ret;
 
@@ -4144,29 +4144,29 @@ int sclr_dsi_config(u8 lane_num, enum sclr_dsi_fmt fmt, u16 width)
 EXPORT_SYMBOL_GPL(sclr_dsi_config);
 
 #ifdef __CV181X__
-void i80_set_cmd0(u32 cmd)
+static void i80_set_cmd0(u32 cmd)
 {
 	_reg_write(reg_base + REG_SCL_DISP_MCU_HW_CMD0, cmd);
 }
 
-void i80_set_cmd1(u32 cmd)
+static void i80_set_cmd1(u32 cmd)
 {
 	cmd = (_reg_read(reg_base + REG_SCL_DISP_MCU_HW_CMD0) | cmd << 16);
 	_reg_write(reg_base + REG_SCL_DISP_MCU_HW_CMD0, cmd);
 }
 
-void i80_set_cmd2(u32 cmd)
+static void i80_set_cmd2(u32 cmd)
 {
 	_reg_write(reg_base + REG_SCL_DISP_MCU_HW_CMD1, cmd);
 }
 
-void i80_set_cmd3(u32 cmd)
+static void i80_set_cmd3(u32 cmd)
 {
 	cmd = (_reg_read(reg_base + REG_SCL_DISP_MCU_HW_CMD1) | cmd << 16);
 	_reg_write(reg_base + REG_SCL_DISP_MCU_HW_CMD1, cmd);
 }
 
-void i80_set_cmd_cnt(u32 cmdcnt)
+static void i80_set_cmd_cnt(u32 cmdcnt)
 {
 	if (cmdcnt == 1) {
 		_reg_write_mask(reg_base + REG_SCL_DISP_MCU_HW_CMD, BIT(4), 0);//sw_tx_num=0
@@ -4186,7 +4186,7 @@ void i80_set_cmd_cnt(u32 cmdcnt)
 	}
 }
 
-void i80_trig(void)
+static void i80_trig(void)
 {
 	int cnt = 0;
 	_reg_write_mask(reg_base + REG_SCL_DISP_MCU_HW_CMD, BIT(0), 0);//rising edge to trig
@@ -4272,7 +4272,7 @@ void sclr_i80_packet(u32 cmd)
 }
 EXPORT_SYMBOL_GPL(sclr_i80_packet);
 
-bool sclr_i80_chk_idle(void)
+static bool sclr_i80_chk_idle(void)
 {
 #define I80_BUSY_WAITING_TIMES 50
 #define I80_CLEAR_TRAIL 3
@@ -4312,7 +4312,7 @@ EXPORT_SYMBOL_GPL(sclr_i80_run);
  * sclr_prepare - setup all img & sc instances.
  *
  */
-void sclr_prepare(void)
+static void sclr_prepare(void)
 {
 	int i = 0;
 
@@ -6098,7 +6098,7 @@ void sclr_dump_top_register(void)
 	CVI_TRACE_VPSS(CVI_DBG_DEBUG, "SC_TOP_PRI_M_REG_8=0x%08x\n", _reg_read(top_base + SC_TOP_PRI_M_REG_8));
 }
 
-void sclr_show_top_status(void)
+static void sclr_show_top_status(void)
 {
 	u32 val, rdy;
 	uintptr_t top_base = reg_base + REG_SCL_TOP_BASE;
@@ -6283,7 +6283,7 @@ void sclr_dump_img_in_register(int img_inst)
 	CVI_TRACE_VPSS(CVI_DBG_DEBUG, "IMG_IN_SB_REG_Y_STAT=0x%08x\n", _reg_read(img_base + IMG_IN_SB_REG_Y_STAT));
 }
 
-void sclr_show_img_in_status(int img_inst)
+static void sclr_show_img_in_status(int img_inst)
 {
 	uintptr_t img_base = reg_base + REG_SCL_IMG_BASE(img_inst);
 	u32 val;
@@ -6532,7 +6532,7 @@ void sclr_dump_core_register(int inst)
 	CVI_TRACE_VPSS(CVI_DBG_DEBUG, "SC_CORE_PRI_M_REG_7=0x%08x\n", _reg_read(core_base + SC_CORE_PRI_M_REG_7));
 }
 
-void sclr_show_core_status(int inst)
+static void sclr_show_core_status(int inst)
 {
 	u32 val;
 	uintptr_t core_base = reg_base + REG_SCL_CORE_BASE(inst);
@@ -6783,7 +6783,7 @@ void sclr_dump_odma_register(int inst)
 		(val & SC_ODMA_REG_SC_CSC_R2Y_FRAC_2_MASK) >> SC_ODMA_REG_SC_CSC_R2Y_FRAC_2_OFFSET);
 }
 
-void sclr_show_odma_status(u8 inst)
+static void sclr_show_odma_status(u8 inst)
 {
 	u32 val, latched_line_cnt = 0;
 	uintptr_t odma_base = reg_base + REG_SCL_ODMA_BASE(inst);
@@ -7148,7 +7148,7 @@ void sclr_dump_gop_register(int inst)
 	}
 }
 
-void sclr_show_gop_status(int inst)
+static void sclr_show_gop_status(int inst)
 {
 	u32 val, i;
 	uintptr_t gop_base = reg_base + REG_SCL_GOP0_BASE(inst);
