@@ -4,6 +4,7 @@
 #include <linux/platform_device.h>
 #include <linux/thermal.h>
 #include <linux/clk.h>
+#include <linux/version.h>
 
 struct dev_freq {
 	unsigned long cpu_freq;
@@ -267,14 +268,20 @@ static int cv181x_cooling_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cv181x_cooling_remove(struct platform_device *pdev)
+#else
+static void cv181x_cooling_remove(struct platform_device *pdev)
+#endif
 {
 	struct cv181x_cooling_device *cvcdev = platform_get_drvdata(pdev);
 
 	if (!IS_ERR(cvcdev))
 		cv181x_cooling_device_unregister(cvcdev);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static const struct of_device_id cv181x_cooling_match[] = {
