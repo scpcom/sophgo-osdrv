@@ -629,7 +629,7 @@ static int _init_resources(struct platform_device *pdev)
 	return rc;
 }
 
-int cvifb_probe(struct platform_device *pdev)
+static int cvifb_probe(struct platform_device *pdev)
 {
 	int ret;
 	struct fb_info *info = NULL;
@@ -657,7 +657,11 @@ int cvifb_probe(struct platform_device *pdev)
 	info->fix.mmio_len = par->reg_len;
 	info->fix.smem_start = par->mem_base;
 	info->fix.smem_len = par->mem_len;
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0))
 	info->flags = FBINFO_DEFAULT | FBINFO_HWACCEL_YPAN;
+#else
+	info->flags = FBINFO_HWACCEL_YPAN;
+#endif
 
 	info->var.activate = FB_ACTIVATE_NOW;
 	info->var.bits_per_pixel = 8;
@@ -777,7 +781,11 @@ err_dts:
 	return ret;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvifb_remove(struct platform_device *pdev)
+#else
+static void cvifb_remove(struct platform_device *pdev)
+#endif
 {
 	struct fb_info *info = platform_get_drvdata(pdev);
 
@@ -790,7 +798,9 @@ static int cvifb_remove(struct platform_device *pdev)
 		framebuffer_release(info);
 	}
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static const struct of_device_id cvi_fb_dt_match[] = {
