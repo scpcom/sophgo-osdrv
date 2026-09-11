@@ -195,7 +195,7 @@ void cvi_fast_image_isp_ion_free(void)
 EXPORT_SYMBOL_GPL(cvi_fast_image_isp_ion_free);
 
 
-struct _JPEG_PIC *cvi_fast_image_dump_jpg(int idx)
+static struct _JPEG_PIC *cvi_fast_image_dump_jpg(int idx)
 {
 	struct _JPEG_PIC *dump_jpg_va;
 	cmdqu_t cmdq;
@@ -228,7 +228,7 @@ struct _JPEG_PIC *cvi_fast_image_dump_jpg(int idx)
 	return dump_jpg_va;
 }
 
-struct dump_uart_s *cvi_fast_image_dump_msg(void)
+static struct dump_uart_s *cvi_fast_image_dump_msg(void)
 {
 	struct dump_uart_s *dump_uart_va;
 	cmdqu_t cmdq;
@@ -259,7 +259,7 @@ struct dump_uart_s *cvi_fast_image_dump_msg(void)
 	return dump_uart_va;
 }
 
-struct trace_snapshot_t *cvi_fast_image_dump_snapshot(void)
+static struct trace_snapshot_t *cvi_fast_image_dump_snapshot(void)
 {
 	struct trace_snapshot_t *dump_snapshot_va;
 	cmdqu_t cmdq;
@@ -422,9 +422,11 @@ static long cvi_fast_image_ioctl(struct file *filp, unsigned int cmd, unsigned l
 		rtos_cmdqu_send(&cmdq);
 		break;
 	case FAST_IMAGE_QUERY_DUMP_JPG_INFO:
-		copy_from_user(&idx,
+		ret = copy_from_user(&idx,
 			(size_t __user *)arg,
 			sizeof(size_t));
+		if (ret)
+			return -EFAULT;
 		dump_jpg_va = cvi_fast_image_dump_jpg(idx);
 		if (!dump_jpg_va) {
 			pr_err("dump_jpg_va = 0\n");
@@ -615,7 +617,11 @@ static int cvi_fast_image_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_fast_image_remove(struct platform_device *pdev)
+#else
+static void cvi_fast_image_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_fast_image_device *ndev = platform_get_drvdata(pdev);
 
@@ -623,7 +629,9 @@ static int cvi_fast_image_remove(struct platform_device *pdev)
 	platform_set_drvdata(pdev, NULL);
 	pr_debug("%s DONE\n", __func__);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static const struct of_device_id cvi_rtos_image_match[] = {
@@ -915,7 +923,11 @@ static int cvi_fast_image_init(void)
 	int rc;
 
 	pr_debug("cvi_fast_image_init");
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	pbase_class = class_create(THIS_MODULE, FAST_IMAGE_DEV_NAME);
+#else
+	pbase_class = class_create(FAST_IMAGE_DEV_NAME);
+#endif
 	if (IS_ERR(pbase_class)) {
 		pr_err("create class failed\n");
 		rc = PTR_ERR(pbase_class);

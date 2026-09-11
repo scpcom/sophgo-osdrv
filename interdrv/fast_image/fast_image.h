@@ -152,4 +152,20 @@ struct trace_snapshot_t {
 	uint16_t type;
 } __packed;
 
+int cvi_stop_fast_image(void);
+phys_addr_t cvi_fast_image_isp_buf_pa(void);
+phys_addr_t cvi_fast_image_isp_buf_va(void);
+size_t cvi_fast_image_isp_size(void);
+phys_addr_t cvi_fast_image_encode_img_pa(void);
+phys_addr_t cvi_fast_image_encode_img_va(void);
+size_t cvi_fast_image_encode_img_size(void);
+phys_addr_t cvi_fast_image_encode_buf_pa(void);
+phys_addr_t cvi_fast_image_encode_buf_va(void);
+size_t cvi_fast_image_encode_buf_size(void);
+void cvi_fast_image_enc_ion_free(void);
+void cvi_fast_image_img_ion_free(void);
+void cvi_fast_image_isp_ion_free(void);
+
+void cvi_fast_image_callback_handler(unsigned char cmd_id, unsigned int ptr, void *dev_id);
+
 #endif // end of __FAST_IMAGE_HEADER__
