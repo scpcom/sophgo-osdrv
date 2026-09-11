@@ -34,6 +34,7 @@
 #include <linux/sched.h>
 #include <linux/delay.h>
 #include <linux/of.h>
+#include <linux/version.h>
 
 #include "cvi_wiegand.h"
 #include "cvi_wiegand_ioctl.h"
@@ -228,7 +229,7 @@ static int cvi_wiegand_rx(struct cvi_wiegand_device *ndev, unsigned long arg, in
 	return 0;
 }
 
-ssize_t cvi_wiegand_read(struct file *filp, char *buff, size_t count, loff_t *offp)
+static ssize_t cvi_wiegand_read(struct file *filp, char *buff, size_t count, loff_t *offp)
 {
 	struct cvi_wiegand_device *ndev = filp->private_data;
 
@@ -238,7 +239,7 @@ ssize_t cvi_wiegand_read(struct file *filp, char *buff, size_t count, loff_t *of
 }
 
 #if 0
-ssize_t cvi_wiegand_write(struct file *filp, const char *buff, size_t count, loff_t *offp)
+static ssize_t cvi_wiegand_write(struct file *filp, const char *buff, size_t count, loff_t *offp)
 {
 	if (copy_from_user(&flag, buff, 1))
 		return -EFAULT;
@@ -378,7 +379,7 @@ static const struct file_operations wiegand_fops = {
 	.compat_ioctl = cvi_wiegand_ioctl,
 };
 
-int cvi_wiegand_register_cdev(struct cvi_wiegand_device *ndev)
+static int cvi_wiegand_register_cdev(struct cvi_wiegand_device *ndev)
 {
 	cdev_init(&ndev->cdev, &wiegand_fops);
 	ndev->cdev.owner = THIS_MODULE;
@@ -463,7 +464,11 @@ static int cvi_wiegand_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_wiegand_remove(struct platform_device *pdev)
+#else
+static void cvi_wiegand_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_wiegand_device *ndev = platform_get_drvdata(pdev);
 
@@ -474,7 +479,9 @@ static int cvi_wiegand_remove(struct platform_device *pdev)
 	platform_set_drvdata(pdev, NULL);
 	pr_debug("=== cvi_wiegand_remove\n");
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static const struct of_device_id cvi_wiegand_match[] = {
@@ -497,7 +504,11 @@ static int __init wgn_init(void)
 {
 	int rc;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	wiegand_class = class_create(THIS_MODULE, CVI_WIEGAND_CLASS_NAME);
+#else
+	wiegand_class = class_create(CVI_WIEGAND_CLASS_NAME);
+#endif
 	if (IS_ERR(wiegand_class)) {
 		pr_err("create class failed\n");
 		return PTR_ERR(wiegand_class);
