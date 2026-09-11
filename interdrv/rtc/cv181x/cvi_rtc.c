@@ -457,7 +457,11 @@ disable_clk:
 	return ret;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_rtc_remove(struct platform_device *pdev)
+#else
+static void cvi_rtc_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_rtc_info *info = platform_get_drvdata(pdev);
 
@@ -466,7 +470,9 @@ static int cvi_rtc_remove(struct platform_device *pdev)
 	cancel_delayed_work(&info->cvi_rtc_work);
 #endif
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 #ifdef CONFIG_PM_SLEEP
