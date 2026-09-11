@@ -68,6 +68,10 @@
 #define MIPI_RX_DEV_NAME "cvi-mipi-rx"
 #define MAX_CIF_PROC_BUF 32
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 static int data = 0;
 static int lt_int = 0;
 
@@ -186,7 +190,7 @@ static struct cvi_cif_dev *file_cif_dev(struct file *file)
 	return container_of(file->private_data, struct cvi_cif_dev, miscdev);
 }
 
-const char *_to_string_input_mode(enum input_mode_e input_mode)
+static const char *_to_string_input_mode(enum input_mode_e input_mode)
 {
 	switch (input_mode) {
 	case INPUT_MODE_MIPI:
@@ -212,7 +216,7 @@ const char *_to_string_input_mode(enum input_mode_e input_mode)
 	}
 }
 
-const char *_to_string_mac_clk(enum rx_mac_clk_e mac_clk)
+static const char *_to_string_mac_clk(enum rx_mac_clk_e mac_clk)
 {
 	switch (mac_clk) {
 	case RX_MAC_CLK_200M:
@@ -230,7 +234,7 @@ const char *_to_string_mac_clk(enum rx_mac_clk_e mac_clk)
 	}
 }
 
-const char *_to_string_cmd(unsigned int cmd)
+static const char *_to_string_cmd(unsigned int cmd)
 {
 	switch (cmd) {
 	case CVI_MIPI_SET_DEV_ATTR:
@@ -269,7 +273,7 @@ const char *_to_string_cmd(unsigned int cmd)
 	return "unknown";
 }
 
-const char *_to_string_raw_data_type(enum raw_data_type_e raw_data_type)
+static const char *_to_string_raw_data_type(enum raw_data_type_e raw_data_type)
 {
 	switch (raw_data_type) {
 	case RAW_DATA_8BIT:
@@ -287,7 +291,7 @@ const char *_to_string_raw_data_type(enum raw_data_type_e raw_data_type)
 	}
 }
 
-const char *_to_string_mipi_wdr_mode(enum mipi_wdr_mode_e wdr)
+static const char *_to_string_mipi_wdr_mode(enum mipi_wdr_mode_e wdr)
 {
 	switch (wdr) {
 	case CVI_MIPI_WDR_MODE_NONE:
@@ -305,7 +309,7 @@ const char *_to_string_mipi_wdr_mode(enum mipi_wdr_mode_e wdr)
 	}
 }
 
-const char *_to_string_wdr_mode(enum wdr_mode_e wdr)
+static const char *_to_string_wdr_mode(enum wdr_mode_e wdr)
 {
 	switch (wdr) {
 	case CVI_WDR_MODE_NONE:
@@ -323,7 +327,7 @@ const char *_to_string_wdr_mode(enum wdr_mode_e wdr)
 	}
 }
 
-const char *_to_string_lvds_sync_mode(enum lvds_sync_mode_e mode)
+static const char *_to_string_lvds_sync_mode(enum lvds_sync_mode_e mode)
 {
 	switch (mode) {
 	case LVDS_SYNC_MODE_SOF:
@@ -335,7 +339,7 @@ const char *_to_string_lvds_sync_mode(enum lvds_sync_mode_e mode)
 	}
 }
 
-const char *_to_string_bit_endian(enum lvds_bit_endian endian)
+static const char *_to_string_bit_endian(enum lvds_bit_endian endian)
 {
 	switch (endian) {
 	case LVDS_ENDIAN_LITTLE:
@@ -347,7 +351,7 @@ const char *_to_string_bit_endian(enum lvds_bit_endian endian)
 	}
 }
 
-const char *_to_string_lvds_vsync_type(enum lvds_vsync_type_e type)
+static const char *_to_string_lvds_vsync_type(enum lvds_vsync_type_e type)
 {
 	switch (type) {
 	case LVDS_VSYNC_NORMAL:
@@ -361,7 +365,7 @@ const char *_to_string_lvds_vsync_type(enum lvds_vsync_type_e type)
 	}
 }
 
-const char *_to_string_lvds_fid_type(enum lvds_fid_type_e type)
+static const char *_to_string_lvds_fid_type(enum lvds_fid_type_e type)
 {
 	switch (type) {
 	case LVDS_FID_NONE:
@@ -373,7 +377,7 @@ const char *_to_string_lvds_fid_type(enum lvds_fid_type_e type)
 	}
 }
 
-const char *_to_string_mclk(enum cam_pll_freq_e freq)
+static const char *_to_string_mclk(enum cam_pll_freq_e freq)
 {
 	switch (freq) {
 	case CAMPLL_FREQ_NONE:
@@ -393,7 +397,7 @@ const char *_to_string_mclk(enum cam_pll_freq_e freq)
 	}
 }
 
-const char *_to_string_csi_decode(enum csi_decode_fmt_e fmt)
+static const char *_to_string_csi_decode(enum csi_decode_fmt_e fmt)
 {
 	switch (fmt) {
 	case DEC_FMT_YUV422_8:
@@ -411,7 +415,7 @@ const char *_to_string_csi_decode(enum csi_decode_fmt_e fmt)
 	}
 }
 
-const char *_to_string_dlane_state(enum mipi_dlane_state_e state)
+static const char *_to_string_dlane_state(enum mipi_dlane_state_e state)
 {
 	switch (state) {
 	case HS_IDLE:
@@ -433,7 +437,7 @@ const char *_to_string_dlane_state(enum mipi_dlane_state_e state)
 	}
 }
 
-const char *_to_string_deskew_state(enum mipi_deskew_state_e state)
+static const char *_to_string_deskew_state(enum mipi_deskew_state_e state)
 {
 	switch (state) {
 	case DESKEW_IDLE:
@@ -2957,6 +2961,7 @@ static int _init_resource(struct platform_device *pdev)
 	}
 
 	if (lt_int) {
+		int ret;
 		proc_create(PROC_FILE_NAME, 0666, NULL, &my_proc_fops);
 		// LT6911 GPIO5 INT
 
@@ -2966,12 +2971,13 @@ static int _init_resource(struct platform_device *pdev)
 		lt_irq = gpio_to_irq(btn_info.gpio);
 		gpio_request(	btn_info.gpio,
 				btn_info.name);
-		request_irq	(	lt_irq,  		//中断号
+		ret = request_irq	(	lt_irq,  		//中断号
 					button_isr,		//注册的中断处理函数
 					IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
 					btn_info.name,	//中断名称
 					&btn_info 		//将每个按键对应的硬件信息传递给中断处理函数
 				);
+		(void)(ret);
 	}
 
 	/* reset pin */
@@ -3144,8 +3150,12 @@ static int proc_cif_show(struct seq_file *m, void *v)
 	struct cvi_cif_dev *dev = (struct cvi_cif_dev *)m->private;
 	int i;
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	seq_printf(m, "\nModule: [MIPI_RX], Build Time[%s]\n",
 			UTS_VERSION);
+#else
+	seq_printf(m, "\nModule: [MIPI_RX]\n");
+#endif
 	seq_puts(m, "\n------------Combo DEV ATTR--------------\n");
 	for (i = 0; i < MAX_LINK_NUM; i++)
 		if (dev->link[i].is_on)
@@ -3396,13 +3406,21 @@ static int cvi_cif_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_cif_remove(struct platform_device *pdev)
+#else
+static void cvi_cif_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_cif_dev *dev;
 
 	if (!pdev) {
 		dev_err(&pdev->dev, "invalid param");
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 		return -EINVAL;
+#else
+		return;
+#endif
 	}
 
 	/* rm cif_cb */
@@ -3412,7 +3430,11 @@ static int cvi_cif_remove(struct platform_device *pdev)
 	dev = dev_get_drvdata(&pdev->dev);
 	if (!dev) {
 		dev_err(&pdev->dev, "Can not get cvi_cif drvdata");
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 		return 0;
+#else
+		return;
+#endif
 	}
 
 	misc_deregister(&dev->miscdev);
@@ -3421,7 +3443,9 @@ static int cvi_cif_remove(struct platform_device *pdev)
 #ifdef CONFIG_PROC_FS
 	proc_remove(cif_proc_entry);
 #endif
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 #ifdef CONFIG_PM_SLEEP
