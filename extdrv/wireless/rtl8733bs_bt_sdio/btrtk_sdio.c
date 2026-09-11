@@ -779,6 +779,7 @@ static int btsdio_probe(struct sdio_func *func,
 	hdev->bus = HCI_SDIO;
 	hci_set_drvdata(hdev, data);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 10, 0))
 	if (id->class == SDIO_CLASS_BT_AMP)
 		hdev->dev_type = HCI_AMP;
 	else
@@ -786,6 +787,7 @@ static int btsdio_probe(struct sdio_func *func,
 		hdev->dev_type = HCI_BREDR;
 #else
 		hdev->dev_type = HCI_PRIMARY;
+#endif
 #endif
 
 	data->hdev = hdev;
