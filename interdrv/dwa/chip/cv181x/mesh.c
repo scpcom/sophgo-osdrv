@@ -33,7 +33,7 @@ typedef struct COORD2D_INT_HW {
 
 extern struct cvi_gdc_proc_ctx *gdc_proc_ctx;
 
-void mesh_gen_get_1st_size(SIZE_S in_size, u32 *mesh_1st_size)
+static void mesh_gen_get_1st_size(SIZE_S in_size, u32 *mesh_1st_size)
 {
 	u32 ori_src_width, ori_src_height, src_width_s1, src_height_s1;
 	u32 dst_height_s1, dst_width_s1, num_tilex_s1, num_tiley_s1;

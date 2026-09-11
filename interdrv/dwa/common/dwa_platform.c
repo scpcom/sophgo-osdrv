@@ -3,6 +3,7 @@
 #include <linux/clk.h>
 #include <linux/io.h>
 #include <linux/mm.h>
+#include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
@@ -237,7 +238,7 @@ static int _register_dev(struct cvi_dwa_vdev *wdev)
 /*************************************************************************
  *	General functions
  *************************************************************************/
-int dwa_create_instance(struct platform_device *pdev)
+static int dwa_create_instance(struct platform_device *pdev)
 {
 	int i, rc = 0;
 	struct cvi_dwa_vdev *wdev;
@@ -298,7 +299,7 @@ err_work_init:
 	return rc;
 }
 
-int dwa_destroy_instance(struct platform_device *pdev)
+static int dwa_destroy_instance(struct platform_device *pdev)
 {
 	struct cvi_dwa_vdev *wdev;
 
@@ -403,7 +404,7 @@ static MOD_ID_E convert_mod_id(enum ENUM_MODULES_ID cbModId)
 	return CVI_ID_BUTT;
 }
 
-int dwa_cmd_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
+static int dwa_cmd_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
 {
 	struct cvi_dwa_vdev *wdev = (struct cvi_dwa_vdev *)dev;
 	int rc = -1;
@@ -517,7 +518,11 @@ err_irq:
  * cvi_ldc_remove - device remove method.
  * @pdev: Pointer of platform device.
  */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_dwa_remove(struct platform_device *pdev)
+#else
+static void cvi_dwa_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_dwa_vdev *wdev;
 
@@ -533,18 +538,28 @@ static int cvi_dwa_remove(struct platform_device *pdev)
 
 	if (!pdev) {
 		dev_err(&pdev->dev, "invalid param");
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 		return -EINVAL;
+#else
+		return;
+#endif
 	}
 
 	wdev = dev_get_drvdata(&pdev->dev);
 	if (!wdev) {
 		dev_err(&pdev->dev, "Can not get cvi_vip drvdata");
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 		return 0;
+#else
+		return;
+#endif
 	}
 
 	dev_set_drvdata(&pdev->dev, NULL);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static const struct of_device_id cvi_dwa_dt_match[] = {
@@ -553,7 +568,7 @@ static const struct of_device_id cvi_dwa_dt_match[] = {
 };
 
 #ifdef CONFIG_PM_SLEEP
-int dwa_suspend(struct device *dev)
+static int dwa_suspend(struct device *dev)
 {
 	CVI_S32 ret = CVI_SUCCESS;
 
@@ -579,7 +594,7 @@ int dwa_suspend(struct device *dev)
 	return ret;
 }
 
-int dwa_resume(struct device *dev)
+static int dwa_resume(struct device *dev)
 {
 	CVI_S32 ret = CVI_SUCCESS;
 

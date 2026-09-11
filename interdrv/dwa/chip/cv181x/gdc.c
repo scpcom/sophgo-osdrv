@@ -55,7 +55,7 @@ static inline CVI_S32 CHECK_GDC_FORMAT(VIDEO_FRAME_INFO_S imgIn, VIDEO_FRAME_INF
 
 struct cvi_gdc_proc_ctx *gdc_proc_ctx;
 
-int gdc_handle_to_procIdx(struct cvi_dwa_job *job)
+static int gdc_handle_to_procIdx(struct cvi_dwa_job *job)
 {
 	int idx = 0;
 
@@ -78,7 +78,7 @@ int gdc_handle_to_procIdx(struct cvi_dwa_job *job)
 	return -1;
 }
 
-void gdc_proc_record_hw_start(struct cvi_dwa_job *job)
+static void gdc_proc_record_hw_start(struct cvi_dwa_job *job)
 {
 	struct timespec64 curTime;
 
@@ -107,7 +107,7 @@ void gdc_proc_record_hw_end(struct cvi_dwa_job *job)
 	gdc_proc_ctx->stJobInfo[idx].u32HwTime += end_time - job->hw_start_time;
 }
 
-void gdc_proc_record_job_start(struct cvi_dwa_job *job)
+static void gdc_proc_record_job_start(struct cvi_dwa_job *job)
 {
 	int idx;
 	struct timespec64 curTime;
@@ -131,7 +131,7 @@ void gdc_proc_record_job_start(struct cvi_dwa_job *job)
 	gdc_proc_ctx->stJobStatus.u32ProcingNum = 1;
 }
 
-void gdc_proc_record_job_end(struct cvi_dwa_job *job)
+static void gdc_proc_record_job_end(struct cvi_dwa_job *job)
 {
 	int idx;
 	struct timespec64 curTime;
@@ -157,7 +157,7 @@ void gdc_proc_record_job_end(struct cvi_dwa_job *job)
 		(u32)(curTimeUs - gdc_proc_ctx->stJobInfo[idx].u64SubmitTime);
 }
 
-void gdcq_init(void)
+static void gdcq_init(void)
 {
 #if 0
 	pthread_mutexattr_t ma;
@@ -522,7 +522,7 @@ int dwa_vpss_sdm_cb_done(struct cvi_dwa_vdev *wdev)
 }
 
 /* == gdc_event_handler */
-void gdc_job_worker(struct kthread_work *work)
+static void gdc_job_worker(struct kthread_work *work)
 {
 	struct cvi_dwa_vdev *wdev =
 		container_of(work, struct cvi_dwa_vdev, work);
@@ -613,7 +613,11 @@ int cvi_gdc_init(struct cvi_dwa_vdev *wdev)
 				   "gdc_work");
 
 	// Same as sched_set_fifo in linux 5.x
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 	tsk.sched_priority = MAX_USER_RT_PRIO / 2;
+#else
+	tsk.sched_priority = MAX_RT_PRIO / 2;
+#endif
 	ret = sched_setscheduler(wdev->thread, SCHED_FIFO, &tsk);
 	if (ret)
 		CVI_TRACE_DWA(CVI_DBG_WARN, "gdc thread priority update failed: %d\n", ret);
@@ -835,7 +839,7 @@ s32 gdc_add_ldc_task(struct cvi_dwa_vdev *wdev, struct gdc_task_attr *attr)
 	return CVI_SUCCESS;
 }
 
-s32 gdc_is_same_task_attr(const struct gdc_task_attr *tsk1, const struct gdc_task_attr *tsk2)
+static s32 gdc_is_same_task_attr(const struct gdc_task_attr *tsk1, const struct gdc_task_attr *tsk2)
 {
 	CVI_TRACE_DWA(CVI_DBG_DEBUG, "tsk1: IW=%d, IH=%d, OW=%d, OH=%d\n",
 			tsk1->stImgIn.stVFrame.u32Width, tsk1->stImgIn.stVFrame.u32Height,
@@ -983,7 +987,11 @@ s32 dwa_start_handler(struct cvi_dwa_vdev *wdev_dwa)
 				   "gdc_work");
 
 	// Same as sched_set_fifo in linux 5.x
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 	tsk.sched_priority = MAX_USER_RT_PRIO / 2;
+#else
+	tsk.sched_priority = MAX_RT_PRIO / 2;
+#endif
 	ret = sched_setscheduler(wdev_dwa->thread, SCHED_FIFO, &tsk);
 	if (ret)
 		CVI_TRACE_DWA(CVI_DBG_WARN, "gdc thread priority update failed: %d\n", ret);

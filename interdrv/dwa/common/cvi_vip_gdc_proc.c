@@ -3,6 +3,10 @@
 #define GENERATE_STRING(STRING)	(#STRING),
 #define GDC_PROC_NAME "cvitek/gdc"
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 static void *gdc_shared_mem;
 static const char *const MOD_STRING[] = FOREACH_MOD(GENERATE_STRING);
 /*************************************************************************
@@ -20,7 +24,11 @@ static int gdc_proc_show(struct seq_file *m, void *v)
 		return -1;
 	}
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 	seq_printf(m, "\nModule: [GDC], Build Time[%s]\n", UTS_VERSION);
+#else
+	seq_printf(m, "\nModule: [GDC]\n");
+#endif
 	// recent job info
 	seq_puts(m, "\n-------------------------------RECENT JOB INFO----------------------------\n");
 	seq_printf(m, "%10s%10s%10s%10s%20s%20s%20s%20s\n",
