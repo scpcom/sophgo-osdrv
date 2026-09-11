@@ -1,6 +1,7 @@
 #include "rtos_cmdqu.h"
 #include <base_cb.h>
 #include "cmdqu_cb.h"
+#include "rtos_cmdqu_cb.h"
 
 int rtos_cmdqu_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
 {

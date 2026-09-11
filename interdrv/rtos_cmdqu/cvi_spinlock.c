@@ -71,7 +71,7 @@ static inline int hw_spin_trylock(hw_raw_spinlock_t *lock)
 #endif
 }
 
-int hw_spin_lock(hw_raw_spinlock_t *lock)
+static int hw_spin_lock(hw_raw_spinlock_t *lock)
 {
 	u64 i;
 	u64 loops = 1000000;

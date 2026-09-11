@@ -83,7 +83,7 @@ int request_rtos_irq(unsigned char ip_id, void (*handler), const char *devname, 
 }
 EXPORT_SYMBOL(request_rtos_irq);
 
-void init_sqirq(void)
+static void init_sqirq(void)
 {
 	int ip_id;
 
@@ -118,7 +118,7 @@ static void callback_rtos_irq_handler(int cmd_id, unsigned int ptr, void *dev_id
 
 DEFINE_CVI_SPINLOCK(mailbox_lock, SPIN_MBOX);
 
-irqreturn_t rtos_irq_handler(int irq, void *dev_id)
+static irqreturn_t rtos_irq_handler(int irq, void *dev_id)
 {
 	char set_val, done_val;
 	int i;
@@ -215,7 +215,7 @@ irqreturn_t rtos_irq_handler(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-long rtos_cmdqu_init(void)
+static long rtos_cmdqu_init(void)
 {
 	long ret = 0;
 	int i;
@@ -239,7 +239,7 @@ long rtos_cmdqu_init(void)
 	return ret;
 }
 
-long rtos_cmdqu_deinit(void)
+static long rtos_cmdqu_deinit(void)
 {
 	long ret = 0;
 	pr_debug("RTOS_CMDQU_DEINIT\n");
@@ -410,16 +410,20 @@ static long cvi_rtos_cmdqu_ioctl(struct file *filp, unsigned int cmd, unsigned l
 	switch (cmd) {
 		case RTOS_CMDQU_SEND:
 			pr_debug("RTOS_CMDQU_SEND\n");
-			copy_from_user(&cmdq,
+			ret = copy_from_user(&cmdq,
 				(struct cmdqu_t __user *)arg,
 				sizeof(struct cmdqu_t));
+			if (ret)
+				return -EFAULT;
 			ret = rtos_cmdqu_send(&cmdq);
 			break;
 		case RTOS_CMDQU_SEND_WAKEUP:
 			pr_debug("RTOS_CMDQU_SEND_WAKEUP\n");
-			copy_from_user(&cmdq,
+			ret = copy_from_user(&cmdq,
 				(struct cmdqu_t __user *)arg,
 				sizeof(struct cmdqu_t));
+			if (ret)
+				return -EFAULT;
 			pr_debug("cmdq.ip_id=%d cmdq.cmd_id=%d\n", cmdq.ip_id, cmdq.cmd_id);
 
 			spin_lock_irqsave(&send_queue_lock, flags);
@@ -461,17 +465,21 @@ static long cvi_rtos_cmdqu_ioctl(struct file *filp, unsigned int cmd, unsigned l
 			kfree(wait_list);
 			break;
 		case RTOS_CMDQU_REQUEST:
-			copy_from_user(&cmdq,
+			ret = copy_from_user(&cmdq,
 				(struct cmdqu_t __user *)arg,
 				sizeof(struct cmdqu_t));
+			if (ret)
+				return -EFAULT;
 
 			ret = request_rtos_irq(cmdq.ip_id, callback_rtos_irq_handler,
 				"RTOS_CMDQU_REQUEST", (void *)((unsigned long)cmdq.param_ptr));
 			break;
 		case RTOS_CMDQU_REQUEST_FREE:
-			copy_from_user(&cmdq,
+			ret = copy_from_user(&cmdq,
 				(struct cmdqu_t __user *)arg,
 				sizeof(struct cmdqu_t));
+			if (ret)
+				return -EFAULT;
 			free_rtos_irq(cmdq.ip_id);
 			break;
 		default:
@@ -602,7 +610,11 @@ static int cvi_rtos_cmdqu_probe(struct platform_device *pdev)
 //	return err;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_rtos_cmdqu_remove(struct platform_device *pdev)
+#else
+static void cvi_rtos_cmdqu_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_rtos_cmdqu_device *ndev = platform_get_drvdata(pdev);
 
@@ -617,7 +629,9 @@ static int cvi_rtos_cmdqu_remove(struct platform_device *pdev)
 	rtos_cmdqu_deinit();
 	pr_debug("%s DONE\n", __func__);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static const struct of_device_id cvi_rtos_cmdqu_match[] = {
@@ -648,7 +662,11 @@ static int cvi_rtos_cmdqu_init(void)
 {
 	int rc;
 	pr_debug("cvi_rtos_cmdqu_init");
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	pbase_class = class_create(THIS_MODULE, RTOS_CMDQU_DEV_NAME);
+#else
+	pbase_class = class_create(RTOS_CMDQU_DEV_NAME);
+#endif
 	if (IS_ERR(pbase_class)) {
 		pr_err("create class failed\n");
 		rc = PTR_ERR(pbase_class);
