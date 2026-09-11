@@ -3,6 +3,10 @@
 
 #define VI_DBG_PROC_NAME	"cvitek/vi_dbg"
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 /* Switch the output of proc.
  *
  * 0: VI debug info

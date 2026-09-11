@@ -101,7 +101,11 @@ static int vi_core_register_cdev(struct cvi_vi_dev *dev)
 	struct device *dev_t;
 	int err = 0;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	dev->vi_class = class_create(THIS_MODULE, CVI_VI_CLASS_NAME);
+#else
+	dev->vi_class = class_create(CVI_VI_CLASS_NAME);
+#endif
 	if (IS_ERR(dev->vi_class)) {
 		dev_err(dev->dev, "create class failed\n");
 		return PTR_ERR(dev->vi_class);
@@ -253,7 +257,11 @@ err_req_irq:
 	return ret;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int vi_core_remove(struct platform_device *pdev)
+#else
+static void vi_core_remove(struct platform_device *pdev)
+#endif
 {
 	int ret = 0;
 
@@ -280,7 +288,9 @@ static int vi_core_remove(struct platform_device *pdev)
 err_destroy_instance:
 	vi_pr(VI_INFO, "%s -\n", __func__);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return ret;
+#endif
 }
 
 #ifdef CONFIG_PM_SLEEP

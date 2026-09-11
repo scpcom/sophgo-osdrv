@@ -1,3 +1,4 @@
+#include <linux/vmalloc.h>
 #include <vip/vi_drv.h>
 #include <vip_common.h>
 #include <sys.h>
@@ -1468,7 +1469,7 @@ void isp_first_frm_reset(struct isp_ctx *ctx, uint8_t reset)
 	ISP_WR_BITS(tnr, REG_ISP_444_422_T, REG_8, FORCE_DMA_DISABLE, reset ? 0x3F : 0x0);
 }
 
-void _ispblk_isptop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
+static void _ispblk_isptop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 {
 	uintptr_t isptopb = ctx->phys_regs[ISP_BLK_ID_ISPTOP];
 	union REG_ISP_TOP_SCENARIOS_CTRL scene_ctrl;
@@ -1510,7 +1511,7 @@ void _ispblk_isptop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_n
 	ISP_WR_REG(isptopb, REG_ISP_TOP_T, SCENARIOS_CTRL, scene_ctrl.raw);
 }
 
-void _ispblk_be_yuv_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
+static void __maybe_unused _ispblk_be_yuv_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 {
 	uintptr_t preraw_be = ctx->phys_regs[ISP_BLK_ID_PRE_RAW_BE];
 	uintptr_t vi_sel = ctx->phys_regs[ISP_BLK_ID_PRE_RAW_VI_SEL];
@@ -1540,7 +1541,7 @@ void _ispblk_be_yuv_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_n
 	ISP_WR_BITS(preraw_be, REG_PRE_RAW_BE_T, IMG_SIZE_LE, FRAME_HEIGHTM1, ctx->img_height - 1);
 }
 
-void _ispblk_rawtop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
+static void _ispblk_rawtop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 {
 	uintptr_t rawtop = ctx->phys_regs[ISP_BLK_ID_RAWTOP];
 	uintptr_t raw_rdma = ctx->phys_regs[ISP_BLK_ID_RAW_RDMA];
@@ -1612,7 +1613,7 @@ void _ispblk_rawtop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_n
 	ISP_WR_BITS(rawtop, REG_RAW_TOP_T, RAW_2, IMG_HEIGHTM1, ctx->img_height - 1);
 }
 
-void _ispblk_rgbtop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
+static void _ispblk_rgbtop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 {
 	uintptr_t rgbtop = ctx->phys_regs[ISP_BLK_ID_RGBTOP];
 	uintptr_t manr = ctx->phys_regs[ISP_BLK_ID_MMAP];
@@ -1641,7 +1642,7 @@ void _ispblk_rgbtop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_n
 	ISP_WR_BITS(rgbtop, REG_ISP_RGB_TOP_T, REG_9, RGBTOP_IMGH_M1, ctx->img_height - 1);
 }
 
-void _ispblk_yuvtop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
+static void _ispblk_yuvtop_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 {
 	uintptr_t yuvtop = ctx->phys_regs[ISP_BLK_ID_YUVTOP];
 	uintptr_t tnr = ctx->phys_regs[ISP_BLK_ID_TNR];

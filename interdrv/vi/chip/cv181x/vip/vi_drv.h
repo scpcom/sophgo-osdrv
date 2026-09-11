@@ -917,6 +917,8 @@ void ispblk_isptop_fpga_config(struct isp_ctx *ctx, uint16_t test_case);
 void ispblk_dci_restore_default_config(struct isp_ctx *ctx, bool en);
 #endif
 
+int ispblk_blc_config(struct isp_ctx *ctx, uint32_t blc_id, bool en, bool bypass);
+
 #ifdef __cplusplus
 }
 #endif

@@ -182,7 +182,7 @@ static CVI_S32 _mesh_gdc_do_op_cb(enum GDC_USAGE usage, const CVI_VOID *pUsagePa
 	return base_exe_module_cb(&exe_cb);
 }
 
-void _isp_snr_cfg_enq(struct cvi_isp_snr_update *snr_node, const enum cvi_isp_raw raw_num)
+static void _isp_snr_cfg_enq(struct cvi_isp_snr_update *snr_node, const enum cvi_isp_raw raw_num)
 {
 	unsigned long flags;
 	struct _isp_snr_i2c_node *n, *q;
@@ -227,7 +227,7 @@ void _isp_snr_cfg_enq(struct cvi_isp_snr_update *snr_node, const enum cvi_isp_ra
 	spin_unlock_irqrestore(&snr_node_lock[raw_num], flags);
 }
 
-void pre_raw_num_enq(struct _isp_sof_raw_num_q *q, struct _isp_raw_num_n *n)
+static void pre_raw_num_enq(struct _isp_sof_raw_num_q *q, struct _isp_raw_num_n *n)
 {
 	unsigned long flags;
 
@@ -4517,7 +4517,11 @@ int vi_create_thread(struct cvi_vi_dev *vdev, enum E_VI_TH th_id)
 		return -1;
 	}
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 	param.sched_priority = MAX_USER_RT_PRIO - 10;
+#else
+	param.sched_priority = MAX_RT_PRIO - 10;
+#endif
 
 	if (vdev->vi_th[th_id].w_thread == NULL) {
 		switch (th_id) {

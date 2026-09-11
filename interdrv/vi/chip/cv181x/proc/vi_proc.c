@@ -4,6 +4,10 @@
 
 #define VI_PRC_NAME	"cvitek/vi"
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 static void *vi_shared_mem;
 /*************************************************************************
  *	VI proc functions

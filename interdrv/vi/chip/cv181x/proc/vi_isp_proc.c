@@ -5,6 +5,10 @@
 #define ISP_PRC_NAME		"cvitek/isp"
 #define PROC_READ_TIMEOUT	1000
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 struct isp_prc_ctrl {
 	u8			*isp_buff_str;
 	spinlock_t		isp_proc_lock;

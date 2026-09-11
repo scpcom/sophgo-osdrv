@@ -1,3 +1,4 @@
+#include <linux/vmalloc.h>
 #include <vi_raw_dump.h>
 
 struct isp_buffer *isp_byr[ISP_PRERAW_VIRT_MAX], *isp_byr_se[ISP_PRERAW_VIRT_MAX];
