@@ -26,4 +26,7 @@ struct ssv6xxx_cfg_cmd_table {
     u8  *def_val;
 };
 
+int ssv_device_init(void);
+void ssv_device_exit(void);
+
 #endif

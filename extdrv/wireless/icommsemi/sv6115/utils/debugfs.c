@@ -49,6 +49,10 @@ static struct proc_dir_entry *__ssv_procfs;
 
 extern struct ssv_cmd_table cmd_table[];
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 void ssv_snprintf_res(struct ssv_cmd_data *cmd_data, const char *fmt, ... )
 {
     char *buf_head;

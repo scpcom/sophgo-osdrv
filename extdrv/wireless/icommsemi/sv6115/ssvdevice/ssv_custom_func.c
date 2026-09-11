@@ -11,6 +11,7 @@
 #include "rftool/ssv_rftool.h"
 #include "rftool/ssv_phy_rf.h"
 #include "ssv_debug.h"
+#include "ssv_custom_func.h"
 
 extern struct ssv6xxx_cfg ssv_cfg;
 extern struct ssv_efuse_info efuse_info;

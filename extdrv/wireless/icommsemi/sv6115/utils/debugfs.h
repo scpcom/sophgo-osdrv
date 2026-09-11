@@ -38,6 +38,9 @@ struct ssv_cmd_data {
 
 void ssv_snprintf_res(struct ssv_cmd_data *cmd_data, const char *fmt, ... );
 
+int ssv_init_cli(const char *dev_name, struct ssv_cmd_data *cmd_data);
+void ssv_deinit_cli(const char *dev_name, struct ssv_cmd_data *cmd_data);
+
 #endif /* _DEBUG_FS_H_ */
 
 

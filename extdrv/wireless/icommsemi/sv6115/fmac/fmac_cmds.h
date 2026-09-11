@@ -114,6 +114,8 @@ void ssv_cmd_mgr_init(struct ssv_cmd_mgr *cmd_mgr);
 void ssv_cmd_mgr_deinit(struct ssv_cmd_mgr *cmd_mgr);
 void ssv_msg_to_hci(struct ssv_softc *sc, void *msg_params);
 
+int ssv_private_msg_to_hci(struct ssv_softc *sc, u8 *msg_buffer, u32 msg_len);
+void _ssv_fwreset_msg_to_hci(struct ssv_softc *sc, u8 *msg_buffer, u32 msg_len, u32 msg_type);
 
 #endif /* __FMAC_CMDS_H__ */
 

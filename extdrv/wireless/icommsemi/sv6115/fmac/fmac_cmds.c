@@ -487,7 +487,7 @@ static int _ssv_cmd_mgr_llind(struct ssv_cmd_mgr *cmd_mgr, struct ssv_cmd *cmd)
     return 0;
 }
 
-void _ssv_cmd_mgr_fwreset_chechk(struct ssv_softc *sc , u16_l id)
+static void _ssv_cmd_mgr_fwreset_chechk(struct ssv_softc *sc , u16_l id)
 {
     SSV_LOG_DBG("fw reset recv msg id: %d\n",id);
 }

@@ -84,7 +84,7 @@ static char* thermal_name[] = {"LT2 Config", "LT1 Config", "RT Config", "HT1 Con
 
 extern int ssv_private_msg_to_hci(struct ssv_softc *sc, u8 *msg_buffer, u32 msg_len);
 extern int ssv_rftool_private_msg_to_hci(struct ssv_rftool_softc *srfc, u8 *msg_buffer, u32 msg_len);
-int ssv_send_priv_msg_rf_update_table(struct ssv_rftool_softc *srfc, struct st_rf_table *param)
+static int ssv_send_priv_msg_rf_update_table(struct ssv_rftool_softc *srfc, struct st_rf_table *param)
 {
     struct st_rf_table *p_table;
     u32 msg_total_len = sizeof(ST_IPC_PRIV_MSG)+sizeof(struct st_rf_table);
@@ -105,7 +105,7 @@ int ssv_send_priv_msg_rf_update_table(struct ssv_rftool_softc *srfc, struct st_r
     return 0;
 }
 
-int ssv_send_priv_msg_rf_cmd(struct ssv_rftool_softc *srfc, struct ssv_rf_tool_param *param)
+static int ssv_send_priv_msg_rf_cmd(struct ssv_rftool_softc *srfc, struct ssv_rf_tool_param *param)
 {
     struct ssv_rf_tool_param *rf_tool_param;
     u32 msg_total_len = sizeof(ST_IPC_PRIV_MSG)+sizeof(struct ssv_rf_tool_param);
@@ -125,7 +125,7 @@ int ssv_send_priv_msg_rf_cmd(struct ssv_rftool_softc *srfc, struct ssv_rf_tool_p
     }
     return 0;
 }
-int ssv_send_priv_msg_rf_cmd_wait_resp(struct ssv_rftool_softc *srfc, struct ssv_rf_tool_param *param)
+static int ssv_send_priv_msg_rf_cmd_wait_resp(struct ssv_rftool_softc *srfc, struct ssv_rf_tool_param *param)
 {
     struct ssv_rf_tool_param *rf_tool_param;
     u32 msg_total_len = sizeof(ST_IPC_PRIV_MSG)+sizeof(struct ssv_rf_tool_param);
@@ -152,7 +152,7 @@ int ssv_send_priv_msg_rf_cmd_wait_resp(struct ssv_rftool_softc *srfc, struct ssv
     }
     return 0;
 }
-int ssv_send_priv_msg_rfble_cmd(struct ssv_rftool_softc *srfc, struct ssv_rfble_tool_param *param)
+static int ssv_send_priv_msg_rfble_cmd(struct ssv_rftool_softc *srfc, struct ssv_rfble_tool_param *param)
 {
     struct ssv_rfble_tool_param *rfble_tool_param;
     u32 msg_total_len = sizeof(ST_IPC_PRIV_MSG)+sizeof(struct ssv_rfble_tool_param);
@@ -172,7 +172,7 @@ int ssv_send_priv_msg_rfble_cmd(struct ssv_rftool_softc *srfc, struct ssv_rfble_
     }
     return 0;
 }
-int ssv_send_priv_msg_rfble_cmd_wait_resp(struct ssv_rftool_softc *srfc, struct ssv_rfble_tool_param *param)
+static int ssv_send_priv_msg_rfble_cmd_wait_resp(struct ssv_rftool_softc *srfc, struct ssv_rfble_tool_param *param)
 {
     struct ssv_rfble_tool_param *rfble_tool_param;
     u32 msg_total_len = sizeof(ST_IPC_PRIV_MSG)+sizeof(struct ssv_rfble_tool_param);
@@ -200,7 +200,7 @@ int ssv_send_priv_msg_rfble_cmd_wait_resp(struct ssv_rftool_softc *srfc, struct 
 }
 
 void _ssv_fwreset_msg_to_hci(struct ssv_softc *sc, u8 *msg_buffer, u32 msg_len, u32 msg_type);
-int ssv_send_priv_msg_set_pll_phy_rf(struct ssv_rftool_softc *srfc, struct ssv_softc *sc, struct ssv_rf_cali *param)
+static int ssv_send_priv_msg_set_pll_phy_rf(struct ssv_rftool_softc *srfc, struct ssv_softc *sc, struct ssv_rf_cali *param)
 {
     struct ssv_rf_cali *p_cali;
     u32 msg_total_len = sizeof(ST_IPC_PRIV_MSG)+sizeof(struct ssv_rf_cali);

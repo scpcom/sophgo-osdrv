@@ -100,7 +100,7 @@ extern struct ssv_rftool_cfg rftool_cfg;
 
 extern int ssv_rftool_private_msg_to_hci(struct ssv_rftool_softc *srfc, u8 *msg_buffer, u32 msg_len);
 
-int _ssv_eng_fw_chosen(void)
+static int _ssv_eng_fw_chosen(void)
 {
     if(ssv_cfg.firmware_choice==2)
     {
@@ -1391,7 +1391,7 @@ const char *efuse_get_chip_id(void)
     return (const char *)&efuse_info.chip_id[0];
 }
 
-const char *_efuse_trans_chip_id(u32 sku_id, u32 sku_id1)
+static const char *_efuse_trans_chip_id(u32 sku_id, u32 sku_id1)
 {
     switch(sku_id)
     {

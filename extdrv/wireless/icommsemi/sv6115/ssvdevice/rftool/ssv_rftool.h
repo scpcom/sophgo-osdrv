@@ -63,4 +63,8 @@ struct ssv_rftool_cfg {
     u16 ble_rx_err_count;
 };
 
+u8 ssv_get_engmode(void);
+int ssv_rftool_init(void **plat_srfc, struct ssv6xxx_hci_ops *hci_ops, void *hci_priv, struct device *dev);
+void ssv_rftool_deinit(void *plat_srfc);
+
 #endif

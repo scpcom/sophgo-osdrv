@@ -92,7 +92,7 @@ static inline void house_keeping_timer_hdl(struct timer_list *in_timer)
 }
 #endif
 
-void ssv6xxx_fw_reset_softap_deauth_to_host(struct ssv_softc *sc)
+static void ssv6xxx_fw_reset_softap_deauth_to_host(struct ssv_softc *sc)
 {
     int i = 0;
     struct ssv_vif *vif = NULL;
@@ -116,7 +116,7 @@ void ssv6xxx_fw_reset_softap_deauth_to_host(struct ssv_softc *sc)
     }
 }
 
-void ssv6xxx_fw_reset_sta_dis_to_host(struct ssv_softc *sc)
+static void ssv6xxx_fw_reset_sta_dis_to_host(struct ssv_softc *sc)
 {
     int i = 0;
     struct ssv_vif *vif = NULL;
@@ -156,7 +156,7 @@ static void ssv6xxx_fw_reset_scan_done(struct ssv_softc *sc)
 
 void _ssv_fwreset_msg_to_hci(struct ssv_softc *sc, u8 *msg_buffer, u32 msg_len, u32 msg_type);
 
-void ssv6xxx_fw_reset_process(struct work_struct *work)
+static void ssv6xxx_fw_reset_process(struct work_struct *work)
 {
     int i = 0;
     struct ssv_softc *sc = container_of(work, struct ssv_softc, fw_reset_work);
@@ -201,7 +201,7 @@ void ssv6xxx_fw_reset_process(struct work_struct *work)
    sc->fw_reset_run = false; 
 }
 
-void ssv6xxx_house_keeping(unsigned long argv)
+static void ssv6xxx_house_keeping(unsigned long argv)
 {
 #define TIMEOUT_REORDER_WORK    50 
 #define TIMEOUT_PROBE_STA_WORK    1000 
@@ -252,7 +252,7 @@ void ssv6xxx_house_keeping(unsigned long argv)
     mod_timer(&ssv_hw->house_keeping.time.timer, jiffies + msecs_to_jiffies(HOUSE_KEEPING_TIMEOUT));
 }
 
-int ssv6xxx_housekeeping_init(struct ssv_hw *ssv_hw)
+static int ssv6xxx_housekeeping_init(struct ssv_hw *ssv_hw)
 {
     struct ssv_softc *sc = ssv_hw->sc;
     
@@ -277,7 +277,7 @@ int ssv6xxx_housekeeping_init(struct ssv_hw *ssv_hw)
     return 0;
 }
 
-int ssv6xxx_housekeeping_deinit(struct ssv_hw *ssv_hw)
+static int ssv6xxx_housekeeping_deinit(struct ssv_hw *ssv_hw)
 {
     struct ssv_softc *sc = ssv_hw->sc;
     // remove house keeping
@@ -289,7 +289,7 @@ int ssv6xxx_housekeeping_deinit(struct ssv_hw *ssv_hw)
 extern const char *sw_driver_version;
 extern const char *driver_build_date;
 
-void ssv6xxx_check_fw_version(struct ssv_softc *sc)
+static void ssv6xxx_check_fw_version(struct ssv_softc *sc)
 {
     u32 regval = 0;
     if(sc->hci_ops->hci_read_word)

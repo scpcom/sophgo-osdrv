@@ -210,4 +210,7 @@ void ssv_downgrade_ac(struct ssv_sta *sta, struct sk_buff *skb);
 void ssv_build_tx_bmu_header(struct tx_bmu_desc *tx_bmu_hdr, int tx_len);
 int ssv_tx_check_resource(void *app_param, struct sk_buff_head *qhead,
                         int reserved_page, int *p_max_count);
+
+void ssv_update_mgmt_txdesc(struct ssv_vif *vif, struct ssv_sta *sta,
+                                        struct sk_buff *skb, bool robust, bool no_cck);
 #endif /* __FMAC_TX_H__ */

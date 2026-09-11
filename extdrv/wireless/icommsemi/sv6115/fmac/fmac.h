@@ -248,4 +248,9 @@ struct ssv_softc {
    u32 fw_version;
 };
 
+int ssv6xxx_fmac_init(void **plat_sc, struct ssv6xxx_hci_ops *hci_ops, void *hci_priv, u8 *maddr, struct device *dev);
+void ssv6xxx_fmac_deinit(void *plat_sc);
+
+extern void ssv_wdev_unregister(struct ssv_softc *sc);
+
 #endif

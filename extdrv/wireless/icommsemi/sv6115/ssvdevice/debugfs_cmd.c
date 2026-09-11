@@ -39,6 +39,8 @@ extern struct ssv6xxx_cfg ssv_cfg;
 extern void ssv_update_mgmt_txdesc(struct ssv_vif *vif, struct ssv_sta *sta, 
                                         struct sk_buff *skb, bool robust, bool no_cck);
 
+int ssv_resp_reg_rw_handler(struct ssv_softc *sc, u8* data);
+
 static int ssv_cmd_help(void *cmd_priv, int argc, char *argv[])
 {
     struct ssv_cmd_data *cmd_data = (struct ssv_cmd_data *)cmd_priv;
@@ -487,7 +489,7 @@ end:
 	return 0;
 }
 
-int ssv_txtput_generate_m2(struct ssv_softc *sc, u32 size_per_frame, u32 loop_times)
+static int ssv_txtput_generate_m2(struct ssv_softc *sc, u32 size_per_frame, u32 loop_times)
 {
 	sc->ssv_txtput.size_per_frame = size_per_frame;
 	sc->ssv_txtput.loop_times = loop_times;
@@ -1052,7 +1054,7 @@ static int ssv_cmd_mib(void *cmd_priv, int argc, char *argv[])
     return 0;
 }
 
-int rx_pkt_type_and_record(struct sk_buff *rx_skb)
+static int rx_pkt_type_and_record(struct sk_buff *rx_skb)
 {
     int i = 0;
     u8 *base = (u8 *)&rx_skb->data[0];
@@ -1089,7 +1091,7 @@ int rx_pkt_type_and_record(struct sk_buff *rx_skb)
     return 0;
 }
 
-int tx_pkt_type_and_record(struct sk_buff *tx_skb)
+static int tx_pkt_type_and_record(struct sk_buff *tx_skb)
 {
     int i = 0;
     u8 *base = (char *)&tx_skb->data[0];
@@ -1648,9 +1650,9 @@ static void _ping_mac(struct ssv_softc *sc, struct ssv_vif *my_vif)
 #endif
 
     if (NL80211_IFTYPE_AP == SSV_VIF_TYPE(my_vif)) {
-        skb = ssv_build_nulldata_frame(peer->mac_addr, dev->dev_addr, dev->dev_addr, peer->qos, true);
+        skb = ssv_build_nulldata_frame(peer->mac_addr, (u8 *)dev->dev_addr, (u8 *)dev->dev_addr, peer->qos, true);
     } else {
-        skb = ssv_build_nulldata_frame(peer->mac_addr, dev->dev_addr, peer->mac_addr, peer->qos, false);
+        skb = ssv_build_nulldata_frame(peer->mac_addr, (u8 *)dev->dev_addr, peer->mac_addr, peer->qos, false);
     }
 
     if (NULL == skb) {

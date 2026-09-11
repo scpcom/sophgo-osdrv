@@ -455,7 +455,7 @@ static int ssv6xxx_sdio_write_sram(struct device *child, u32 addr, u8 *data, u32
     do {
         //Setting SDIO DMA address
         // if (ssv6xxx_sdio_write_reg(child,0xc0000860,addr)) ;
-        if (ssv6xxx_sdio_write_reg(child,0x08c10260,addr)) ;
+        if (ssv6xxx_sdio_write_reg(child,0x08c10260,addr)) {} ;
     
         // Set data path to DMA to SRAM
         sdio_writeb(func, 0x2, REG_Fn1_STATUS, &ret);

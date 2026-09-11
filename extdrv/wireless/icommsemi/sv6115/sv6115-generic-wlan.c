@@ -12,7 +12,10 @@
 extern int ssv_device_init(void);
 extern void ssv_device_exit(void);
 
-int ssv_initWlan(void)
+int ssv_generic_wifi_init_module(void);
+void ssv_generic_wifi_exit_module(void);
+
+static int ssv_initWlan(void)
 {
     int ret=0;
     SSV_LOG_DBG("wlan.c ssv_initWlan\n");
@@ -20,7 +23,7 @@ int ssv_initWlan(void)
     return ret;
 }
 
-void ssv_exitWlan(void)
+static void ssv_exitWlan(void)
 {
     ssv_device_exit();
     return;

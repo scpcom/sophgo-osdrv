@@ -92,7 +92,7 @@ static struct genl_family ssv_ctl_gnl_family = {
 };
 
 
-void wifi_ctl_oper_response(ST_WIFI_REG_PARAM *reg )
+static void wifi_ctl_oper_response(ST_WIFI_REG_PARAM *reg )
 {
     struct sk_buff *msg;
     void *hdr;

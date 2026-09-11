@@ -644,7 +644,7 @@ static void ssv_reord_flush(struct rxu_cntrl_reord *rx_reord, uint16_t sn_skippe
  * @param[in] frame    Pointer to the received frame
  ****************************************************************************************
  */
-bool ssv_reord_bar_check(struct ssv_softc *sc, struct host_reorder_info *rx_reorder_info, struct sk_buff *skb)
+static bool ssv_reord_bar_check(struct ssv_softc *sc, struct host_reorder_info *rx_reorder_info, struct sk_buff *skb)
 {
     uint8_t sta_idx = rx_reorder_info->sta_idx;
     uint8_t tid = rx_reorder_info->tid;
@@ -686,7 +686,7 @@ exit:
  * @return Whether the frame shall be uploaded or not
  ****************************************************************************************
  */
-bool ssv_reord_data_check(struct ssv_softc *sc, struct host_reorder_info *rx_reorder_info, struct sk_buff *skb)
+static bool ssv_reord_data_check(struct ssv_softc *sc, struct host_reorder_info *rx_reorder_info, struct sk_buff *skb)
 {
     uint8_t sta_idx = rx_reorder_info->sta_idx;
     uint8_t tid = rx_reorder_info->tid;
@@ -827,7 +827,7 @@ bool ssv_reord_data_check(struct ssv_softc *sc, struct host_reorder_info *rx_reo
     return (upload);
 }
 
-void ssv_rxreord_free_all(struct ssv_softc *sc, u8 sta_idx)
+static void ssv_rxreord_free_all(struct ssv_softc *sc, u8 sta_idx)
 {
     uint16_t i = 0, j = 0;
 
@@ -850,7 +850,7 @@ void ssv_rxreord_free_all(struct ssv_softc *sc, u8 sta_idx)
     //SSV_LOG_DBG("free all after\n");            
 }
 
-void ssv_rxreord_flush_tid(struct ssv_softc *sc, u8 sta_idx, u8 tid)
+static void ssv_rxreord_flush_tid(struct ssv_softc *sc, u8 sta_idx, u8 tid)
 {
     uint16_t i = 0;
     struct rxu_cntrl_reord *rx_reord = NULL;
@@ -872,7 +872,7 @@ void ssv_rxreord_flush_tid(struct ssv_softc *sc, u8 sta_idx, u8 tid)
     //SSV_LOG_DBG("flush tid end\n");
 }
 
-void ssv_rxreord_info_dump(struct host_reorder_info *rx_reorder_info)
+static void ssv_rxreord_info_dump(struct host_reorder_info *rx_reorder_info)
 {
     SSV_LOG_DBG("frame_info: %x sta_idx: %d tid: %d baw_size: %d pn: %lld win_start: %d sn: %d cookie: %d\n", 
                     rx_reorder_info->frame_info,
@@ -885,7 +885,7 @@ void ssv_rxreord_info_dump(struct host_reorder_info *rx_reorder_info)
                     rx_reorder_info->cookie);
 }
 
-void ssv_rxreord_tid_dump(struct ssv_softc *sc, struct host_reorder_info *rx_reorder_info)
+static void ssv_rxreord_tid_dump(struct ssv_softc *sc, struct host_reorder_info *rx_reorder_info)
 {
     uint16_t i = 0;
 
@@ -904,7 +904,7 @@ void ssv_rxreord_tid_dump(struct ssv_softc *sc, struct host_reorder_info *rx_reo
     SSV_LOG_DBG("\n");
 }
 
-bool ssv_rxreord_update_rxinfo_and_upload(struct ssv_softc *sc, struct host_reorder_info *rx_reorder_info)
+static bool ssv_rxreord_update_rxinfo_and_upload(struct ssv_softc *sc, struct host_reorder_info *rx_reorder_info)
 {
     bool upload = true;
     struct rxu_cntrl_reord *rx_reord = NULL;
@@ -1167,7 +1167,7 @@ static void ssv_rx_mgmt(struct ssv_softc *sc, struct ssv_vif *ssv_vif,
     dev_kfree_skb_any(skb);
 }
 
-int ssv_update_sta_last_rx(struct ssv_softc *sc, const u8 *mac_addr)
+static int ssv_update_sta_last_rx(struct ssv_softc *sc, const u8 *mac_addr)
 {
     int i;
 
@@ -1182,7 +1182,7 @@ int ssv_update_sta_last_rx(struct ssv_softc *sc, const u8 *mac_addr)
     return 0;
 }
 
-void ssv_rx_sw_ack_handler(struct ssv_softc *sc, struct txdesc_api *msg_desc_api)
+static void ssv_rx_sw_ack_handler(struct ssv_softc *sc, struct txdesc_api *msg_desc_api)
 {
     struct sk_buff *clone_skb;
     struct ssv_vif *ssv_vif = ssv_rx_get_vif(sc, msg_desc_api->host.vif_idx);
@@ -1255,7 +1255,7 @@ void ssv_rx_sw_ack_handler(struct ssv_softc *sc, struct txdesc_api *msg_desc_api
     }    
 }
 
-void ssv6xxx_restart_check_rx(struct ssv_softc *sc, struct sk_buff *skb, u8 pkt_type)
+static void ssv6xxx_restart_check_rx(struct ssv_softc *sc, struct sk_buff *skb, u8 pkt_type)
 {
     char *raw_data = (char *)(skb->data);
     ST_IPC_PRIV_MSG *msg_priv = (ST_IPC_PRIV_MSG *)raw_data;
@@ -1272,7 +1272,7 @@ void ssv6xxx_restart_check_rx(struct ssv_softc *sc, struct sk_buff *skb, u8 pkt_
     }
 }
 
-void ssv6xxx_check_fw_status_process(struct ssv_softc *sc)
+static void ssv6xxx_check_fw_status_process(struct ssv_softc *sc)
 {
     u32 cur_status_cnt = 0;
 

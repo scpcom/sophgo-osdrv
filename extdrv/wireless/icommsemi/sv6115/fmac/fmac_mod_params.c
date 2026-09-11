@@ -50,6 +50,10 @@ extern struct ssv6xxx_cfg ssv_cfg;
 /******************************************************************************
  * CFG80211
  *****************************************************************************/
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0)
+#define IEEE80211_HE_PHY_CAP9_NOMIMAL_PKT_PADDING_RESERVED IEEE80211_HE_PHY_CAP9_NOMINAL_PKT_PADDING_RESERVED
+#endif // 5.17
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 1, 0)
 #define WLAN_EXT_CAPA3_MULTI_BSSID_SUPPORT	0
 
@@ -454,7 +458,7 @@ static void ssv_set_ppe_threshold(struct ssv_softc *sc,
 
 
 
-void ssv_get_custom_channle_range(u32 channel_bitwise, struct custom_channel_info *p_channel_info)
+static void ssv_get_custom_channle_range(u32 channel_bitwise, struct custom_channel_info *p_channel_info)
 {
     int n_bit = 1; 
     int ch_list_idx = 0;
@@ -492,6 +496,7 @@ void ssv_get_custom_channle_range(u32 channel_bitwise, struct custom_channel_inf
 
 }
 
+#if 0
 void dump_custom_channel_info(struct custom_channel_info *p_channel_info)
 {
     int i = 0;
@@ -505,8 +510,9 @@ void dump_custom_channel_info(struct custom_channel_info *p_channel_info)
     }
 
 }
+#endif
 
-u32 channel_to_freq(u32 ch)
+static u32 channel_to_freq(u32 ch)
 {
     u32 freq = 0;
     switch(ch)
@@ -562,7 +568,7 @@ u32 channel_to_freq(u32 ch)
 
 
 
-void ssv_gen_custom_regulatory(struct custom_channel_info *p_channel_info, struct ieee80211_regdomain *ssv_regdom)
+static void ssv_gen_custom_regulatory(struct custom_channel_info *p_channel_info, struct ieee80211_regdomain *ssv_regdom)
 {
     int i;
     u8 alpha2[3] = "99";
@@ -583,7 +589,7 @@ void ssv_gen_custom_regulatory(struct custom_channel_info *p_channel_info, struc
     }
 }
 
-void dump_custom_regulatory(struct ieee80211_regdomain *ssv_regdom)
+static void dump_custom_regulatory(struct ieee80211_regdomain *ssv_regdom)
 {
     int i;
 

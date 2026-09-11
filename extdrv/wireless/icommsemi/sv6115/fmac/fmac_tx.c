@@ -1042,7 +1042,7 @@ static int _ssv_start_probe_pkt_xmit(struct ssv_vif *vif, struct ssv_sta *sta, s
     return 0;
 }
 
-void ssv_start_probe_pkt_xmit(struct ssv_vif *vif, struct ssv_sta *sta, bool fromds)
+static void ssv_start_probe_pkt_xmit(struct ssv_vif *vif, struct ssv_sta *sta, bool fromds)
 {
 #define MAX_STATION_PROBE_PERIOD        (5*1000)
     struct net_device *dev = vif->ndev;
@@ -1054,9 +1054,9 @@ void ssv_start_probe_pkt_xmit(struct ssv_vif *vif, struct ssv_sta *sta, bool fro
     }
 
     if (fromds) {
-        skb = ssv_build_nulldata_frame(sta->mac_addr, dev->dev_addr, dev->dev_addr, sta->qos, true);
+        skb = ssv_build_nulldata_frame(sta->mac_addr, (u8 *)dev->dev_addr, (u8 *)dev->dev_addr, sta->qos, true);
     } else {
-        skb = ssv_build_nulldata_frame(sta->mac_addr, dev->dev_addr, sta->mac_addr, sta->qos, false);
+        skb = ssv_build_nulldata_frame(sta->mac_addr, (u8 *)dev->dev_addr, sta->mac_addr, sta->qos, false);
     }
     if (NULL == skb) {
         SSV_LOG_DBG("fail to build nulldata\n");

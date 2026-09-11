@@ -923,7 +923,7 @@ static int ssv6xxx_hci_tx_task (void *data)
     return 0;
 }
 
-void ssv6xxx_hci_process_rx_q(struct ssv6xxx_hci_ctrl *hci_ctrl, struct sk_buff_head *rx_q)
+static void ssv6xxx_hci_process_rx_q(struct ssv6xxx_hci_ctrl *hci_ctrl, struct sk_buff_head *rx_q)
 {
     struct sk_buff                *skb, *sskb;
     int                            data_offset, data_length;
@@ -1036,7 +1036,7 @@ void ssv6xxx_hci_process_rx_q(struct ssv6xxx_hci_ctrl *hci_ctrl, struct sk_buff_
 } // end of - ssv6xxx_hci_process_rx_q -
 
 
-int ssv6xxx_hci_rx_task (void *data)
+static int ssv6xxx_hci_rx_task (void *data)
 {
     struct ssv6xxx_hci_ctrl *hci_ctrl = (struct ssv6xxx_hci_ctrl *)data;
     unsigned long     wait_period = msecs_to_jiffies(3);
@@ -1188,7 +1188,7 @@ int ssv6xxx_hci_proc_rx_register(void* hci_priv,proc_rx_cb rx_cb, void *args)
 }
 
 
-int ssv6xxx_hci_is_rx_q_full(void *args)
+static int ssv6xxx_hci_is_rx_q_full(void *args)
 {
     struct ssv6xxx_hci_ctrl *hci_ctrl=(struct ssv6xxx_hci_ctrl *)args;
     unsigned long rx_now = 0;
@@ -1218,7 +1218,7 @@ int ssv6xxx_hci_is_rx_q_full(void *args)
     
 }
 
-int ssv6xxx_hci_rx(struct sk_buff *rx_skb, void *args)
+static int ssv6xxx_hci_rx(struct sk_buff *rx_skb, void *args)
 {
     struct ssv6xxx_hci_ctrl *hci_ctrl = (struct ssv6xxx_hci_ctrl *)args;
     return _ssv6xxx_hci_rx_enqueue(hci_ctrl, rx_skb, true);

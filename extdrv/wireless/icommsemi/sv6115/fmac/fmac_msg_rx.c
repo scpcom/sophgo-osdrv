@@ -37,6 +37,7 @@
 #include "ssv_cfg.h"
 #include "ssv_debug.h"
 #include <linux/semaphore.h>
+#include "fmac_msg_rx.h"
 
 
 /*******************************************************************************

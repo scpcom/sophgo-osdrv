@@ -132,7 +132,7 @@ err_alloc:
 /**
  * WLAN driver call-back function for message reception indication
  */
-u8 ssv_msgind(void *pthis, void *hostid)
+static u8 ssv_msgind(void *pthis, void *hostid)
 {
     struct ssv_softc *sc = (struct ssv_softc *)pthis;
     struct ipc_e2a_msg *msg = (struct ipc_e2a_msg *)hostid;
@@ -154,7 +154,7 @@ u8 ssv_msgind(void *pthis, void *hostid)
  * FIXME
  *
  */
-u8 ssv_msgackind(void *pthis, void *hostid)
+static u8 ssv_msgackind(void *pthis, void *hostid)
 {
     struct ssv_softc *sc = (struct ssv_softc *)pthis;
 

@@ -578,14 +578,25 @@ struct wireless_dev *ssv_interface_add(struct ssv_softc *sc,
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0))
     if (type == NL80211_IFTYPE_AP_VLAN)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0))
+        dev_addr_mod(ndev, 0, params->macaddr, ETH_ALEN);
+#else
         memcpy(ndev->dev_addr, params->macaddr, ETH_ALEN);
+#endif
     else {
 #endif
         // sc->wphy->perm_addr == sc->macaddr[0][0]
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0))
+        if (0 == vif->drv_vif_index)
+            dev_addr_mod(ndev, 0, sc->wiphy->perm_addr, ETH_ALEN);
+        else
+            dev_addr_mod(ndev, 0, (const void *)&sc->maddr[1][0], ETH_ALEN);
+#else
         if (0 == vif->drv_vif_index)
             memcpy(ndev->dev_addr, sc->wiphy->perm_addr, ETH_ALEN);
         else
             memcpy(ndev->dev_addr, (const void *)&sc->maddr[1][0], ETH_ALEN);
+#endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0))
     }
 #endif

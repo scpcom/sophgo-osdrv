@@ -28,4 +28,7 @@ struct ssv_nimble_softc {
     struct ssv6xxx_hci_ops      *hci_ops;
 };
 
+int ssv_nimble_init(void **plat_sbc, struct ssv6xxx_hci_ops *hci_ops, void *hci_priv, struct device *dev);
+void ssv_nimble_deinit(void *plat_sbc);
+
 #endif

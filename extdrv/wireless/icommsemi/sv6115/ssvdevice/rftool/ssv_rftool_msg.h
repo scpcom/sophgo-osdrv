@@ -52,5 +52,7 @@
 //void ssv_rftool_api_send(struct ssv_nimble_softc *snc, char *buf, u16 buflen);
 int ssv_rftool_event(void *app_param, struct sk_buff *skb);
 
+int ssv_rftool_private_msg_to_hci(struct ssv_rftool_softc *srfc, u8 *msg_buffer, u32 msg_len);
+
 #endif /* __SSV_RFTOOL_MSG_H__ */
 

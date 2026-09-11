@@ -296,7 +296,7 @@ struct ssv6xxx_cfg_cmd_table cfg_cmds[] = {
 };
 
 
-size_t ssv_read_line(struct file *fp, char *buf, size_t size)
+static size_t ssv_read_line(struct file *fp, char *buf, size_t size)
 {
 	size_t num_read = 0;
 	size_t total_read = 0;
@@ -354,7 +354,7 @@ size_t ssv_read_line(struct file *fp, char *buf, size_t size)
 	return total_read;
 }
 
-int ssv_ischar(char *c)
+static int ssv_ischar(char *c)
 {
 	int is_char = 1;
 

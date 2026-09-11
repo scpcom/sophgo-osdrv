@@ -432,8 +432,11 @@ END:
  * @add_key: add a key with the given parameters. @mac_addr will be %NULL
  *	when adding a group key.
  */
-static int ssv_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev,
-                                 u8 key_index, bool pairwise, const u8 *mac_addr,
+static int ssv_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+	, int link_id
+#endif
+                                 , u8 key_index, bool pairwise, const u8 *mac_addr,
                                  struct key_params *params)
 {
     struct ssv_softc *sc = wiphy_priv(wiphy);
@@ -523,8 +526,11 @@ static int ssv_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev,
  *	not possible to retrieve the key, -ENOENT if it doesn't exist.
  *
  */
-static int ssv_cfg80211_get_key(struct wiphy *wiphy, struct net_device *netdev,
-                                 u8 key_index, bool pairwise, const u8 *mac_addr,
+static int ssv_cfg80211_get_key(struct wiphy *wiphy, struct net_device *netdev
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+	, int link_id
+#endif
+                                 , u8 key_index, bool pairwise, const u8 *mac_addr,
                                  void *cookie,
                                  void (*callback)(void *cookie, struct key_params*))
 {
@@ -537,8 +543,11 @@ static int ssv_cfg80211_get_key(struct wiphy *wiphy, struct net_device *netdev,
  * @del_key: remove a key given the @mac_addr (%NULL for a group key)
  *	and @key_index, return -ENOENT if the key doesn't exist.
  */
-static int ssv_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netdev,
-                                 u8 key_index, bool pairwise, const u8 *mac_addr)
+static int ssv_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netdev
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+	, int link_id
+#endif
+                                 , u8 key_index, bool pairwise, const u8 *mac_addr)
 {
     struct ssv_softc *sc = wiphy_priv(wiphy);
     struct ssv_vif *vif = netdev_priv(netdev);
@@ -564,8 +573,11 @@ static int ssv_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netdev,
  * @set_default_key: set the default key on an interface
  */
 static int ssv_cfg80211_set_default_key(struct wiphy *wiphy,
-                                         struct net_device *netdev,
-                                         u8 key_index, bool unicast, bool multicast)
+                                         struct net_device *netdev
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+	, int link_id
+#endif
+                                         , u8 key_index, bool unicast, bool multicast)
 {
     SSV_LOG_DBG("[%s][%d]\n", __FUNCTION__, __LINE__);
     return 0;
@@ -575,8 +587,11 @@ static int ssv_cfg80211_set_default_key(struct wiphy *wiphy,
  * @set_default_mgmt_key: set the default management frame key on an interface
  */
 static int ssv_cfg80211_set_default_mgmt_key(struct wiphy *wiphy,
-                                              struct net_device *netdev,
-                                              u8 key_index)
+                                              struct net_device *netdev
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+	, int link_id
+#endif
+                                              , u8 key_index)
 {
     SSV_LOG_DBG("[%s][%d]\n", __FUNCTION__, __LINE__);
     return 0;
@@ -608,7 +623,7 @@ RETRY_CONNECT:
         sme->auth_type == NL80211_AUTHTYPE_OPEN_SYSTEM)
     {
         SSV_LOG_DBG("%s: the actual auth type is SAE!!!\n", __func__);
-        sme->auth_type = SSV_NL80211_AUTHTYPE_SAE;
+        sme->auth_type = (enum nl80211_auth_type)SSV_NL80211_AUTHTYPE_SAE;
         g_ssv_sc = sc;
         g_ssv_vif = ssv_vif;
     }
@@ -622,7 +637,11 @@ RETRY_CONNECT:
         key_params.key_len = sme->key_len;
         key_params.seq_len = 0;
         key_params.cipher = sme->crypto.cipher_group;
-        ssv_cfg80211_add_key(wiphy, dev, sme->key_idx, false, NULL, &key_params);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+        ssv_cfg80211_add_key(wiphy, dev, 0, sme->key_idx, false, NULL, &key_params);
+#else
+	ssv_cfg80211_add_key(wiphy, dev, sme->key_idx, false, NULL, &key_params);
+#endif
     }
     //SSV_LOG_DBG("auth_type %d\n",sme->auth_type);
     //SSV_LOG_DBG("ciphers_pairwise 0x%x\n",sme->crypto.ciphers_pairwise[0]);
@@ -767,9 +786,14 @@ static int ssv_cfg80211_add_station(struct wiphy *wiphy, struct net_device *dev,
             sta->vif_idx = ssv_vif->drv_vif_index;
             sta->vlan_idx = sta->vif_idx;
             sta->qos = (params->sta_flags_set & BIT(NL80211_STA_FLAG_WME)) != 0;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
             sta->ht = params->ht_capa ? 1 : 0;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
             sta->vht = params->vht_capa ? 1 : 0;
+#endif
+#else
+	    sta->ht = params->link_sta_params.ht_capa ? 1 : 0;
+	    sta->vht = params->link_sta_params.vht_capa ? 1 : 0;
 #endif
             sta->acm = 0;
             sta->probe_timestamp = 0;
@@ -1062,9 +1086,14 @@ static int ssv_cfg80211_change_station(struct wiphy *wiphy, struct net_device *d
                     sta->vif_idx = ssv_vif->drv_vif_index;
                     sta->vlan_idx = sta->vif_idx;
                     sta->qos = (params->sta_flags_set & BIT(NL80211_STA_FLAG_WME)) != 0;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
                     sta->ht = params->ht_capa ? 1 : 0;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
                     sta->vht = params->vht_capa ? 1 : 0;
+#endif
+#else
+		    sta->ht = params->link_sta_params.ht_capa ? 1 : 0;
+		    sta->vht = params->link_sta_params.vht_capa ? 1 : 0;
 #endif
                     sta->acm = 0;
                     for (tid = 0; tid < NX_NB_TXQ_PER_STA; tid++) {
@@ -1360,9 +1389,16 @@ err:
  * @change_beacon: Change the beacon parameters for an access point mode
  *	interface. This should reject the call when AP mode wasn't started.
  */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0))
+static int ssv_cfg80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
+                                       struct cfg80211_ap_update *update)
+{
+	struct cfg80211_beacon_data *info = &update->beacon;
+#else
 static int ssv_cfg80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
                                        struct cfg80211_beacon_data *info)
 {
+#endif
     struct ssv_softc *sc = wiphy_priv(wiphy);
     struct ssv_vif *vif = netdev_priv(dev);
     struct ssv_bcn *bcn = &vif->ap.bcn;
@@ -1388,7 +1424,11 @@ static int ssv_cfg80211_change_beacon(struct wiphy *wiphy, struct net_device *de
 /**
  * * @stop_ap: Stop being an AP, including stopping beaconing.
  */
-static int ssv_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+static int ssv_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+	, unsigned int link_id
+#endif
+	)
 {
     struct ssv_softc *sc = wiphy_priv(wiphy);
     struct ssv_vif *ssv_vif = netdev_priv(dev);
@@ -1544,7 +1584,7 @@ END:
  * @probe_client: probe an associated client, must return a cookie that it
  *	later passes to cfg80211_probe_status().
  */
-int ssv_cfg80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+static int ssv_cfg80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
             const u8 *peer, u64 *cookie)
 {
     return 0;
@@ -1555,7 +1595,7 @@ int ssv_cfg80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
  * @update_mgmt_frame_registrations: Notify the driver that management frame
  *	registrations were updated. The callback is allowed to sleep.
  */
-void ssv_cfg80211_update_mgmt_frame_registrations(struct wiphy *wiphy,
+static void ssv_cfg80211_update_mgmt_frame_registrations(struct wiphy *wiphy,
 						 struct wireless_dev *wdev,
 						 struct mgmt_frame_regs *upd)
 {
@@ -1890,6 +1930,9 @@ static struct ssv_vif *ssv_get_first_up_vif(struct ssv_softc *sc)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
 static int ssv_cfg80211_get_channel(struct wiphy *wiphy,
                                      struct wireless_dev *wdev,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+	unsigned int link_id,
+#endif
                                      struct cfg80211_chan_def *chandef)
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
 static struct ieee80211_channel *ssv_cfg80211_get_channel(struct wiphy *wiphy,
@@ -2180,7 +2223,7 @@ int ssv_cfg80211_set_cqm_rssi_config(struct wiphy *wiphy,
 /**
  * @change_bss: Modify parameters for a given BSS (mainly for AP mode).
  */
-int ssv_cfg80211_change_bss(struct wiphy *wiphy, struct net_device *dev,
+static int ssv_cfg80211_change_bss(struct wiphy *wiphy, struct net_device *dev,
                              struct bss_parameters *params)
 {
     struct ssv_vif *ssv_vif = netdev_priv(dev);
@@ -2213,7 +2256,7 @@ int ssv_cfg80211_change_bss(struct wiphy *wiphy, struct net_device *dev,
  *	as soon as possible.
  */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 12, 0)
-int ssv_cfg80211_channel_switch(struct wiphy *wiphy,
+static int ssv_cfg80211_channel_switch(struct wiphy *wiphy,
                                  struct net_device *dev,
                                  struct cfg80211_csa_settings *params)
 {
@@ -2314,7 +2357,7 @@ end:
 /**
  * @get_station: get station information.
  */
-int ssv_cfg80211_get_station(struct wiphy *wiphy, 
+static int ssv_cfg80211_get_station(struct wiphy *wiphy, 
 				struct net_device *dev,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
                 const u8 *mac,
@@ -2445,7 +2488,7 @@ void ssv_external_auth_disable(struct ssv_vif *vif)
 }
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0) || defined(CONFIG_SUPPORT_WPA3))
-int ssv_cfg80211_external_auth(struct wiphy *wiphy, struct net_device *dev,
+static int ssv_cfg80211_external_auth(struct wiphy *wiphy, struct net_device *dev,
                 struct cfg80211_external_auth_params *params)
 {
     struct ssv_softc *sc = wiphy_priv(wiphy);
