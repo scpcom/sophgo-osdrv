@@ -24,6 +24,7 @@
 #endif
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
+#include <linux/vmalloc.h>
 
 #include "cvi_ive_interface.h"
 #include "cvi_ive_platform.h"
@@ -31,11 +32,15 @@
 #define CVI_IVE_CDEV_NAME "cvi-ive"
 #define CVI_IVE_CLASS_NAME "cvi-ive"
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 #if (KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE)
-uint32_t get_duration_us(const struct timespec64 *start,
+static uint32_t get_duration_us(const struct timespec64 *start,
 				const struct timespec64 *end)
 #else
-uint32_t get_duration_us(const struct timespec *start,
+static uint32_t get_duration_us(const struct timespec *start,
 				const struct timespec *end)
 #endif
 {
@@ -810,11 +815,15 @@ static int cvi_ive_close(struct inode *inode, struct file *filp)
 //	return 0;
 //}
 
-int cvi_ive_register_cdev(struct cvi_ive_device *ndev)
+static int cvi_ive_register_cdev(struct cvi_ive_device *ndev)
 {
 	int ret;
 	// Create device to /sys/class/
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	class_id = class_create(THIS_MODULE, CVI_IVE_CLASS_NAME);
+#else
+	class_id = class_create(CVI_IVE_CLASS_NAME);
+#endif
 	if (IS_ERR(class_id)) {
 		pr_err("[IVE] create class failed\n");
 		return PTR_ERR(class_id);
@@ -907,7 +916,11 @@ static int cvi_ive_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_ive_remove(struct platform_device *pdev)
+#else
+static void cvi_ive_remove(struct platform_device *pdev)
+#endif
 {
 	// Get drvdata(global variables)
 	struct cvi_ive_device *ndev = platform_get_drvdata(pdev);
@@ -929,7 +942,9 @@ static int cvi_ive_remove(struct platform_device *pdev)
 
 	// remove ive proc
 	proc_remove(ndev->proc_dir);
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 #ifdef CONFIG_PM_SLEEP
