@@ -554,7 +554,7 @@ void sys_save_modules_cb(void *base_m_cb)
 }
 EXPORT_SYMBOL_GPL(sys_save_modules_cb);
 
-int _sys_exe_module_cb(struct base_exe_m_cb *exe_cb)
+static int _sys_exe_module_cb(struct base_exe_m_cb *exe_cb)
 {
 	struct base_m_cb_info *cb_info;
 
@@ -867,7 +867,7 @@ static const struct file_operations cvi_sys_fops = {
 #endif
 };
 
-int cvi_sys_register_misc(struct cvi_sys_device *ndev)
+static int cvi_sys_register_misc(struct cvi_sys_device *ndev)
 {
 	int rc;
 
@@ -914,7 +914,11 @@ static int cvi_sys_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_sys_remove(struct platform_device *pdev)
+#else
+static void cvi_sys_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_sys_device *ndev = platform_get_drvdata(pdev);
 
@@ -923,7 +927,9 @@ static int cvi_sys_remove(struct platform_device *pdev)
 	misc_deregister(&ndev->miscdev);
 	platform_set_drvdata(pdev, NULL);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static const struct of_device_id cvitek_sys_match[] = {
@@ -946,4 +952,5 @@ module_platform_driver(cvitek_sys_driver);
 MODULE_AUTHOR("Wellken Chen<wellken.chen@cvitek.com.tw>");
 MODULE_DESCRIPTION("Cvitek SoC SYS driver");
 MODULE_LICENSE("GPL");
+MODULE_INFO(import_ns, "DMA_BUF");
 

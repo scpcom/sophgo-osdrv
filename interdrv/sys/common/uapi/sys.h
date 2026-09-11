@@ -35,6 +35,8 @@ int32_t sys_unbind(MMF_CHN_S *pstSrcChn, MMF_CHN_S *pstDestChn);
 const uint8_t *sys_get_modname(MOD_ID_E id);
 VPSS_MODE_E sys_get_vpssmode(void);
 
+void sys_save_modules_cb(void *base_m_cb);
+
 #if 0
 #define SYS_IOCTL_BASE	'y'
 #define SYS_ION_ALLOC		_IOWR(SYS_IOCTL_BASE, 0x01, unsigned long long)
