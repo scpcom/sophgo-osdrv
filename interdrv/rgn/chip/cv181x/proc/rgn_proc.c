@@ -3,6 +3,10 @@
 #define GENERATE_STRING(STRING)	(#STRING),
 #define RGN_PROC_NAME "cvitek/rgn"
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 static const char *const MOD_STRING[] = FOREACH_MOD(GENERATE_STRING);
 extern struct cvi_rgn_ctx rgn_prc_ctx;
 /*************************************************************************
@@ -40,7 +44,11 @@ static int rgn_proc_show(struct seq_file *m, void *v)
 		return -1;
 	}
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	seq_printf(m, "\nModule: [RGN], Build Time[%s]\n", UTS_VERSION);
+#else
+	seq_printf(m, "\nModule: [RGN]\n");
+#endif
 	// Region status of overlay
 	seq_puts(m, "\n------REGION STATUS OF OVERLAY--------------------------------------------\n");
 	seq_printf(m, "%10s%10s%10s%20s%10s%10s%10s%20s%20s%10s%10s%7s%12s\n",

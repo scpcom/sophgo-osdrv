@@ -16,6 +16,7 @@
 #include <rgn_cb.h>
 #include <cmdqu_cb.h>
 #include "sys.h"
+#include "rgn_interfaces.h"
 
 /*******************************************************
  *  type definition
@@ -2034,7 +2035,7 @@ RGN_COMP_INFO_S s_ConvertInfo[RGN_COLOR_FMT_BUTT] = {
 		{ 8, 8, 8, 8 }  /*ARGB8888*/
 };
 
-CVI_U16 RGN_MAKECOLOR_U16_A(CVI_U8 a, CVI_U8 r, CVI_U8 g, CVI_U8 b, RGN_COMP_INFO_S input_fmt)
+static CVI_U16 RGN_MAKECOLOR_U16_A(CVI_U8 a, CVI_U8 r, CVI_U8 g, CVI_U8 b, RGN_COMP_INFO_S input_fmt)
 {
 	CVI_U8 a1, r1, g1, b1;
 	CVI_U16 pixel;

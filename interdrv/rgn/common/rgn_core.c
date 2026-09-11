@@ -28,7 +28,7 @@ const struct file_operations rgn_fops = {
 	.release = rgn_core_release,
 };
 
-int rgn_core_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
+static int rgn_core_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
 {
 	return rgn_cb(dev, caller, cmd, arg);
 }
@@ -108,7 +108,11 @@ err_create_instance:
 	return ret;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_rgn_remove(struct platform_device *pdev)
+#else
+static void cvi_rgn_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_rgn_dev *rdev = platform_get_drvdata(pdev);
 	int ret = 0;
@@ -129,7 +133,9 @@ static int cvi_rgn_remove(struct platform_device *pdev)
 err_destroy_instance:
 	CVI_TRACE_RGN(RGN_INFO, "%s -\n", __func__);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return ret;
+#endif
 }
 
 static const struct of_device_id cvi_rgn_dt_match[] = {
