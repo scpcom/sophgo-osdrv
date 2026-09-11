@@ -126,7 +126,11 @@ static spinlock_t s_vpu_lock = __SPIN_LOCK_UNLOCKED(s_vpu_lock);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 36)
 static DECLARE_MUTEX(s_vpu_sem);
 #else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 static DEFINE_SEMAPHORE(s_vpu_sem);
+#else
+static DEFINE_SEMAPHORE(s_vpu_sem, 1);
+#endif
 #endif
 static struct list_head s_vbp_head = LIST_HEAD_INIT(s_vbp_head);
 static struct list_head s_inst_list_head = LIST_HEAD_INIT(s_inst_list_head);
@@ -1402,7 +1406,11 @@ static int cvi_vcodec_register_cdev(struct cvi_vpu_device *vdev)
 {
 	int err = 0;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	vdev->vpu_class = class_create(THIS_MODULE, VPU_CLASS_NAME);
+#else
+	vdev->vpu_class = class_create(VPU_CLASS_NAME);
+#endif
 	if (IS_ERR(vdev->vpu_class)) {
 		VCODEC_DBG_ERR("create class failed\n");
 		return PTR_ERR(vdev->vpu_class);
@@ -1568,7 +1576,11 @@ static int cvi_vcodec_allocate_memory(struct platform_device *pdev)
 }
 #endif
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int vpu_remove(struct platform_device *pdev)
+#else
+static void vpu_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_vpu_device *vdev = platform_get_drvdata(pdev);
 
@@ -1608,14 +1620,21 @@ static int vpu_remove(struct platform_device *pdev)
 
 	cviReleaseRegResource(vdev);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 struct mutex vcodec_mutex;
 
 void vcodec_lock(void)
 {
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	mutex_lock_interruptible(&vcodec_mutex);
+#else
+	int ret = mutex_lock_interruptible(&vcodec_mutex);
+	(void)(ret);
+#endif
 }
 EXPORT_SYMBOL(vcodec_lock);
 
@@ -1652,7 +1671,7 @@ int ctrl_reg40;
 #define W5_CMD_SLEEP_VPU (0x0004)
 #define W5_CMD_WAKEUP_VPU (0x0002)
 
-void dump_sbm_reg(void)
+static void dump_sbm_reg(void)
 {
       int i = 0;
 
@@ -1663,7 +1682,7 @@ void dump_sbm_reg(void)
       }
 }
 
-void write_sbm_reg(void)
+static void write_sbm_reg(void)
 {
       int i = 0;
 
@@ -1674,7 +1693,7 @@ void write_sbm_reg(void)
       }
 }
 
-void dump_ctrl_reg(void)
+static void dump_ctrl_reg(void)
 {
 	ctrl_reg10 = ReadCtrlRegister(0x10);
 #if defined(__CV180X__)
@@ -1683,7 +1702,7 @@ void dump_ctrl_reg(void)
 	ctrl_reg40 = ReadCtrlRegister(0x40);
 }
 
-void write_ctrl_reg(void)
+static void write_ctrl_reg(void)
 {
 	WritCtrlRegister(0x10, ctrl_reg10);
 #if defined(__CV180X__)
