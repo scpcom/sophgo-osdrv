@@ -29,6 +29,12 @@ static DEFINE_MUTEX(reboot_lock);
 struct cvi_vip_mipi_tx_dev *reboot_info;
 int dump_reg = 1;
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0))
+#define GPIOF_DIR_OUT GPIOF_OUT_INIT_LOW
+#define GPIOF_INIT_LOW GPIOF_OUT_INIT_LOW
+#define GPIOF_INIT_HIGH GPIOF_OUT_INIT_HIGH
+#endif
+
 /*
  * macro definition
  */
@@ -810,14 +816,22 @@ err_res:
 	return rc;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_mipi_tx_remove(struct platform_device *pdev)
+#else
+static void cvi_mipi_tx_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_vip_mipi_tx_dev *tdev;
 
 	tdev = dev_get_drvdata(&pdev->dev);
 	if (!tdev) {
 		dev_err(&pdev->dev, "Can not get cvi_mipi_tx drvdata");
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 		return -ENODEV;
+#else
+		return;
+#endif
 	}
 
 	unregister_reboot_notifier(&_reboot_notifier);
@@ -837,7 +851,9 @@ static int cvi_mipi_tx_remove(struct platform_device *pdev)
 
 	mipi_tx_proc_remove();
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 #if defined(CONFIG_PM)

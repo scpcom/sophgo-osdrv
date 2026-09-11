@@ -4,6 +4,10 @@
 #define MIPI_TX_PROC_NAME "cvitek/mipi_tx"
 #define MIPI_TX_PROC_MEM_SIZE sizeof(struct combo_dev_cfg_s)
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 /*************************************************************************
  *	MIPI_Tx proc functions
  *************************************************************************/
@@ -57,7 +61,11 @@ static int mipi_tx_proc_show(struct seq_file *m, void *v)
 		phy_data_rate = phy_data_rate % 10 ? phy_data_rate / 10 + 1 : phy_data_rate / 10;
 	}
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	seq_printf(m, "\nModule: [MIPI_TX], Build Time[%s]\n", UTS_VERSION);
+#else
+	seq_printf(m, "\nModule: [MIPI_TX]\n");
+#endif
 	// MIPI_Tx DEV CONFIG
 	seq_puts(m, "\n------MIPI_Tx DEV CONFIG----------------------------------------------\n");
 	seq_printf(m, "%10s%10s%10s%10s%10s%15s%15s%15s%15s%15s\n",

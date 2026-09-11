@@ -5,6 +5,10 @@
 
 #define VO_PRC_NAME	"cvitek/vo"
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 static void *vo_shared_mem;
 /*************************************************************************
  *	VO proc functions

@@ -50,7 +50,7 @@ const struct file_operations vo_fops = {
 	.poll = vo_core_poll,
 };
 
-int vo_core_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
+static int vo_core_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
 {
 	return vo_cb(dev, caller, cmd, arg);
 }
@@ -82,7 +82,11 @@ static int vo_core_register_cdev(struct cvi_vo_dev *dev)
 	struct device *dev_t;
 	int err = 0;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	dev->vo_class = class_create(THIS_MODULE, CVI_VO_CLASS_NAME);
+#else
+	dev->vo_class = class_create(CVI_VO_CLASS_NAME);
+#endif
 	if (IS_ERR(dev->vo_class)) {
 		dev_err(dev->dev, "create class failed\n");
 		return PTR_ERR(dev->vo_class);
@@ -236,7 +240,11 @@ err_clk_init:
 	return ret;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int vo_core_remove(struct platform_device *pdev)
+#else
+static void vo_core_remove(struct platform_device *pdev)
+#endif
 {
 	int ret = 0;
 	bool status = false;
@@ -266,11 +274,13 @@ static int vo_core_remove(struct platform_device *pdev)
 err_destroy_instance:
 	CVI_TRACE_VO(CVI_DBG_INFO, "%s -\n", __func__);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return ret;
+#endif
 }
 
 #if defined(CONFIG_PM)
-int vo_core_suspend(struct platform_device *pdev, pm_message_t state)
+static int vo_core_suspend(struct platform_device *pdev, pm_message_t state)
 {
 	CVI_S32 ret = CVI_FAILURE;
 	struct cvi_vo_dev *dev;
@@ -305,7 +315,7 @@ int vo_core_suspend(struct platform_device *pdev, pm_message_t state)
 
 }
 
-int vo_core_resume(struct platform_device *pdev)
+static int vo_core_resume(struct platform_device *pdev)
 {
 	CVI_S32 ret = CVI_FAILURE;
 	struct cvi_vo_dev *dev;

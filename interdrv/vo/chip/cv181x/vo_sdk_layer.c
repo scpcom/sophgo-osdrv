@@ -249,7 +249,7 @@ VO_SYNC_INFO_S stSyncInfo[VO_OUTPUT_BUTT] = {
  ****************************************************************************/
 
 
-CVI_S32 vo_clear_chnbuf(VO_LAYER VoLayer, VO_CHN VoChn, bool bClrAll)
+static CVI_S32 vo_clear_chnbuf(VO_LAYER VoLayer, VO_CHN VoChn, bool bClrAll)
 {
 	int i = 0;
 	struct vb_s *vb;
@@ -306,7 +306,7 @@ CVI_S32 vo_clear_chnbuf(VO_LAYER VoLayer, VO_CHN VoChn, bool bClrAll)
 	return ret;
 }
 
-CVI_S32 vo_send_frame(VO_LAYER VoLayer, VO_CHN VoChn, VIDEO_FRAME_INFO_S *pstVideoFrame, CVI_S32 s32MilliSec)
+static CVI_S32 vo_send_frame(VO_LAYER VoLayer, VO_CHN VoChn, VIDEO_FRAME_INFO_S *pstVideoFrame, CVI_S32 s32MilliSec)
 {
 	MMF_CHN_S chn = {.enModId = CVI_ID_VO, .s32DevId = VoLayer, .s32ChnId = VoChn};
 	VB_BLK blk;
@@ -424,7 +424,7 @@ CVI_S32 vo_get_chn_attr(VO_LAYER VoLayer, VO_CHN VoChn, VO_CHN_ATTR_S *pstChnAtt
 	return CVI_SUCCESS;
 }
 
-CVI_S32 vo_get_panelstatus(VO_LAYER VoLayer, VO_CHN VoChn, CVI_U32 *is_init)
+static CVI_S32 vo_get_panelstatus(VO_LAYER VoLayer, VO_CHN VoChn, CVI_U32 *is_init)
 {
 	CVI_U32 is_init_panel = 0;
 	CVI_S32 ret = CVI_FAILURE;
@@ -442,7 +442,7 @@ CVI_S32 vo_get_panelstatus(VO_LAYER VoLayer, VO_CHN VoChn, CVI_U32 *is_init)
 
 	return CVI_SUCCESS;
 }
-CVI_S32 vo_set_pub_attr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr)
+static CVI_S32 vo_set_pub_attr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr)
 {
 	struct cvi_disp_intf_cfg *cfg;
 
@@ -725,7 +725,7 @@ CVI_S32 vo_set_pub_attr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr)
 	kfree(cfg);
 	return CVI_SUCCESS;
 }
-CVI_S32 vo_get_pub_attr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr)
+static CVI_S32 vo_get_pub_attr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr)
 {
 	enum sclr_vo_sel vo_sel;
 	struct sclr_disp_timing *timing = sclr_disp_get_timing();
@@ -774,7 +774,7 @@ CVI_S32 vo_get_pub_attr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr)
 
 }
 
-CVI_S32 vo_set_chn_attr(VO_LAYER VoLayer, VO_CHN VoChn, const VO_CHN_ATTR_S *pstChnAttr)
+static CVI_S32 vo_set_chn_attr(VO_LAYER VoLayer, VO_CHN VoChn, const VO_CHN_ATTR_S *pstChnAttr)
 {
 	struct sclr_rect area;
 	u8 i = 0;
@@ -824,7 +824,7 @@ CVI_S32 vo_set_chn_attr(VO_LAYER VoLayer, VO_CHN VoChn, const VO_CHN_ATTR_S *pst
 	return CVI_SUCCESS;
 }
 
-CVI_S32 vo_enable(VO_DEV VoDev)
+static CVI_S32 vo_enable(VO_DEV VoDev)
 {
 	CVI_S32 ret = CVI_FAILURE;
 	struct base_exe_m_cb exe_cb;
@@ -889,7 +889,7 @@ CVI_S32 vo_disable(VO_DEV VoDev)
 
 }
 
-CVI_S32 vo_enable_chn(VO_LAYER VoLayer, VO_CHN VoChn)
+static CVI_S32 vo_enable_chn(VO_LAYER VoLayer, VO_CHN VoChn)
 {
 	u8 create_thread = true;
 	MMF_CHN_S chn = {.enModId = CVI_ID_VO, .s32DevId = 0, .s32ChnId = 0};
@@ -1039,7 +1039,7 @@ int vo_get_chnrotation(VO_LAYER VoLayer, VO_CHN VoChn, ROTATION_E *penRotation)
 
 	return CVI_SUCCESS;
 }
-struct vo_fmt *vo_sdk_get_format(u32 pixelformat)
+static struct vo_fmt *vo_sdk_get_format(u32 pixelformat)
 {
 	struct vo_fmt *fmt;
 	unsigned int k;
@@ -1083,7 +1083,7 @@ static void _vo_sdk_fill_disp_cfg(struct sclr_disp_cfg *cfg,
 }
 
 
-int _vo_sdk_setfmt(CVI_S32 width, CVI_S32 height, CVI_U32 pxlfmt)
+static int _vo_sdk_setfmt(CVI_S32 width, CVI_S32 height, CVI_U32 pxlfmt)
 {
 	int p = 0, i = 0;
 	u8 align = 0;
@@ -1249,7 +1249,7 @@ static int vo_set_chnrotation(VO_LAYER VoLayer, VO_CHN VoChn, ROTATION_E enRotat
 	return CVI_SUCCESS;
 }
 
-CVI_S32 vo_resume(void)
+static CVI_S32 vo_resume(void)
 {
 	CVI_S32 ret = CVI_FAILURE;
 	MMF_CHN_S chn = {.enModId = CVI_ID_VO, .s32DevId = 0, .s32ChnId = 0};
@@ -1277,7 +1277,7 @@ CVI_S32 vo_resume(void)
 
 }
 
-CVI_S32 vo_suspend(void)
+static CVI_S32 vo_suspend(void)
 {
 	CVI_S32 ret = CVI_FAILURE;
 	MMF_CHN_S chn = {.enModId = CVI_ID_VO, .s32DevId = 0, .s32ChnId = 0};

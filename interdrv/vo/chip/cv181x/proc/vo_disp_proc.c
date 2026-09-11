@@ -9,6 +9,10 @@ static const char * const str_sclr_fmt[] = {"YUV420", "YUV422", "RGB_PLANAR", "R
 static const char * const str_sclr_csc[] = {"Disable", "2RGB_601_Limit", "2RGB_601_Full", "2RGB_709_Limit"
 	, "2RGB_709_Full", "2YUV_601_Limit", "2YUV_601_Full", "2YUV_709_Limit", "2YUV_709_Full"};
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 /*************************************************************************
  *	VO proc functions
  *************************************************************************/

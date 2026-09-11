@@ -40,6 +40,12 @@
  ******************************************************/
 #define SEM_WAIT_TIMEOUT_MS  200
 #define VO_PROFILE
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0))
+#define GPIOF_DIR_OUT GPIOF_OUT_INIT_LOW
+#define GPIOF_INIT_LOW GPIOF_OUT_INIT_LOW
+#define GPIOF_INIT_HIGH GPIOF_OUT_INIT_HIGH
+#endif
 /*******************************************************
  *  Global variables
  ******************************************************/
@@ -65,7 +71,7 @@ static CVI_U8 i80_ctrl[I80_CTRL_MAX] = { 0x31, 0x75, 0xff };
 static struct mutex vo_gdc_lock;
 static atomic_t  dev_open_cnt;
 
-void _disp_sel_remux(const struct vo_d_remap *pins, unsigned int pin_num)
+static void _disp_sel_remux(const struct vo_d_remap *pins, unsigned int pin_num)
 {
 	int i = 0;
 
@@ -246,7 +252,7 @@ static void _disp_sel_pinmux(enum cvi_disp_intf intf_type, void *param)
 	}
 }
 
-void _disp_ctrlpin_set(unsigned int gpio_num, enum GPIO_ACTIVE_E active)
+static void _disp_ctrlpin_set(unsigned int gpio_num, enum GPIO_ACTIVE_E active)
 {
 	enum of_gpio_flags flags;
 	static int count;
@@ -344,7 +350,7 @@ static int _vo_destroy_proc(struct cvi_vo_dev *vdev)
 
 	return ret;
 }
-u8 _gop_get_bpp(enum sclr_gop_format fmt)
+static u8 _gop_get_bpp(enum sclr_gop_format fmt)
 {
 	return (fmt == SCL_GOP_FMT_ARGB8888) ? 4 :
 		(fmt == SCL_GOP_FMT_256LUT) ? 1 : 2;
@@ -534,7 +540,7 @@ int vo_set_interface(struct cvi_vo_dev *vdev, struct cvi_disp_intf_cfg *cfg)
 	return rc;
 }
 
-int vo_set_rgn_cfg(const u8 inst, const struct cvi_rgn_cfg *cfg, const struct sclr_size *size)
+static int vo_set_rgn_cfg(const u8 inst, const struct cvi_rgn_cfg *cfg, const struct sclr_size *size)
 {
 	u8 i, layer = 0;
 	struct sclr_gop_cfg *gop_cfg = sclr_gop_get_cfg(inst, layer);
@@ -647,7 +653,7 @@ void vo_fill_disp_timing(struct sclr_disp_timing *timing,
 	timing->hsync_pol = bt_timing->polarities & VO_DV_HSYNC_POS_POL;
 }
 
-struct cvi_disp_buffer *vo_next_buf(struct cvi_vo_dev *vdev)
+static struct cvi_disp_buffer *vo_next_buf(struct cvi_vo_dev *vdev)
 {
 	unsigned long flags;
 	struct cvi_disp_buffer *b = NULL;
@@ -666,7 +672,7 @@ struct cvi_disp_buffer *vo_next_buf(struct cvi_vo_dev *vdev)
 	return b;
 }
 
-struct cvi_disp_buffer *vo_buf_remove(struct cvi_vo_dev *vdev)
+static struct cvi_disp_buffer *vo_buf_remove(struct cvi_vo_dev *vdev)
 {
 	unsigned long flags;
 	struct cvi_disp_buffer *b = NULL;
@@ -728,14 +734,14 @@ static void _vo_hw_enque(struct cvi_vo_dev *vdev)
 	}
 }
 
-void vo_wake_up_th(struct cvi_vo_dev *vdev)
+static void vo_wake_up_th(struct cvi_vo_dev *vdev)
 {
 	CVI_TRACE_VO(CVI_DBG_INFO, "wake up th when vb buffer done\n");
 	vdev->vo_th[E_VO_TH_DISP].flag = 1;
 	wake_up(&vdev->vo_th[E_VO_TH_DISP].wq);
 }
 
-void vo_buf_queue(struct cvi_vo_dev *vdev, struct cvi_disp_buffer *b)
+static void vo_buf_queue(struct cvi_vo_dev *vdev, struct cvi_disp_buffer *b)
 {
 	unsigned long flags;
 
@@ -810,7 +816,7 @@ static void _get_frame_rgb(PIXEL_FORMAT_E fmt, CVI_U8 **buf, CVI_U32 *stride, CV
 	}
 }
 
-CVI_U32 _MAKECOLOR(CVI_U8 r, CVI_U8 g, CVI_U8 b, VO_I80_FORMAT fmt)
+static CVI_U32 _MAKECOLOR(CVI_U8 r, CVI_U8 g, CVI_U8 b, VO_I80_FORMAT fmt)
 {
 	CVI_U8 r1, g1, b1;
 	CVI_U8 r_len, g_len, b_len;
@@ -937,7 +943,7 @@ static CVI_S32 _i80_transform_frame(VB_BLK blk_in, VB_BLK *blk_out)
 	return CVI_SUCCESS;
 }
 
-void vo_post_job(CVI_U8 vo_dev)
+static void vo_post_job(CVI_U8 vo_dev)
 {
 	MMF_CHN_S chn = {.enModId = CVI_ID_VO, .s32DevId = 0, .s32ChnId = 0};
 	struct vb_jobs_t *jobs;
@@ -1010,7 +1016,7 @@ static CVI_VOID _vo_qbuf(VB_BLK blk)
 	vo_disp_buf_queue(gVdev, qbuf);
 }
 
-void _vo_gdc_callback(CVI_VOID *pParam, VB_BLK blk)
+static void _vo_gdc_callback(CVI_VOID *pParam, VB_BLK blk)
 {
 	if (!pParam)
 		return;
@@ -1293,7 +1299,11 @@ int vo_create_thread(struct cvi_vo_dev *vdev, enum E_VO_TH th_id)
 		CVI_TRACE_VO(CVI_DBG_ERR, "_vo_create_thread fail\n");
 		return -1;
 	}
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 	param.sched_priority = MAX_USER_RT_PRIO - 10;
+#else
+	param.sched_priority = MAX_RT_PRIO - 10;
+#endif
 
 	if (vdev->vo_th[th_id].w_thread == NULL) {
 		switch (th_id) {
@@ -2107,7 +2117,7 @@ int vo_open(struct inode *inode, struct file *file)
 
 }
 
-void _vo_sdk_release(struct cvi_vo_dev *vdev)
+static void _vo_sdk_release(struct cvi_vo_dev *vdev)
 {
 	int i, j;
 

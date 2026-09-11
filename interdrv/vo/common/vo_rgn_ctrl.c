@@ -7,6 +7,7 @@
 
 #include <vo.h>
 #include <vo_cb.h>
+#include "vo_rgn_ctrl.h"
 
 static CVI_S32 _check_vo_status(VO_LAYER VoLayer, VO_CHN VoChn)
 {
