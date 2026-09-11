@@ -27,6 +27,7 @@
 #include <linux/of_reserved_mem.h>
 #include <linux/streamline_annotate.h>
 #include <linux/version.h>
+#include <linux/vmalloc.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 #include <linux/sched/signal.h>
 #endif
@@ -58,7 +59,11 @@
 #define MJPEG_PIC_STATUS_REG 0x4
 #define MJPEG_INTR_MASK_REG  0x0C0
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 static DEFINE_SEMAPHORE(s_jpu_sem);
+#else
+static DEFINE_SEMAPHORE(s_jpu_sem, 1);
+#endif
 
 int jpu_mask = JPU_MASK_ERR;
 module_param(jpu_mask, int, 0644);
@@ -90,7 +95,7 @@ static void set_clock_enable(struct cvi_jpu_device *jdev, int enable)
 	}
 }
 
-irqreturn_t jpu_irq_handler(int irq, void *data)
+static irqreturn_t __maybe_unused jpu_irq_handler(int irq, void *data)
 {
 	struct cvi_jpu_device *jdev = data;
 	jpudrv_buffer_t *pReg = &jdev->jpu_register;
@@ -509,7 +514,11 @@ static int cvi_jpu_register_cdev(struct cvi_jpu_device *jdev)
 {
 	int err = 0;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	jdev->jpu_class = class_create(THIS_MODULE, JPU_CLASS_NAME);
+#else
+	jdev->jpu_class = class_create(JPU_CLASS_NAME);
+#endif
 	if (IS_ERR(jdev->jpu_class)) {
 		pr_err("create class failed\n");
 		return PTR_ERR(jdev->jpu_class);
@@ -578,7 +587,11 @@ static int jpu_allocate_memory(struct cvi_jpu_device *jdev, struct platform_devi
 }
 #endif // #ifndef USE_VMALLOC_FOR_INSTANCE_POOL_MEMORY
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int jpu_remove(struct platform_device *pdev)
+#else
+static void jpu_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_jpu_device *jdev = platform_get_drvdata(pdev);
 
@@ -614,7 +627,9 @@ static int jpu_remove(struct platform_device *pdev)
 		jdev->jpu_control_register.virt_addr = 0x00;
 	}
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static void cvi_jpu_unregister_cdev(struct platform_device *pdev)
