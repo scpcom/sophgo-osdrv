@@ -17,7 +17,9 @@
 #ifdef __KERNEL__
 	#include <linux/if_arp.h>
 	#include <net/ip.h>
+#ifdef CONFIG_RTW_IPX
 	#include <net/ipx.h>
+#endif
 	#include <linux/atalk.h>
 	#include <linux/udp.h>
 	#include <linux/if_pppox.h>
@@ -68,6 +70,8 @@
 #define MAGIC_CODE_LEN	2
 #define WAIT_TIME_PPPOE	5	/* waiting time for pppoe server in sec */
 
+int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method);
+
 /*-----------------------------------------------------------------
   How database records network address:
            0    1    2    3    4    5    6    7    8    9   10
@@ -78,6 +82,12 @@
   Apple |type| Network |node|
   PPPoE |type|   SID   |           AC MAC            |
 -----------------------------------------------------------------*/
+
+void nat25_db_expire(_adapter *priv);
+int nat25_handle_frame(_adapter *priv, struct sk_buff *skb);
+void dhcp_flag_bcast(_adapter *priv, struct sk_buff *skb);
+void *scdb_findEntry(_adapter *priv, unsigned char *macAddr,
+		     unsigned char *ipAddr);
 
 
 /* Find a tag in pppoe frame and return the pointer */
@@ -949,6 +959,7 @@ int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method)
 			}
 		}
 
+#ifdef CONFIG_RTW_IPX
 		/*   IPX  */
 		if (ipx != NULL) {
 			switch (method) {
@@ -1015,10 +1026,11 @@ int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method)
 			default:
 				return -1;
 			}
-		}
+		} else
+#endif
 
 		/*   AARP  */
-		else if (ea != NULL) {
+		if (ea != NULL) {
 			/* Sanity check fields. */
 			if (ea->hw_len != ETH_ALEN || ea->pa_len != AARP_PA_ALEN) {
 				DEBUG_WARN("NAT25: Appletalk AARP Sanity check fail!\n");
