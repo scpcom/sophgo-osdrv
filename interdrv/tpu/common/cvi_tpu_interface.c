@@ -36,6 +36,7 @@
 #include <asm/cacheflush.h>
 #include <linux/of.h>
 #include <linux/version.h>
+#include <linux/vmalloc.h>
 #if (KERNEL_VERSION(4, 15, 0) <= LINUX_VERSION_CODE)
 #include <linux/sched/signal.h>
 #endif
@@ -53,6 +54,10 @@
 
 #define CVI_TPU_CDEV_NAME "cvi-tpu"
 #define CVI_TPU_CLASS_NAME "cvi-tpu"
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
 
 enum tpu_submit_path {
 	TPU_PATH_DESNORMAL = 0,
@@ -1116,7 +1121,11 @@ int cvi_tpu_register_cdev(struct cvi_tpu_device *ndev)
 {
 	int ret;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	npu_class = class_create(THIS_MODULE, CVI_TPU_CLASS_NAME);
+#else
+	npu_class = class_create(CVI_TPU_CLASS_NAME);
+#endif
 	if (IS_ERR(npu_class)) {
 		pr_err("create class failed\n");
 		return PTR_ERR(npu_class);
@@ -1246,7 +1255,11 @@ static int cvi_tpu_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_tpu_remove(struct platform_device *pdev)
+#else
+static void cvi_tpu_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_tpu_device *ndev = platform_get_drvdata(pdev);
 	struct cvi_kernel_work *kernel_work = &ndev->kernel_work;
@@ -1274,7 +1287,9 @@ static int cvi_tpu_remove(struct platform_device *pdev)
 
 	//remove tpu proc
 	proc_remove(tpu_proc_dir);
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 #ifdef CONFIG_PM_SLEEP
@@ -1326,3 +1341,4 @@ module_platform_driver(cvi_tpu_driver);
 MODULE_AUTHOR("Wellken Chen<wellken.chen@cvitek.com.tw>");
 MODULE_DESCRIPTION("Cvitek SoC TPU driver");
 MODULE_LICENSE("GPL");
+MODULE_INFO(import_ns, "DMA_BUF");
