@@ -5,6 +5,7 @@
 #include <linux/thermal.h>
 #include <linux/clk.h>
 #include <linux/io.h>
+#include <linux/version.h>
 
 /* Clock Bypass Registers */
 #define CLK_BYP_1 0x03002034
@@ -295,14 +296,20 @@ static int cv180x_cooling_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cv180x_cooling_remove(struct platform_device *pdev)
+#else
+static void cv180x_cooling_remove(struct platform_device *pdev)
+#endif
 {
 	struct cv180x_cooling_device *cvcdev = platform_get_drvdata(pdev);
 
 	if (!IS_ERR(cvcdev))
 		cv180x_cooling_device_unregister(cvcdev);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static const struct of_device_id cv180x_cooling_match[] = {
