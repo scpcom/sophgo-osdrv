@@ -67,7 +67,7 @@ Int32 BSFeederEsIn_Act(void *feeder, BSChunk *chunk)
 	return chunk->size;
 }
 
-BOOL BSFeederEsIn_Rewind(void)
+BOOL BSFeederEsIn_Rewind(void *feeder)
 {
 	return TRUE;
 }

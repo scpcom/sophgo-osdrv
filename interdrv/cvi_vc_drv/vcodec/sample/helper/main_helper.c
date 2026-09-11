@@ -223,7 +223,7 @@ void PrintDecSeqWarningMessages(Uint32 productId, DecInitialInfo *seqInfo)
 	}
 }
 
-void DisplayDecodedInformationForHevc(DecHandle handle, Uint32 frameNo,
+static void DisplayDecodedInformationForHevc(DecHandle handle, Uint32 frameNo,
 				      DecOutputInfo *decodedInfo)
 {
 	Int32 logLevel;
@@ -351,7 +351,7 @@ void DisplayDecodedInformationForVP9(DecHandle handle, Uint32 frameNo,
 }
 #endif
 
-void DisplayDecodedInformationCommon(DecHandle handle, CodStd codec,
+static void DisplayDecodedInformationCommon(DecHandle handle, CodStd codec,
 				     Uint32 frameNo, DecOutputInfo *decodedInfo)
 {
 	Int32 logLevel;

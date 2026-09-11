@@ -190,6 +190,8 @@ int CVIJpgGetFrameData(CVIJpgHandle jpgHandle, void *data, int length,
 		       unsigned long int *pu64HwTime);
 /* get jpu encoder input data buffer */
 int CVIJpgGetInputDataBuf(CVIJpgHandle jpgHandle, void *data, int length);
+/* */
+int CVIVidJpuReset(void);
 /* release stream buffer */
 int CVIJpgReleaseFrameData(CVIJpgHandle jpgHandle);
 int cviJpegIoctl(void *handle, int op, void *arg);

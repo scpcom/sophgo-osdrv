@@ -81,7 +81,8 @@ static int cviEncode265HeaderByType(stTestEncoder *pTestEnc,
 
 	#if CACHE_ENCODE_HEADER
 		if (pTestEnc->bEncHeader == 1) {
-			MUTEX_LOCK(&psp->packMutex);
+			int mlr = MUTEX_LOCK(&psp->packMutex);
+			(void)(mlr);
 			if (psp->totalPacks >= MAX_NUM_PACKS) {
 				CVI_VC_ERR("hevc cache header droped, type:%d, totalpacks:%d\n",
 					nal_type, psp->totalPacks);
@@ -241,6 +242,7 @@ int cviEncode264Header(stTestEncoder *pTestEnc)
 	if (pTestEnc->bEncHeader == 1) {
 		for (cacheIdx = 0; cacheIdx < 8; ++cacheIdx) {
 			if (pTestEnc->headerBackup[cacheIdx].size) {
+				int mlr;
 				switch (cacheIdx) {
 				case 0:
 					nalType = NAL_SEI;
@@ -258,7 +260,8 @@ int cviEncode264Header(stTestEncoder *pTestEnc)
 					continue;
 				}
 
-				MUTEX_LOCK(&psp->packMutex);
+				mlr = MUTEX_LOCK(&psp->packMutex);
+				(void)(mlr);
 				if (psp->totalPacks >= MAX_NUM_PACKS) {
 					CVI_VC_ERR("avc cache header droped, type:%d, totalpacks:%d\n",
 						nalType, psp->totalPacks);
@@ -578,8 +581,10 @@ static int cviInsertOneUserDataSegment(stStreamPack *psp, Uint8 *pUserData,
 {
 	stPack *pPack;
 	Uint8 *pBuffer;
+	int mlr;
 
-	MUTEX_LOCK(&psp->packMutex);
+	mlr = MUTEX_LOCK(&psp->packMutex);
+	(void)(mlr);
 	if (psp->totalPacks >= MAX_NUM_PACKS) {
 		CVI_VC_ERR("totalPacks (%d) >= MAX_NUM_PACKS\n",
 			   psp->totalPacks);
@@ -596,7 +601,8 @@ static int cviInsertOneUserDataSegment(stStreamPack *psp, Uint8 *pUserData,
 
 	memcpy(pBuffer, pUserData, userDataLen);
 
-	MUTEX_LOCK(&psp->packMutex);
+	mlr = MUTEX_LOCK(&psp->packMutex);
+	(void)(mlr);
 	pPack = &psp->pack[psp->totalPacks++];
 	pPack->addr = pBuffer;
 	pPack->len = userDataLen;
@@ -686,6 +692,7 @@ int cviPutEsInPack(stTestEncoder *pTestEnc, PhysicalAddress paBsBufStart,
 	Uint8 *esBuf = NULL;
 	int esBufValidSize, ret;
 	BOOL bSkipCopy = FALSE;
+	int mlr;
 
 #if defined(CVI_H26X_USE_ION_MEM)
 	if (!vdi_get_is_single_es_buf(pTestEnc->encConfig.coreIdx)) {
@@ -703,7 +710,8 @@ int cviPutEsInPack(stTestEncoder *pTestEnc, PhysicalAddress paBsBufStart,
 		return FALSE;
 	}
 
-	MUTEX_LOCK(&psp->packMutex);
+	mlr = MUTEX_LOCK(&psp->packMutex);
+	(void)(mlr);
 	if (psp->totalPacks >= MAX_NUM_PACKS) {
 		CVI_VENC_DEBUG("[WARN]totalPacks (%d) >= MAX_NUM_PACKS,drop this packet\n",
 			   psp->totalPacks);

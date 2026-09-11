@@ -1026,7 +1026,7 @@ static void StoreYuvImageBurstLinearCbCrInterleaveHelper(
 	}
 }
 
-Uint32 StoreYuvImageBurstLinear(Uint32 coreIdx, FrameBuffer *fbSrc,
+static Uint32 StoreYuvImageBurstLinear(Uint32 coreIdx, FrameBuffer *fbSrc,
 				TiledMapConfig mapCfg, Uint8 *pDst,
 				VpuRect cropRect, BOOL enableCrop, BOOL isVP9)
 {

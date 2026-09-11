@@ -709,8 +709,9 @@ unsigned int jdi_read_register(unsigned int addr)
 #endif
 }
 
+#if 0
 // It could be removed in the future
-void *jdi_osal_memcpy(void *dst, const void *src, int count)
+static void * jdi_osal_memcpy(void *dst, const void *src, int count)
 {
 	// return memcpy(dst, src, count);
 	int i;
@@ -726,6 +727,7 @@ void *jdi_osal_memcpy(void *dst, const void *src, int count)
 
 	return dst;
 }
+#endif
 
 int jdi_write_memory(unsigned long addr, unsigned char *data, int len,
 		     int endian)

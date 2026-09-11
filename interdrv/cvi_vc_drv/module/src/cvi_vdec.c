@@ -426,7 +426,7 @@ static CVI_S32 allocate_vdec_frame(vdec_chn_context *pChnHandle, CVI_U32 idx)
 	return s32Ret;
 }
 
-CVI_S32 _CVI_VDEC_InitHandle(void)
+static CVI_S32 _CVI_VDEC_InitHandle(void)
 {
 	CVI_S32 s32Ret = CVI_SUCCESS;
 
@@ -640,7 +640,7 @@ static CVI_S32 _cvi_vdec_CallbackFunc(unsigned int VdChn, unsigned int CbType,
 }
 
 #define VDEC_NO_FRAME_IDX 0xFFFFFFFF
-CVI_BOOL _cvi_vdec_FindBlkInfo(vdec_chn_context *pChnHandle, CVI_U64 u64PhyAddr,
+static CVI_BOOL _cvi_vdec_FindBlkInfo(vdec_chn_context *pChnHandle, CVI_U64 u64PhyAddr,
 			       VB_BLK *pVbBLK, CVI_U32 *pFrmIdx)
 {
 	CVI_U32 i = 0;
@@ -675,7 +675,7 @@ typedef struct _VDEC_BIND_FRM_S {
 	CVI_BOOL bIsFrmOutput;
 } VDEC_BIND_FRM_S;
 
-CVI_S32 _cvi_vdec_FindFrameIdx(vdec_chn_context *pChnHandle,
+static CVI_S32 _cvi_vdec_FindFrameIdx(vdec_chn_context *pChnHandle,
 			       const VIDEO_FRAME_INFO_S *pstFrameInfo)
 {
 	CVI_U32 i = 0;

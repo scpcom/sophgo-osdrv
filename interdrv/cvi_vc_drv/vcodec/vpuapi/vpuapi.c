@@ -3102,7 +3102,7 @@ RetCode cviConfigEncParam(CodecInst *pCodec, EncOpenParam *param)
 	return ret;
 }
 
-void VPU_WaitPendingInst(CodecInst *pCodecInst)
+static void VPU_WaitPendingInst(CodecInst *pCodecInst)
 {
 RETRY:
 	if (GetPendingInst(pCodecInst->coreIdx)) {

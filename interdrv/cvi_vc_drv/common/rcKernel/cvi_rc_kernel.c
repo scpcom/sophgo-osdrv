@@ -63,7 +63,7 @@ static RC_Float lambdaToBpp(RC_Float lambda, RC_Float alpha, RC_Float beta)
 
 // ----------------------------------------------------------------
 
-void rcModelUpdateParam_Init(stRcKernelInfo *info, RC_Float targetBpp)
+static void rcModelUpdateParam_Init(stRcKernelInfo *info, RC_Float targetBpp)
 {
 	CVI_VCOM_FLOAT("targetBpp = %f\n", getFloat(targetBpp));
 
@@ -84,7 +84,7 @@ void rcModelUpdateParam_Init(stRcKernelInfo *info, RC_Float targetBpp)
 
 // ----------------------------------------------------------------
 
-void updateAlphaBetaIntra(RC_Float *alpha, RC_Float *beta, RC_Float tc, int targetBits, int encodedBits)
+static void updateAlphaBetaIntra(RC_Float *alpha, RC_Float *beta, RC_Float tc, int targetBits, int encodedBits)
 {
 	RC_Float lnbpp = CVI_FLOAT_LOG(tc);
 	RC_Float diffLambda = CVI_FLOAT_MUL(
@@ -102,7 +102,7 @@ void updateAlphaBetaIntra(RC_Float *alpha, RC_Float *beta, RC_Float tc, int targ
 	*beta = CVI_FLOAT_ADD(*beta, CVI_FLOAT_DIV(diffLambda, lnbpp));
 }
 
-void rcGopBitAlloc(stRcKernelInfo *info, int picIdx)
+static void rcGopBitAlloc(stRcKernelInfo *info, int picIdx)
 {
 	int picIdxInIPeriod = picIdx % info->intraPeriod;
 	int smoothWinSize = MAX(info->statFrameNum - picIdxInIPeriod + 1, info->framerate);
@@ -154,7 +154,7 @@ void rcGopBitAlloc(stRcKernelInfo *info, int picIdx)
 	info->lastRcGopBit = 0;
 }
 
-void rcGopBitReAlloc(stRcKernelInfo *info, int picIdx)
+static void rcGopBitReAlloc(stRcKernelInfo *info, int picIdx)
 {
 	int picIdxInIPeriod = picIdx % info->intraPeriod;
 	int smoothWinSize = MAX(info->statFrameNum - picIdxInIPeriod + 1, info->framerate);
@@ -178,7 +178,7 @@ void rcGopBitReAlloc(stRcKernelInfo *info, int picIdx)
 	info->bitrateChange = 0;
 }
 
-int getAvgPFrameQp(stRcKernelInfo *info)
+static int getAvgPFrameQp(stRcKernelInfo *info)
 {
 	if (info->pPicCnt > 0) {
 		return (((CVI_FLOAT_TO_INT(info->pPicQpAccum) + (info->pPicCnt>>1)) /  info->pPicCnt)) +
@@ -188,7 +188,7 @@ int getAvgPFrameQp(stRcKernelInfo *info)
 	}
 }
 
-int estPicBitByModel(stRcKernelInfo *info, RC_Float lambda, int isIPic)
+static int estPicBitByModel(stRcKernelInfo *info, RC_Float lambda, int isIPic)
 {
 	RC_Float alpha = info->rqModel[isIPic == 0].alpha;
 	RC_Float beta = info->rqModel[isIPic == 0].beta;
@@ -206,7 +206,7 @@ int estPicBitByModel(stRcKernelInfo *info, RC_Float lambda, int isIPic)
 	return ((long long int)bpp_frac * info->numOfPixel)>>FIX_POINT_FRAC_BIT;
 }
 
-int rcIPicBitAlloc(stRcKernelInfo *info, int qp)
+static int rcIPicBitAlloc(stRcKernelInfo *info, int qp)
 {
 	RC_Float lambda = QpToLambda(INT_TO_CVI_FLOAT(qp));
 	int intraOrgBits = estPicBitByModel(info, lambda, 1);
@@ -224,7 +224,7 @@ int rcIPicBitAlloc(stRcKernelInfo *info, int qp)
 	return intraBits;
 }
 
-int estPicTargetBits(stRcKernelInfo *info, int rcGopFrameIdx)
+static int estPicTargetBits(stRcKernelInfo *info, int rcGopFrameIdx)
 {
 	int gopRemainAvgBit = CLIP(info->minPicBit, info->gopPicAvgBit, MAX(0, info->gopBitLeft) / MAX(1, info->gopPicLeft));
 	int targetBits = (g_rcGopRemainBitWeight * gopRemainAvgBit +
@@ -239,7 +239,7 @@ int estPicTargetBits(stRcKernelInfo *info, int rcGopFrameIdx)
 	return targetBits;
 }
 
-RC_Float calculateLambdaIntra(RC_Float alpha, RC_Float beta, RC_Float picTextCplx, RC_Float bitsPerPixel)
+static RC_Float calculateLambdaIntra(RC_Float alpha, RC_Float beta, RC_Float picTextCplx, RC_Float bitsPerPixel)
 {
 	return CVI_FLOAT_MUL(
 			FRAC_INT_TO_CVI_FLOAT(
@@ -247,7 +247,7 @@ RC_Float calculateLambdaIntra(RC_Float alpha, RC_Float beta, RC_Float picTextCpl
 			CVI_FLOAT_POW(CVI_FLOAT_DIV(picTextCplx, bitsPerPixel), beta));
 }
 
-RC_Float estPicLambda(stRcKernelInfo *info, int targetBits, int isIPic, int picIdx)
+static RC_Float estPicLambda(stRcKernelInfo *info, int targetBits, int isIPic, int picIdx)
 {
 	int picLv = isIPic == 0;
 	RC_Float alpha = info->rqModel[picLv].alpha;
@@ -336,7 +336,7 @@ RC_Float estPicLambda(stRcKernelInfo *info, int targetBits, int isIPic, int picI
 	return estLambda;
 }
 
-int estPicQP(stRcKernelInfo *info, RC_Float lambda, int isIPic, int picIdx)
+static int estPicQP(stRcKernelInfo *info, RC_Float lambda, int isIPic, int picIdx)
 {
 	int qp = LambdaToQp(lambda);
 	int picLv = isIPic == 0;

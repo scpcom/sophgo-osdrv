@@ -41,7 +41,7 @@ static void set_pic_qp_by_delta(stRcInfo *pRcInfo, EncOpenParam *pEncOP,
 }
 
 // ---------------------------------------------------------
-int _cviEncRc_getBitrate(stRcInfo *pRcInfo)
+static int _cviEncRc_getBitrate(stRcInfo *pRcInfo)
 {
 	if (!pRcInfo->rcEnable) {
 		return 0;
@@ -132,7 +132,7 @@ static void _cviEncRc_setBitrateParam(stRcInfo *pRcInfo, EncOpenParam *pEncOP)
 	}
 }
 
-int _cviEncRc_getFramerate(stRcInfo *pRcInfo)
+static int _cviEncRc_getFramerate(stRcInfo *pRcInfo)
 {
 	if (!pRcInfo->rcEnable) {
 		return 0;

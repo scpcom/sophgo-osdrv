@@ -605,7 +605,7 @@ static int cviBitstreamFeeder_Act(cviVideoDecoder *pvdec)
 				   pdeccfg->streamEndian, bsBuf);
 }
 
-BOOL _AllocateH265DecFrameBuffer(cviVideoDecoder *pvdec, DecHandle decHandle,
+static BOOL _AllocateH265DecFrameBuffer(cviVideoDecoder *pvdec, DecHandle decHandle,
 				 cviDecConfig *pdeccfg, Uint32 tiledFbCount,
 				 Uint32 linearFbCount, FrameBuffer *retFbArray,
 				 vpu_buffer_t *retFbAddrs, Uint32 *retStride)
@@ -791,7 +791,7 @@ BOOL _AllocateH265DecFrameBuffer(cviVideoDecoder *pvdec, DecHandle decHandle,
 	return TRUE;
 }
 
-int _cviH265_FreeFrmBuf(cviVideoDecoder *pvdec)
+static int _cviH265_FreeFrmBuf(cviVideoDecoder *pvdec)
 {
 	if (pvdec->eVdecVBSource == E_CVI_VB_SRC_COMMON) {
 		CVI_VC_WARN("Don't support E_CVI_VB_SRC_COMMON now!!\n");
@@ -836,7 +836,7 @@ static void _ReleasePreviousSequenceResources(DecHandle handle,
 	}
 }
 
-int _cviH265_Free_ReAlloc_FrmBuf(cviVideoDecoder *pvdec)
+static int _cviH265_Free_ReAlloc_FrmBuf(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 	DecInitialInfo *pSeqInfo = &pvdec->sequenceInfo;
@@ -902,7 +902,7 @@ int _cviH265_Free_ReAlloc_FrmBuf(cviVideoDecoder *pvdec)
 	return CVI_INIT_SEQ_OK;
 }
 
-int _cviH264_Free_ReAlloc_FrmBuf(cviVideoDecoder *pvdec)
+static int _cviH264_Free_ReAlloc_FrmBuf(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 	CVI_DEC_STATUS decStatus;
@@ -929,7 +929,7 @@ int _cviH264_Free_ReAlloc_FrmBuf(cviVideoDecoder *pvdec)
 	return decStatus;
 }
 
-int _cviH265_AllocFrmBuf(cviVideoDecoder *pvdec)
+static int _cviH265_AllocFrmBuf(cviVideoDecoder *pvdec)
 {
 	DecInitialInfo *pSeqInfo = &pvdec->sequenceInfo;
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
@@ -1008,7 +1008,7 @@ int _cviH265_AllocFrmBuf(cviVideoDecoder *pvdec)
 	return CVI_INIT_SEQ_OK;
 }
 
-int _cviH264_FreeFrmBuf(cviVideoDecoder *pvdec)
+static int _cviH264_FreeFrmBuf(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 	vpu_buffer_t *pvb = NULL;
@@ -1028,7 +1028,7 @@ int _cviH264_FreeFrmBuf(cviVideoDecoder *pvdec)
 	return CVI_INIT_SEQ_OK;
 }
 
-int _cviH264_AllocFrmBuf(cviVideoDecoder *pvdec)
+static int _cviH264_AllocFrmBuf(cviVideoDecoder *pvdec)
 {
 	MaverickCacheConfig *pCacheCfg = &pvdec->cacheCfg;
 	FrameBufferAllocInfo *pFbAllocInfo = &pvdec->fbAllocInfo;
@@ -1466,7 +1466,7 @@ static int cviInitSeq(cviVideoDecoder *pvdec)
 	return CVI_INIT_SEQ_OK;
 }
 
-int _cviH265_DecodeOneFrame(cviVideoDecoder *pvdec)
+static int _cviH265_DecodeOneFrame(cviVideoDecoder *pvdec)
 {
 	/********************************************************************************
 	* DEC_PIC                                                                       *
@@ -1561,7 +1561,7 @@ int _cviH265_DecodeOneFrame(cviVideoDecoder *pvdec)
 	return CVI_DECODE_ONE_FRAME_OK;
 }
 
-int _cviH264_DecodeOneFrame(cviVideoDecoder *pvdec)
+static int _cviH264_DecodeOneFrame(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 	DecParam *pdp = &pvdec->decParam;
@@ -1700,7 +1700,7 @@ int cviDecodeOneFrame(cviVideoDecoder *pvdec)
 	return ret;
 }
 
-int _cviH265_WaitInterrupt(cviVideoDecoder *pvdec)
+static int _cviH265_WaitInterrupt(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 	BOOL repeat;
@@ -1788,7 +1788,7 @@ int _cviH265_WaitInterrupt(cviVideoDecoder *pvdec)
 	return CVI_WAIT_INT_OK;
 }
 
-int _cviH264_WaitInterrupt(cviVideoDecoder *pvdec)
+static int _cviH264_WaitInterrupt(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 #ifdef REDUNDENT_CODE
@@ -1983,7 +1983,7 @@ static void _cviH265FreeAllocatedFrmBuffer(cviVideoDecoder *pvdec,
 	}
 }
 #endif
-int _cviH265_GetDecodedData(cviVideoDecoder *pvdec)
+static int _cviH265_GetDecodedData(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 	DecOutputInfo *pdoi = &pvdec->outputInfo;
@@ -2352,7 +2352,7 @@ int _cviH265_GetDecodedData(cviVideoDecoder *pvdec)
 	return CVI_DECODE_DATA_OK;
 }
 
-int _cviH264_GetDecodedData(cviVideoDecoder *pvdec)
+static int _cviH264_GetDecodedData(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 	DecOutputInfo *pdoi = &pvdec->outputInfo;
@@ -2725,7 +2725,7 @@ static int cviWriteComp(cviVideoDecoder *pvdec, PhysicalAddress buf, int width,
 }
 #endif
 
-void _cviH265_CloseDecoder(cviVideoDecoder *pvdec)
+static void _cviH265_CloseDecoder(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 	//DecOutputInfo *pdoi = &pvdec->outputInfo;
@@ -2787,7 +2787,7 @@ void _cviH265_CloseDecoder(cviVideoDecoder *pvdec)
 	VLOG(INFO, "\nDec End. Tot Frame %d\n", pvdec->decodedIdx);
 }
 
-void _cviH264_CloseDecoder(cviVideoDecoder *pvdec)
+static void _cviH264_CloseDecoder(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 #ifdef REDUNDENT_CODE
@@ -2850,14 +2850,14 @@ void cviCloseDecoder(cviVideoDecoder *pvdec)
 		_cviH265_CloseDecoder(pvdec);
 }
 
-void _cviH265_DeInitDecoder(cviVideoDecoder *pvdec)
+static void _cviH265_DeInitDecoder(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 
 	VPU_DeInit(pdeccfg->coreIdx);
 }
 
-void _cviH264_DeInitDecoder(cviVideoDecoder *pvdec)
+static void _cviH264_DeInitDecoder(cviVideoDecoder *pvdec)
 {
 	cviDecConfig *pdeccfg = &pvdec->decConfig;
 	vpu_buffer_t *pvbs = &pvdec->vbStream[0];

@@ -1837,6 +1837,18 @@ int parse_user_scaling_list(UserScalingList *sl, FILE *fp_sl);
 int parse_custom_lambda(Uint32 buf[NUM_CUSTOM_LAMBDA], FILE *fp);
 #endif
 
+extern void *BSFeederEsIn_Create(void);
+extern BOOL BSFeederEsIn_Destroy(void *feeder);
+extern Int32 BSFeederEsIn_Act(void *feeder, BSChunk *chunk);
+extern BOOL BSFeederEsIn_Rewind(void *feeder);
+
+BOOL yuvAddrFeeder_Create(YuvFeederImpl *impl, const char *path, Uint32 packed,
+			  Uint32 fbStride, Uint32 fbHeight);
+BOOL yuvAddrFeeder_Feed(YuvFeederImpl *impl, Int32 coreIdx, FrameBuffer *fb,
+			size_t picWidth, size_t picHeight, void *arg);
+BOOL yuvAddrFeeder_Destory(YuvFeederImpl *impl);
+BOOL yuvAddrFeeder_Configure(YuvFeederImpl *impl, Uint32 cmd, YuvInfo yuv);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

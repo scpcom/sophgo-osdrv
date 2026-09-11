@@ -8,6 +8,7 @@
 #include "vpuconfig.h"
 #include <linux/slab.h>
 #include <linux/fs.h>
+#include <linux/version.h>
 #include <asm/uaccess.h>
 
 #include "../vdi_osal.h"
@@ -36,7 +37,9 @@ static FILE *fpLog;
 
 struct cvi_osal_file {
 	struct file *filep;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 11, 0)
 	mm_segment_t old_fs;
+#endif
 };
 
 
@@ -222,7 +225,9 @@ osal_file_t osal_fopen(const char *osal_file_tname, const char *mode)
 		return NULL;
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 11, 0)
 	cvi_fp->old_fs = get_fs();
+#endif
 	return cvi_fp;
 }
 size_t osal_fwrite(const void *p, int size, int count, osal_file_t fp)
@@ -267,7 +272,9 @@ int osal_fclose(osal_file_t fp)
 
 	filep = cvi_fp->filep;
 	filp_close(filep, 0);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 11, 0)
 	set_fs(cvi_fp->old_fs);
+#endif
 	vfree(cvi_fp);
 	return 0;
 }

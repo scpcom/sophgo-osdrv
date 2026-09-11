@@ -2014,7 +2014,7 @@ JpgRet CheckJpgEncParam(JpgEncHandle handle, JpgEncParam *param)
 	return JPG_RET_SUCCESS;
 }
 
-int JpgEncGenHuffTab(JpgEncInfo *pEncInfo, int tabNum)
+static int JpgEncGenHuffTab(JpgEncInfo *pEncInfo, int tabNum)
 {
 	int p, i, l, lastp, si, maxsymbol;
 
@@ -2236,7 +2236,8 @@ int JpgEncEncodeHeader(JpgEncHandle handle, JpgEncParamSet *para)
 
 JpgRet JpgEnterLock(void)
 {
-	mutex_lock_interruptible(&jpgLock);
+	int ret = mutex_lock_interruptible(&jpgLock);
+	(void)(ret);
 
 	return JPG_RET_SUCCESS;
 }

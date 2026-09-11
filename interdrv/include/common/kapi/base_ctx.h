@@ -1,6 +1,7 @@
 #ifndef __BASE_CTX_H__
 #define __BASE_CTX_H__
 
+#include <linux/time64.h>
 #include <linux/cvi_base_ctx.h>
 #include <linux/vb_uapi.h>
 

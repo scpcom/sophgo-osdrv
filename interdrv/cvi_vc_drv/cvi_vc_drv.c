@@ -1,4 +1,6 @@
 #include <linux/cvi_base_ctx.h>
+#include <linux/of.h>
+#include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <base_cb.h>
 #include <base_ctx.h>
@@ -1360,7 +1362,11 @@ static int cvi_vc_drv_register_cdev(struct cvi_vc_drv_device *vdev)
 	int err = 0;
 	int i = 0;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 	vdev->cvi_vc_class = class_create(THIS_MODULE, CVI_VC_DRV_CLASS_NAME);
+#else
+	vdev->cvi_vc_class = class_create(CVI_VC_DRV_CLASS_NAME);
+#endif
 	if (IS_ERR(vdev->cvi_vc_class)) {
 		pr_err("create class failed\n");
 		return PTR_ERR(vdev->cvi_vc_class);
@@ -1504,7 +1510,7 @@ static int cvi_vc_drv_get_reg_resource(struct cvi_vc_drv_device *vdev,
 	return 0;
 }
 
-int vcodec_drv_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
+static int vcodec_drv_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
 {
 	int ret = CVI_FAILURE;
 
@@ -1665,7 +1671,11 @@ ERROR_PROBE_DEVICE:
 	return err;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_vc_drv_remove(struct platform_device *pdev)
+#else
+static void cvi_vc_drv_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_vc_drv_device *vdev = platform_get_drvdata(pdev);
 
@@ -1700,7 +1710,9 @@ static int cvi_vc_drv_remove(struct platform_device *pdev)
 	}
 #endif
 	class_destroy(vdev->cvi_vc_class);
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 unsigned int cvi_vc_drv_read_vc_reg(REG_TYPE eRegType, unsigned long addr)

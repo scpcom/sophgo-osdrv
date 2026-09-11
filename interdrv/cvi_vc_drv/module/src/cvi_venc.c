@@ -777,7 +777,7 @@ VENC_EVENT_HANDLER_ERR:
 	return CVI_SUCCESS;
 }
 
-CVI_S32 check_chn_handle(VENC_CHN VeChn)
+static CVI_S32 check_chn_handle(VENC_CHN VeChn)
 {
 	if (handle == NULL) {
 		CVI_VENC_ERR("Call VENC Destroy before Create, failed\n");
@@ -829,7 +829,8 @@ static int venc_sbm_send_frame_thread(CVI_VOID *data)
 		CVI_VENC_DEBUG("send start chn:%d,0x94=0x%x 0x90=0x%x\n", pSbmHandle->CurrSbmChn,
 			cvi_vc_drv_read_vc_reg(REG_SBM, 0x94), cvi_vc_drv_read_vc_reg(REG_SBM, 0x90));
 
-		MUTEX_LOCK(&pSbmHandle->SbmMutex);
+		s32Ret = MUTEX_LOCK(&pSbmHandle->SbmMutex);
+		(void)(s32Ret);
 		s32Ret = CVI_VENC_SendFrame(pChnHandle->VeChn, &pChnHandle->stVideoFrameInfo, -1);
 		MUTEX_UNLOCK(&pSbmHandle->SbmMutex);
 
@@ -1888,7 +1889,7 @@ static CVI_S32 cviSetRcParamToDrv(venc_chn_context *pChnHandle)
 	return s32Ret;
 }
 
-CVI_S32 _cvi_h26x_trans_chn_attr(VENC_CHN_ATTR_S *pInChnAttr,
+static CVI_S32 _cvi_h26x_trans_chn_attr(VENC_CHN_ATTR_S *pInChnAttr,
 				 cviVidChnAttr *pOutAttr)
 {
 	CVI_S32 s32Ret = CVI_FAILURE;
@@ -1968,7 +1969,7 @@ CVI_S32 _cvi_h26x_trans_chn_attr(VENC_CHN_ATTR_S *pInChnAttr,
 	return s32Ret;
 }
 
-CVI_S32 _cvi_jpg_trans_chn_attr(VENC_CHN_ATTR_S *pInChnAttr,
+static CVI_S32 _cvi_jpg_trans_chn_attr(VENC_CHN_ATTR_S *pInChnAttr,
 				cviJpegChnAttr *pOutAttr)
 {
 	CVI_S32 s32Ret = CVI_FAILURE;
@@ -6452,7 +6453,7 @@ static unsigned int _cviEncReadReg(unsigned long addr)
 	return value;
 }
 
-CVI_S32 cviSbSkipOneFrm(VENC_CHN VeChn, cviVencSbSetting *pstSbSetting)
+static CVI_S32 cviSbSkipOneFrm(VENC_CHN VeChn, cviVencSbSetting *pstSbSetting)
 {
 	CVI_S32 s32Ret = CVI_SUCCESS;
 	venc_chn_context *pChnHandle = NULL;
@@ -6743,6 +6744,7 @@ CVI_S32 cvi_VENC_CB_SendFrame(CVI_S32 VpssGrp, CVI_S32 VpssChn, CVI_S32 VpssChn1
 	cviVencSbSetting stSbSetting;
 #endif
 	int i = 0;
+	int mlr;
 	MMF_CHN_S encChn = {0};
 	CVI_S32 priChn = -1;
 	CVI_S32 secChn = -1;
@@ -6861,7 +6863,8 @@ CVI_S32 cvi_VENC_CB_SendFrame(CVI_S32 VpssGrp, CVI_S32 VpssChn, CVI_S32 VpssChn1
 	stSbSetting.VpssGrp = VpssGrp;
 	stSbSetting.VpssChn = VpssChn;
 
-	MUTEX_LOCK(&pSbmHandle->SbmMutex);
+	mlr = MUTEX_LOCK(&pSbmHandle->SbmMutex);
+	(void)(mlr);
 
 	cviResetSb(NULL);
 

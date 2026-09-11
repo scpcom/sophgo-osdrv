@@ -170,7 +170,7 @@ void FreeCodecInstance(CodecInst *pCodecInst)
 	pCodecInst->CodecInfo = NULL;
 }
 
-RetCode CheckInstanceValidity(CodecInst *pCodecInst)
+static RetCode CheckInstanceValidity(CodecInst *pCodecInst)
 {
 	int i;
 	vpu_instance_pool_t *vip;
@@ -1634,14 +1634,15 @@ void SetPendingInst(Uint32 coreIdx, CodecInst *inst, const char *caller_fn,
 	if (!vip)
 		return;
 
-	if (inst)
+	if (inst) {
 		CVI_VC_TRACE(
 			"coreIdx %d, set pending inst = %p, inst->instIndex %d, s_n %s, s_line %d\n",
 			coreIdx, inst, inst->instIndex, caller_fn, caller_line);
-	else
+	} else {
 		CVI_VC_TRACE(
 			"coreIdx %d, clear pending inst, s_n %s, s_line %d\n",
 			coreIdx, caller_fn, caller_line);
+	}
 
 	vip->pendingInst = inst;
 	if (inst)
@@ -2502,7 +2503,7 @@ RetCode AllocateTiledFrameBufferGdiV2(TiledMapType mapType, FrameBuffer *fbArr,
 	return RETCODE_SUCCESS;
 }
 
-Int32 _ConfigSecAXICoda9_182x(Uint32 coreIdx, Int32 codecMode, SecAxiInfo *sa,
+static Int32 _ConfigSecAXICoda9_182x(Uint32 coreIdx, Int32 codecMode, SecAxiInfo *sa,
 			      Uint32 width)
 {
 	vpu_buffer_t vb;

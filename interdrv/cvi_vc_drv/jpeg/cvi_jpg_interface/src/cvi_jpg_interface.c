@@ -312,7 +312,7 @@ int CVIVidJpuReset(void)
 	return JPG_RET_SUCCESS;
 }
 
-int cviJpegSetQuality(CVIJpgHandle jpgHandle, void *data)
+static int cviJpegSetQuality(CVIJpgHandle jpgHandle, void *data)
 {
 	int ret = 0;
 	int *quality = data;
@@ -383,7 +383,7 @@ static int cviJpegSetMCUPerECS(CVIJpgHandle jpgHandle, void *data)
 	return ret;
 }
 
-int cviJpegResetChn(CVIJpgHandle jpgHandle, void *data)
+static int cviJpegResetChn(CVIJpgHandle jpgHandle, void *data)
 {
 	int ret = 0;
 	JpgInst *pJpgInst;
@@ -418,7 +418,7 @@ int cviJpegResetChn(CVIJpgHandle jpgHandle, void *data)
 	return ret;
 }
 
-int cviJpegSetUserData(CVIJpgHandle jpgHandle, void *data)
+static int cviJpegSetUserData(CVIJpgHandle jpgHandle, void *data)
 {
 	int ret = 0;
 	JpgInst *pJpgInst;
@@ -445,7 +445,7 @@ int cviJpegSetUserData(CVIJpgHandle jpgHandle, void *data)
 	return ret;
 }
 
-int cviJpegStart(CVIJpgHandle jpgHandle, void *data)
+static int cviJpegStart(CVIJpgHandle jpgHandle, void *data)
 {
 	int ret = JPG_RET_SUCCESS;
 	JpgInst *pJpgInst;
@@ -468,7 +468,7 @@ int cviJpegStart(CVIJpgHandle jpgHandle, void *data)
 	return ret;
 }
 
-int cviJpegSetSbmEnable(CVIJpgHandle jpgHandle, void *data)
+static int cviJpegSetSbmEnable(CVIJpgHandle jpgHandle, void *data)
 {
 	int ret = JPG_RET_SUCCESS;
 	JpgInst *pJpgInst;
@@ -493,7 +493,7 @@ int cviJpegSetSbmEnable(CVIJpgHandle jpgHandle, void *data)
 	return ret;
 }
 
-int cviJpegWaitEncodeDone(CVIJpgHandle jpgHandle, void *data)
+static int cviJpegWaitEncodeDone(CVIJpgHandle jpgHandle, void *data)
 {
 	int ret = JPG_RET_SUCCESS;
 
@@ -507,7 +507,7 @@ int cviJpegWaitEncodeDone(CVIJpgHandle jpgHandle, void *data)
 #ifdef CLI_DEBUG_SUPPORT
 extern void cli_show_jdi_info(void);
 
-int cviJpegShowChnInfo(CVIJpgHandle jpgHandle, void *data)
+static int cviJpegShowChnInfo(CVIJpgHandle jpgHandle, void *data)
 {
 	int ret = 0;
 	JpgInst *pJpgInst;
@@ -665,7 +665,7 @@ int cviJpegShowChnInfo(CVIJpgHandle jpgHandle, void *data)
 }
 
 #else
-int cviJpegShowChnInfo(CVIJpgHandle jpgHandle, void *data)
+static int cviJpegShowChnInfo(CVIJpgHandle jpgHandle, void *data)
 {
 	UNREFERENCED_PARAM(jpgHandle);
 	UNREFERENCED_PARAM(data);

@@ -189,7 +189,7 @@ int vdi_get_single_core(unsigned long core_idx)
 	return vdi->SingleCore;
 }
 
-void vdi_change_task_count(unsigned long core_idx, int add)
+static void vdi_change_task_count(unsigned long core_idx, int add)
 {
 	int locked = 0;
 	vdi_info_t *vdi;
@@ -1168,6 +1168,7 @@ int vdi_disp_lock(unsigned long core_idx)
 {
 	vdi_info_t *vdi;
 #if defined(ANDROID) || !defined(PTHREAD_MUTEX_ROBUST_NP)
+	int ret = 0;
 #else
 	const int MUTEX_TIMEOUT = 5000; // ms
 #endif
@@ -1179,7 +1180,10 @@ int vdi_disp_lock(unsigned long core_idx)
 	}
 
 #if defined(ANDROID) || !defined(PTHREAD_MUTEX_ROBUST_NP)
-	MUTEX_LOCK((MUTEX_HANDLE *)vdi->vpu_disp_mutex);
+	ret = MUTEX_LOCK((MUTEX_HANDLE *)vdi->vpu_disp_mutex);
+
+	// might see we already hold the mutex, which means that we lock it more than one time
+	(void)(ret);
 #else
 	if (MUTEX_LOCK((MUTEX_HANDLE *)vdi->vpu_disp_mutex) != 0) {
 		CVI_VC_ERR("failed to pthread_mutex_lock\n");

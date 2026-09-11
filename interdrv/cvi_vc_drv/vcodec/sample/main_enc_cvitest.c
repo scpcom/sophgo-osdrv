@@ -1121,8 +1121,10 @@ static int cviH264SpsAddVui(stTestEncoder *pTestEnc)
 	stStreamPack *psp = &pTestEnc->streamPack;
 	cviH264Vui *pVui = &pTestEnc->encConfig.cviEc.h264Vui;
 	int i;
+	int ret;
 
-	MUTEX_LOCK(&psp->packMutex);
+	ret = MUTEX_LOCK(&psp->packMutex);
+	(void)(ret);
 	for (i = 0; i < psp->totalPacks; i++) {
 		if (psp->pack[i].cviNalType == NAL_SPS) {
 			H264SpsAddVui(pVui, &psp->pack[i].addr,
@@ -1141,8 +1143,10 @@ static int cviH265SpsAddVui(stTestEncoder *pTestEnc)
 	stStreamPack *psp = &pTestEnc->streamPack;
 	cviH265Vui *pVui = &pTestEnc->encConfig.cviEc.h265Vui;
 	int i;
+	int ret;
 
-	MUTEX_LOCK(&psp->packMutex);
+	ret = MUTEX_LOCK(&psp->packMutex);
+	(void)(ret);
 	for (i = 0; i < psp->totalPacks; i++) {
 		if (psp->pack[i].cviNalType == NAL_SPS) {
 			H265SpsAddVui(pVui, &psp->pack[i].addr,
@@ -2814,7 +2818,7 @@ int initEncoder(stTestEncoder *pTestEnc, TestEncConfig *pEncConfig)
 	return ret;
 }
 
-void cvi_vc_get_motion_tbl(void *arg)
+static void cvi_vc_get_motion_tbl(void *arg)
 {
 	struct base_exe_m_cb exe_cb;
 	/* Notify vi to send buffer as soon as possible */
@@ -3070,7 +3074,8 @@ static int cviGetOneStream(void *handle, cviVEncStreamInfo *pStreamInfo,
 
 		// if drop IDR, need clear vps sps pps header
 		if (pTestEnc->encParam.is_idr_frame) {
-			MUTEX_LOCK(&pTestEnc->streamPack.packMutex);
+			int mlr = MUTEX_LOCK(&pTestEnc->streamPack.packMutex);
+			(void)(mlr);
 			cviDropEsPacks(&pTestEnc->streamPack);
 			MUTEX_UNLOCK(&pTestEnc->streamPack.packMutex);
 		}
@@ -3222,7 +3227,8 @@ static int cviReEncodeIDR(stTestEncoder *pTestEnc,
 
 	pTestEnc->encParam.idr_request = TRUE;
 
-	MUTEX_LOCK(&pStreamInfo->psp->packMutex);
+	ret = MUTEX_LOCK(&pStreamInfo->psp->packMutex);
+	(void)(ret);
 	// only drop latest super frame
 	totalPacks = pStreamInfo->psp->totalPacks;
 	if (totalPacks >= 1) {
@@ -3287,7 +3293,8 @@ int cviVEncReleaseStream(void *handle, cviVEncStreamInfo *pStreamInfo)
 
 	CVI_VC_IF("\n");
 
-	MUTEX_LOCK(&psp->packMutex);
+	ret = MUTEX_LOCK(&psp->packMutex);
+	(void)(ret);
 	if (psp->totalPacks) {
 		for (idx = 0; idx < psp->totalPacks; idx++) {
 			pPack = &psp->pack[idx];
@@ -4970,6 +4977,7 @@ static int cviVEncGetRoi(stTestEncoder *pTestEnc, void *arg)
 static int cviVEncStart(stTestEncoder *pTestEnc, void *arg)
 {
 	TestEncConfig *pEncConfig = vmalloc(sizeof(TestEncConfig));
+	int mlr;
 	int ret = 0;
 	int idx;
 	stStreamPack *psp;
@@ -4989,7 +4997,8 @@ static int cviVEncStart(stTestEncoder *pTestEnc, void *arg)
 	}
 
 	psp = &pTestEnc->streamPack;
-	MUTEX_LOCK(&psp->packMutex);
+	mlr = MUTEX_LOCK(&psp->packMutex);
+	(void)(mlr);
 	if (psp->totalPacks) {
 		for (idx = 0; idx < psp->totalPacks; idx++) {
 			pPack = &psp->pack[idx];
@@ -5323,14 +5332,14 @@ static int cviVEncSetH265Dblk(stTestEncoder *pTestEnc, void *arg)
 	return 0;
 }
 
-int cviVEncDropFrame(stTestEncoder *pTestEnc, void *arg)
+static int cviVEncDropFrame(stTestEncoder *pTestEnc, void *arg)
 {
 	pTestEnc->bDrop = TRUE;
 
 	return 0;
 }
 
-int cviVEncSbmSetting(stTestEncoder *pTestEnc, void *arg)
+static int cviVEncSbmSetting(stTestEncoder *pTestEnc, void *arg)
 {
 	cviVencSbSetting *SbSetting = (cviVencSbSetting *)arg;
 
@@ -5342,7 +5351,7 @@ int cviVEncSbmSetting(stTestEncoder *pTestEnc, void *arg)
 	return 0;
 }
 
-int cviVEncSvcEnable(stTestEncoder *pTestEnc, void *arg)
+static int cviVEncSvcEnable(stTestEncoder *pTestEnc, void *arg)
 {
 	bool *svc_enable = (bool *)arg;
 	TestEncConfig *pEncCfg = &pTestEnc->encConfig;
@@ -5352,7 +5361,7 @@ int cviVEncSvcEnable(stTestEncoder *pTestEnc, void *arg)
 	return 0;
 }
 
-int cviVEncSetSvcParam(stTestEncoder *pTestEnc, void *arg)
+static int cviVEncSetSvcParam(stTestEncoder *pTestEnc, void *arg)
 {
 	TestEncConfig *pEncCfg = &pTestEnc->encConfig;
 	cviSvcParam *svc_param = &pEncCfg->cviEc.svcParam;
@@ -5384,7 +5393,7 @@ bool cviGetSvcEnable(void *handle)
 	return pTestEnc->encOP.svc_enable;
 }
 
-int cviVEncShowRcRealInfo(stTestEncoder *pTestEnc, void *arg)
+static int cviVEncShowRcRealInfo(stTestEncoder *pTestEnc, void *arg)
 {
 	stRcInfo *pRcInfo = &pTestEnc->handle->rcInfo;
 	struct seq_file *m = (struct seq_file *)arg;

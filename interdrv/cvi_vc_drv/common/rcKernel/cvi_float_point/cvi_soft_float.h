@@ -59,4 +59,7 @@ sw_float cvi_float32_sqrt(struct roundingData *roundData, sw_float a);
 sw_float cvi_float32_exp(sw_float x);
 sw_float cvi_float32_log(sw_float x_32);
 sw_float cvi_float32_pow(sw_float x_32, sw_float y_32);
+
+void cvi_float32_extract_int_and_float(sw_float a, sw_float *int_a, sw_float *float_a);
+sw_float cvi_float32_frexp(sw_float a, int *pw2);
 #endif

@@ -2,6 +2,7 @@
 #include <linux/mm.h>
 #include <linux/io.h>
 #include <linux/version.h>
+#include <linux/vmalloc.h>
 #include <asm/cacheflush.h>
 #if (KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE)
 #include <linux/dma-map-ops.h>
@@ -53,7 +54,7 @@ static int cviJpgGetEnv(char *envVar);
 static int cviJpegEncWaitInterrupt(CVIJpgHandle jpgHandle, JpgRet *pRet);
 static int cviJpgEncGetOneFrameData(CVIJpgHandle jpgHandle, void *data);
 
-void add_stats(stSlideWinStats *ptSWStats, int stats)
+static void add_stats(stSlideWinStats *ptSWStats, int stats)
 {
 	int curr_ptr = ptSWStats->ptrIdx;
 	ptSWStats->total -= ptSWStats->stats[curr_ptr];
@@ -62,7 +63,7 @@ void add_stats(stSlideWinStats *ptSWStats, int stats)
 	ptSWStats->ptrIdx = (ptSWStats->ptrIdx + 1) % ptSWStats->winSize;
 }
 
-int get_stats(stSlideWinStats *ptSWStats)
+static int get_stats(stSlideWinStats *ptSWStats)
 {
 	return ptSWStats->total;
 }
@@ -116,7 +117,7 @@ typedef enum {
 
 // ----------------------------------------------
 // main API
-void cviJpeRc_Open(stRcInfo *pRcInfo, stRcCfg *pRcCfg)
+static void cviJpeRc_Open(stRcInfo *pRcInfo, stRcCfg *pRcCfg)
 {
 	CVI_JPG_DBG_RC("targetBitrate %dk byte\n", pRcCfg->targetBitrate);
 	CVI_JPG_DBG_RC("picAvgBit %d byte\n", pRcInfo->picAvgBit);
@@ -218,7 +219,7 @@ static void cviJpeRc_RcKernelInit(stRcInfo *pRcInfo, stRcCfg *pRcCfg)
 	CVI_PRNT("-------------------------------\n");
 }
 
-int cviJpeRc_EstimatePicQs(stRcInfo *pRcInfo)
+static int cviJpeRc_EstimatePicQs(stRcInfo *pRcInfo)
 {
 	return cviJpeRc_RcKernelEstimatePic(pRcInfo);
 }
@@ -255,7 +256,7 @@ static int cviJpeRc_RcKernelEstimatePic(stRcInfo *pRcInfo)
 	return qs;
 }
 
-void cviJpeRc_UpdatePic(stRcInfo *pRcInfo, int encByte)
+static void cviJpeRc_UpdatePic(stRcInfo *pRcInfo, int encByte)
 {
 	CVI_JPG_DBG_RC("(%d)qs %d target %dk, actual %dk\n", pRcInfo->picIdx,
 		       pRcInfo->lastPicQ, pRcInfo->picTargetBit / 1000,
@@ -327,7 +328,7 @@ static const unsigned int std_chrominance_quant_tbl[DCTSIZE2] = {
 	99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
 };
 
-void cvi_jpeg_add_quant_table(unsigned char *q_table,
+static void cvi_jpeg_add_quant_table(unsigned char *q_table,
 			      const unsigned int base_table[DCTSIZE2],
 			      int scale_factor, unsigned int force_baseline)
 {
@@ -373,7 +374,7 @@ static int cvi_jpeg_quality_scaling(int quality)
 	return quality;
 }
 
-void cvi_jpgGetQMatrix(int scale_factor, unsigned char *qMatTab0,
+static void cvi_jpgGetQMatrix(int scale_factor, unsigned char *qMatTab0,
 		       unsigned char *qMatTab1)
 {
 	unsigned int force_baseline = 1;
@@ -383,7 +384,8 @@ void cvi_jpgGetQMatrix(int scale_factor, unsigned char *qMatTab0,
 				 scale_factor, force_baseline);
 }
 
-int LoadYuvImageBurstFormat2(Uint8 *src, unsigned long addrY,
+#ifdef VC_DRIVER_TEST
+static int LoadYuvImageBurstFormat2(Uint8 *src, unsigned long addrY,
 			     unsigned long addrCb, unsigned long addrCr,
 			     int picWidth, int picHeight, int stride,
 			     int interLeave, int format, int endian, int packed)
@@ -654,6 +656,7 @@ int LoadYuvImageBurstFormat2(Uint8 *src, unsigned long addrY,
 
 	return size;
 }
+#endif
 
 int cviJpgEncOpen(CVIJpgHandle *pHandle, CVIEncConfigParam *pConfig)
 {

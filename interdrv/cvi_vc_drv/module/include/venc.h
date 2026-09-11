@@ -142,4 +142,7 @@ typedef struct _venc_context {
 	venc_sbm_context sbm_context;
 } venc_context;
 
+void *venc_get_share_mem(void);
+CVI_S32 cviGetLeftStreamFrames(CVI_S32 VeChn);
+
 #endif
