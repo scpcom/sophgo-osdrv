@@ -157,4 +157,6 @@ static inline unsigned int rwnx_platform_get_irq(struct rwnx_plat *rwnx_plat)
 	return rwnx_plat->pci_dev->irq;
 }
 
+void rwnx_release_firmware_common(u32** buffer);
+
 #endif /* _RWNX_PLATFORM_H_ */

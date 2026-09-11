@@ -254,7 +254,9 @@ int btsdio_init(void)
 	hdev->bus = HCI_SDIO;
 	hci_set_drvdata(hdev, data);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 10, 0))
 	hdev->dev_type = HCI_PRIMARY;
+#endif
 
 	data->hdev = hdev;
 

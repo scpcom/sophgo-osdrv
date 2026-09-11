@@ -1255,7 +1255,7 @@ int rwnx_atoi2(char *value, int c_len)
 }
 
 
-int rwnx_atoi(char *value)
+static int rwnx_atoi(char *value)
 {
     int len = 0;
     int i = 0;
@@ -1282,7 +1282,7 @@ int rwnx_atoi(char *value)
 }
 
 
-void rwnx_plat_nvram_set_value(char *command, char *value)
+static void rwnx_plat_nvram_set_value(char *command, char *value)
 {
     //TODO send command
     AICWFDBG(LOGINFO, "%s:command=%s value=%s\n", __func__, command, value);
@@ -1402,7 +1402,7 @@ void rwnx_plat_nvram_set_value(char *command, char *value)
     }
 }
 
-void rwnx_plat_nvram_set_value_v3(char *command, char *value)
+static void rwnx_plat_nvram_set_value_v3(char *command, char *value)
 {
     //TODO send command
     AICWFDBG(LOGINFO, "%s:command=%s value=%s\n", __func__, command, value);
@@ -1800,7 +1800,7 @@ void rwnx_plat_userconfig_parsing3(char *buffer, int size)
     }
 }
 
-void rwnx_plat_userconfig_parsing(struct rwnx_hw *rwnx_hw, char *buffer, int size)
+static void rwnx_plat_userconfig_parsing(struct rwnx_hw *rwnx_hw, char *buffer, int size)
 {
 	char conf[100], keyname[64];
 	char *line;
@@ -1860,7 +1860,7 @@ void rwnx_plat_userconfig_parsing(struct rwnx_hw *rwnx_hw, char *buffer, int siz
 	vfree(data);
 }
 
-void rwnx_plat_nvram_set_value_8800d80x2(char *command, char *value)
+static void rwnx_plat_nvram_set_value_8800d80x2(char *command, char *value)
 {
     //TODO send command
     AICWFDBG(LOGINFO, "%s:command=%s value=%s\n", __func__, command, value);
@@ -2308,7 +2308,7 @@ static int aic_load_firmware(u32 ** fw_buf, char *fw_path,const char *name, stru
 
 #define FW_USERCONFIG_NAME       "aic_userconfig.txt"
 
-int rwnx_plat_userconfig_upload_android(struct rwnx_hw *rwnx_hw, char *fw_path, char *filename)
+static int rwnx_plat_userconfig_upload_android(struct rwnx_hw *rwnx_hw, char *fw_path, char *filename)
 {
     int size;
     u32 *dst=NULL;

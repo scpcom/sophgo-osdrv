@@ -797,7 +797,7 @@ static void rwnx_csa_finish(struct work_struct *ws)
 		} else
 			rwnx_txq_vif_stop(vif, RWNX_TXQ_STOP_CHAN, rwnx_hw);
 		spin_unlock_bh(&rwnx_hw->cb_lock);
-#if (LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION3)
+#if (LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION3) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 9, 0))
 		cfg80211_ch_switch_notify(vif->ndev, &csa->chandef, 0, 0);
 #elif (LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION)
 		cfg80211_ch_switch_notify(vif->ndev, &csa->chandef, 0);
@@ -858,7 +858,7 @@ void rwnx_external_auth_disable(struct rwnx_vif *vif)
  *
  * If there is no link then the power mode for next peer is used;
  */
-void rwnx_update_mesh_power_mode(struct rwnx_vif *vif)
+static void rwnx_update_mesh_power_mode(struct rwnx_vif *vif)
 {
 	enum nl80211_mesh_power_mode mesh_pm;
 	struct rwnx_sta *sta;
@@ -1437,7 +1437,7 @@ static struct net_device_stats *rwnx_get_stats(struct net_device *dev)
  *	Called to decide which queue to when device supports multiple
  *	transmit queues.
  */
-u16 rwnx_select_queue(struct net_device *dev, struct sk_buff *skb,
+static u16 rwnx_select_queue(struct net_device *dev, struct sk_buff *skb,
 					  struct net_device *sb_dev)
 {
 	struct rwnx_vif *rwnx_vif = netdev_priv(dev);
@@ -1715,9 +1715,9 @@ err:
 
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
-void aicwf_p2p_alive_timeout(ulong data)
+static void aicwf_p2p_alive_timeout(ulong data)
 #else
-void aicwf_p2p_alive_timeout(struct timer_list *t)
+static void aicwf_p2p_alive_timeout(struct timer_list *t)
 #endif
 {
 	struct rwnx_hw *rwnx_hw;
@@ -3012,7 +3012,7 @@ static int rwnx_cfg80211_del_station_compat(struct wiphy *wiphy,
 }
 
 
-void apm_staloss_work_process(struct work_struct *work)
+static void apm_staloss_work_process(struct work_struct *work)
 {
 	struct rwnx_hw *rwnx_hw = container_of(work, struct rwnx_hw, apmStalossWork);
 	struct rwnx_sta *cur, *tmp;
@@ -3120,7 +3120,7 @@ void apm_staloss_work_process(struct work_struct *work)
 }
 
 
-void apm_probe_sta_work_process(struct work_struct *work)
+static void apm_probe_sta_work_process(struct work_struct *work)
 {
        struct apm_probe_sta *probe_sta = container_of(work, struct apm_probe_sta, apmprobestaWork);
        struct rwnx_vif *rwnx_vif = container_of(probe_sta, struct rwnx_vif, sta_probe);
@@ -3456,9 +3456,16 @@ end:
  * @change_beacon: Change the beacon parameters for an access point mode
  *	interface. This should reject the call when AP mode wasn't started.
  */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 7, 0))
+static int rwnx_cfg80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
+									   struct cfg80211_ap_update *params)
+{
+	struct cfg80211_beacon_data *info = &params->beacon;
+#else
 static int rwnx_cfg80211_change_beacon(struct wiphy *wiphy, struct net_device *dev,
 									   struct cfg80211_beacon_data *info)
 {
+#endif
 	struct rwnx_hw *rwnx_hw = wiphy_priv(wiphy);
 	struct rwnx_vif *vif = netdev_priv(dev);
 	struct rwnx_bcn *bcn = &vif->ap.bcn;
@@ -3612,7 +3619,7 @@ int rwnx_cfg80211_set_monitor_channel_(struct wiphy *wiphy,
  * @probe_client: probe an associated client, must return a cookie that it
  *	later passes to cfg80211_probe_status().
  */
-int rwnx_cfg80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+static int rwnx_cfg80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
 			const u8 *peer, u64 *cookie)
 {
 //       struct rwnx_hw *rwnx_hw = wiphy_priv(wiphy);
@@ -3644,16 +3651,18 @@ int rwnx_cfg80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
 
 }
 
+#if 0
 /**
  * @mgmt_frame_register: Notify driver that a management frame type was
  *	registered. Note that this callback may not sleep, and cannot run
  *	concurrently with itself.
  */
-void rwnx_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
+static void rwnx_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
 				   struct wireless_dev *wdev,
 				   u16 frame_type, bool reg)
 {
 }
+#endif
 
 /**
  * @set_wiphy_params: Notify that wiphy parameters have changed;
@@ -4169,6 +4178,9 @@ int rwnx_cfg80211_start_radar_detection(struct wiphy *wiphy,
 									#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 15, 0))
 										, u32 cac_time_ms
 									#endif
+									#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 12, 0))
+										, int link_id
+									#endif
 										)
 {
 	struct rwnx_hw *rwnx_hw = wiphy_priv(wiphy);
@@ -4235,7 +4247,7 @@ int rwnx_cfg80211_set_cqm_rssi_config(struct wiphy *wiphy,
  *	everything. It should do it's best to verify requests and reject them
  *	as soon as possible.
  */
-int rwnx_cfg80211_channel_switch (struct wiphy *wiphy,
+static int rwnx_cfg80211_channel_switch (struct wiphy *wiphy,
 								 struct net_device *dev,
 								 struct cfg80211_csa_settings *params)
 {
@@ -4309,7 +4321,7 @@ int rwnx_cfg80211_channel_switch (struct wiphy *wiphy,
 		goto end;
 	} else {
 		INIT_WORK(&csa->work, rwnx_csa_finish);
-#if LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION4
+#if LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION4 && LINUX_VERSION_CODE < KERNEL_VERSION(6, 9, 0)
 		cfg80211_ch_switch_started_notify(dev, &csa->chandef, 0, params->count, false, 0);
 #elif LINUX_VERSION_CODE >= HIGH_KERNEL_VERSION2
 		cfg80211_ch_switch_started_notify(dev, &csa->chandef, 0, params->count, false);
@@ -4342,6 +4354,9 @@ rwnx_cfg80211_tdls_mgmt(struct wiphy *wiphy,
 	const u8 *peer,
 #else
 	u8 *peer,
+#endif
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 12, 0))
+	int link_id,
 #endif
 	u8 action_code,
 	u8 dialog_token,
@@ -4559,7 +4574,7 @@ rwnx_cfg80211_tdls_cancel_channel_switch (struct wiphy *wiphy,
 /**
  * @change_bss: Modify parameters for a given BSS (mainly for AP mode).
  */
-int rwnx_cfg80211_change_bss(struct wiphy *wiphy, struct net_device *dev,
+static int rwnx_cfg80211_change_bss(struct wiphy *wiphy, struct net_device *dev,
 							 struct bss_parameters *params)
 {
 	struct rwnx_vif *rwnx_vif = netdev_priv(dev);
@@ -5485,7 +5500,7 @@ extern int aicwf_vendor_init(struct wiphy *wiphy);
 extern txpwr_idx_conf_t nvram_txpwr_idx;
 
 
-int rwnx_ic_system_init(struct rwnx_hw *rwnx_hw){
+static int rwnx_ic_system_init(struct rwnx_hw *rwnx_hw){
 	u32 mem_addr;
 	struct dbg_mem_read_cfm rd_mem_addr_cfm;
 
@@ -5536,7 +5551,7 @@ int rwnx_ic_system_init(struct rwnx_hw *rwnx_hw){
 	return 0;
 }
 
-int rwnx_ic_rf_init(struct rwnx_hw *rwnx_hw){
+static int rwnx_ic_rf_init(struct rwnx_hw *rwnx_hw){
 	struct mm_set_rf_calib_cfm cfm;
 	int ret = 0;
 
