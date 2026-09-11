@@ -417,20 +417,32 @@ static int cvi_snsr_i2c_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 static int cvi_snsr_i2c_remove(struct platform_device *pdev)
+#else
+static void cvi_snsr_i2c_remove(struct platform_device *pdev)
+#endif
 {
 	struct cvi_i2c_dev *dev;
 	int i = 0;
 
 	if (!pdev) {
 		dev_err(&pdev->dev, "invalid param");
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 		return -EINVAL;
+#else
+		return;
+#endif
 	}
 
 	dev = dev_get_drvdata(&pdev->dev);
 	if (!dev) {
 		dev_err(&pdev->dev, "Can not get cvi_snsr drvdata");
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 		return 0;
+#else
+		return;
+#endif
 	}
 
 	for (i = 0; i < I2C_MAX_NUM; i++) {
@@ -444,7 +456,9 @@ static int cvi_snsr_i2c_remove(struct platform_device *pdev)
 
 	dev_set_drvdata(&pdev->dev, NULL);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	return 0;
+#endif
 }
 
 static void cvi_snsr_i2c_pdev_release(struct device *dev)
