@@ -23,6 +23,10 @@
 
 static struct proc_dir_entry *rtw_proc = NULL;
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 17, 0))
+#define PDE_DATA(i)	pde_data(i)
+#endif
+
 inline struct proc_dir_entry *get_rtw_drv_proc(void)
 {
 	return rtw_proc;
