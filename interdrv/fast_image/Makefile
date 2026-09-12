@@ -1,3 +1,6 @@
+ifneq ($(OSDRV_IN_TREE),)
+PWD := $(shell pwd)/$(src)
+endif
 include $(PWD)/../Makefile.interdrv.param
 
 soph_fast_image-objs = fast_image.o

@@ -1,5 +1,30 @@
 SHELL=/bin/bash
 -include $(BUILD_PATH)/.config
+ifeq ($(CHIP_ARCH)$(CVIARCH)$(SDK_VER),)
+ifeq ($(CONFIG_ARCH_CV181X),y)
+export CHIP_ARCH := CV181X
+export CVIARCH := CV181X
+else
+export CHIP_ARCH := CV180X
+export CVIARCH := CV180X
+endif
+export CONFIG_ARCH := $(ARCH)
+ifeq ($(ARCH),riscv)
+export SDK_VER := glibc_riscv64
+else ifeq ($(ARCH),arm64)
+export SDK_VER := 64bit
+else
+export SDK_VER := 32bit
+endif
+export KERNEL_DIR := $(srctree)
+export CONFIG_CP_EXT_WIRELESS := y
+export OSDRV_IN_TREE := y
+endif
+ifneq ($(OSDRV_IN_TREE),)
+PWD := $(shell pwd)/$(src)
+else
+PWD := $(shell pwd)
+endif
 #
 export CVIARCH_L := $(shell echo $(CVIARCH) | tr A-Z a-z)
 #
@@ -15,6 +40,8 @@ INSTALL_DIR = ko
 endif
 CUR_DIR = $(PWD)
 
+$(info ** [ CHIP_ARCH ] ** = $(CHIP_ARCH))
+$(info ** [ SDK_VER ] ** = $(SDK_VER))
 $(info ** [ KERNEL_DIR ] ** = $(KERNEL_DIR))
 $(info ** [ INSTALL_DIR ] ** = $(INSTALL_DIR))
 
@@ -42,13 +69,14 @@ define MAKE_EXT_KO
 	$(call MAKE_EXT_KO_CP, $(1))
 endef
 
-SUBDIRS = $(shell find ./interdrv -maxdepth 1 -mindepth 1 -type d | grep -v "git")
-SUBDIRS += $(shell find ./extdrv -maxdepth 1 -mindepth 1 -type d | grep -v "git")
+SUBDIRS = $(shell cd $(PWD) ; find ./interdrv -maxdepth 1 -mindepth 1 -type d | grep -v "git")
+SUBDIRS += $(shell cd $(PWD) ; find ./extdrv -maxdepth 1 -mindepth 1 -type d | grep -v "git")
 exclude_dirs = ./interdrv/include
 SUBDIRS := $(filter-out $(exclude_dirs), $(SUBDIRS))
 
 # prepare ko list
-KO_LIST = base vcodec jpeg pwm rtc wdt tpu mon clock_cooling saradc wiegand wiegand-gpio
+KO_LIST = base vcodec jpeg pwm rtc wdt tpu mon clock_cooling saradc wiegand
+EXT_KO_LIST = wiegand-gpio
 
 ifneq ($(CONFIG_USB_OSDRV_CVITEK_GADGET),)
 KO_LIST += usb
@@ -79,20 +107,25 @@ $(info ** [ KO_LIST ] ** = $(KO_LIST))
 OTHERS :=
 
 ifeq (y, ${CONFIG_CP_EXT_WIRELESS})
-KO_LIST += wireless
+EXT_KO_LIST += wireless
 OTHERS += cp_ext_wireless
 endif
 
 ifeq (, ${CONFIG_NO_TP})
-	KO_LIST += tp
+	EXT_KO_LIST += tp
 	OTHERS += cp_ext_tp
+endif
+
+ifneq ($(OSDRV_IN_TREE),)
+obj-y += $(addprefix $(INTERDRV_PATH)/,$(addsuffix /,$(KO_LIST)))
+obj-y += $(addprefix extdrv/,$(addsuffix /,$(EXT_KO_LIST)))
 endif
 
 export CROSS_COMPILE=$(patsubst "%",%,$(CONFIG_CROSS_COMPILE_KERNEL))
 export ARCH=$(patsubst "%",%,$(CONFIG_ARCH))
 
 .PHONY : prepare clean all
-all: prepare $(KO_LIST) $(OTHERS)
+all: prepare $(KO_LIST) $(EXT_KO_LIST) $(OTHERS)
 
 prepare:
 	@mkdir -p $(INSTALL_DIR)/3rd

@@ -1,3 +1,6 @@
+ifneq ($(OSDRV_IN_TREE),)
+PWD := $(shell pwd)/$(src)
+endif
 include $(PWD)/../Makefile.interdrv.param
 
 ifneq ($(KERNELRELEASE),)

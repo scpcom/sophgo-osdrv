@@ -1,3 +1,6 @@
+ifneq ($(OSDRV_IN_TREE),)
+PWD := $(shell pwd)/$(src)/../..
+endif
 KMODULE_NAME = sv6115
 
 KERNEL_OBJ_PATH := $(TOP_DIR)/linux_5.10/build/kernel_output

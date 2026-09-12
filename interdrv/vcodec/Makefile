@@ -1,3 +1,6 @@
+ifneq ($(OSDRV_IN_TREE),)
+PWD := $(shell pwd)/$(src)
+endif
 include $(PWD)/../Makefile.interdrv.param
 
 HAL_PATH = hal/$(CVIARCH_L)
@@ -6,7 +9,9 @@ ccflags-y += -I$(PWD)/../include/common/uapi/ -I$(PWD)/../include/chip/$(CVIARCH
 ccflags-y += -I$(PWD)/../include/common/kapi/
 ccflags-y += -I$(PWD) -I$(LDDINCDIR) -DCNM_FPGA_PLATFORM -DCNM_FPGA_PCI_INTERFACE -DCVI_H26X_USE_ION_FW_BUFFER -DUSE_KERNEL_MODE -Wno-date-time -Werror
 
+ifeq ($(OSDRV_IN_TREE),)
 PWD	:= $(shell pwd)
+endif
 obj-m += soph_vcodec.o
 soph_vcodec-y += cvi_vcodec.o vcodec_common.o
 soph_vcodec-y += hal/$(CVIARCH_L)/cvi_vcodec_cfg.o

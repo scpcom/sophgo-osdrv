@@ -1,3 +1,6 @@
+ifneq ($(OSDRV_IN_TREE),)
+PWD := $(shell pwd)/$(src)
+endif
 include $(PWD)/../Makefile.interdrv.param
 
 ccflags-y +=-Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-type-limits

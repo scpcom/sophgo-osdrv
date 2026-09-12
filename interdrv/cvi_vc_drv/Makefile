@@ -1,3 +1,6 @@
+ifneq ($(OSDRV_IN_TREE),)
+PWD := $(shell pwd)/$(src)
+endif
 include $(PWD)/../Makefile.interdrv.param
 
 COMMON_PATH = common
@@ -185,7 +188,9 @@ VCODEC_DRIVER_DEFINES = -DUSE_KERNEL_MODE -DCVI_H26X_USE_ION_MEM -DBITSTREAM_ION
 
 ccflags-y += $(PWD) -I$(LDDINCDIR) $(VCODEC_DRIVER_HEADER) $(VCODEC_DRIVER_DEFINES) -Wno-date-time
 
+ifneq ($(OSDRV_IN_TREE),)
 PWD	:= $(shell pwd)
+endif
 obj-m = cvi_vc_drv.o
 cvi_vc_drv-y = $(cvi_vc_drv-objs)
 
