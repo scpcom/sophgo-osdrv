@@ -13,6 +13,7 @@ void _reg_write_mask(uintptr_t addr, u32 mask, u32 data);
 
 #else
 #include <linux/io.h>
+#include <linux/spinlock.h>
 extern int dump_reg;
 
 #define _reg_read(addr) readl((void __iomem *)addr)
