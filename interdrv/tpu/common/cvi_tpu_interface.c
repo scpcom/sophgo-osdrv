@@ -971,7 +971,7 @@ static int cvi_tpu_cache_flush(struct cvi_tpu_device *ndev, unsigned long arg)
 		dev_err(ndev->dev, "copy c user fail\n");
 		return ret;
 	}
-#if (KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE) && defined(__riscv)
+#if ((KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE) && defined(__riscv)) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
 	arch_sync_dma_for_device(flush_arg.paddr, flush_arg.size, DMA_TO_DEVICE);
 #else
 	__dma_map_area(phys_to_virt(flush_arg.paddr), flush_arg.size, DMA_TO_DEVICE);
@@ -992,7 +992,8 @@ static int cvi_tpu_cache_invalidate(struct cvi_tpu_device *ndev,
 		dev_err(ndev->dev, "copy from user fail\n");
 		return ret;
 	}
-#if (KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE) && defined(__riscv)
+#if ((KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE) && defined(__riscv)) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
+
 	arch_sync_dma_for_device(invalidate_arg.paddr, invalidate_arg.size, DMA_FROM_DEVICE);
 #else
 	__dma_map_area(phys_to_virt(invalidate_arg.paddr), invalidate_arg.size, DMA_FROM_DEVICE);
