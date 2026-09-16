@@ -123,6 +123,7 @@ enum IVE_BLK_ID_T {
 #endif
 
 #include <linux/io.h>
+#include <linux/spinlock.h>
 
 #define _reg_read(addr) readl((void __iomem *)addr)
 
