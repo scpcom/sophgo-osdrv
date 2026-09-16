@@ -19,7 +19,11 @@ extern int dump_reg;
 #define _reg_read(addr) readl((void __iomem *)addr)
 
 #if 1
+#if (defined(__arm__) || defined(__aarch64__))
+#define _reg_write(addr, data) writel((u32)(data), (void __iomem *)addr)
+#else
 #define _reg_write(addr, data) writel(data, (void __iomem *)addr)
+#endif
 #else
 #define _reg_write(addr, data) \
 	{ \
