@@ -398,7 +398,7 @@ static int cvifb_set_par(struct fb_info *info)
 	pitch = FB_LINE_SIZE(info->var.xres_virtual, info->var.bits_per_pixel);
 	len = pitch * info->var.yres * (1 + double_buffer);
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)) && defined(__riscv)
+#if ((LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)) && defined(__riscv)) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
 	arch_sync_dma_for_device(info->fix.smem_start, info->fix.smem_len, DMA_TO_DEVICE);
 #else
 	__dma_map_area(info->screen_base, info->fix.smem_len, DMA_TO_DEVICE);
@@ -518,7 +518,7 @@ static int cvifb_pan_display(struct fb_var_screeninfo *var, struct fb_info *info
 
 	cfg->ow_cfg[0].addr = par->mem_base + par->mem_offset;
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)) && defined(__riscv)
+#if ((LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)) && defined(__riscv)) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
 	arch_sync_dma_for_device(info->fix.smem_start, info->fix.smem_len, DMA_TO_DEVICE);
 #else
 	__dma_map_area(info->screen_base, info->fix.smem_len, DMA_TO_DEVICE);
@@ -740,7 +740,7 @@ static int cvifb_probe(struct platform_device *pdev)
 
 	// clear the framebuffer.
 	memset_io(info->screen_base, 0x00, info->screen_size);
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)) && defined(__riscv)
+#if ((LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)) && defined(__riscv)) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
 	arch_sync_dma_for_device(info->fix.smem_start, info->fix.smem_len, DMA_TO_DEVICE);
 #else
 	__dma_map_area(info->screen_base, info->fix.smem_len, DMA_TO_DEVICE);
