@@ -1531,6 +1531,9 @@ static struct ssv_vif *ssv_get_sc_to_vif(struct ssv_softc *sc)
  */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
 static int ssv_cfg80211_set_monitor_channel(struct wiphy *wiphy,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 12, 101))
+					    struct net_device *ndev,
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
                                              struct cfg80211_chan_def *chandef
 #else
