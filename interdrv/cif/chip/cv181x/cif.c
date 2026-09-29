@@ -3150,7 +3150,7 @@ static int proc_cif_show(struct seq_file *m, void *v)
 	struct cvi_cif_dev *dev = (struct cvi_cif_dev *)m->private;
 	int i;
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0))
 	seq_printf(m, "\nModule: [MIPI_RX], Build Time[%s]\n",
 			UTS_VERSION);
 #else
