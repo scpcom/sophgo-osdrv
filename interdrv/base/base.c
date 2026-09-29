@@ -99,7 +99,7 @@ static void __exit base_exit(void);
 CVI_U32 base_log_lv = CVI_BASE_DBG_ERR;
 module_param(base_log_lv, int, 0644);
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0))
 static ssize_t base_efuse_shadow_show(struct class *class,
 				      struct class_attribute *attr, char *buf)
 #else
@@ -116,7 +116,7 @@ static ssize_t base_efuse_shadow_show(const struct class *class,
 	return ret;
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0))
 static ssize_t base_efuse_shadow_store(struct class *class,
 				       struct class_attribute *attr,
 				       const char *buf, size_t count)
@@ -144,7 +144,7 @@ static ssize_t base_efuse_shadow_store(const struct class *class,
 	return count;
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0))
 static ssize_t base_efuse_prog_show(struct class *class,
 				    struct class_attribute *attr, char *buf)
 #else
@@ -158,7 +158,7 @@ static ssize_t base_efuse_prog_show(const struct class *class,
 	return scnprintf(buf, PAGE_SIZE, "%s\n", "PROG_SHOW");
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0))
 static ssize_t base_efuse_prog_store(struct class *class,
 				     struct class_attribute *attr,
 				     const char *buf, size_t count)
@@ -184,7 +184,7 @@ static ssize_t base_efuse_prog_store(const struct class *class,
 	return count;
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0))
 static ssize_t base_uid_show(struct class *class,
 			     struct class_attribute *attr, char *buf)
 #else
@@ -203,7 +203,7 @@ static ssize_t base_uid_show(const struct class *class,
 	return scnprintf(buf, PAGE_SIZE, "UID: %08x_%08x\n", uid_3, uid_4);
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0))
 static ssize_t base_rosc_show(struct class *class,
 			      struct class_attribute *attr, char *buf)
 #else
@@ -236,7 +236,7 @@ static ssize_t base_rosc_show(const struct class *class,
 	return count;
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0))
 static ssize_t base_rosc_store(struct class *class,
 			       struct class_attribute *attr,
 			       const char *buf, size_t count)

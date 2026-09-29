@@ -34,7 +34,7 @@ static void _show_vb_status(struct seq_file *m)
 
 	show_cnt = sizeof(show_mod_ids) / sizeof(show_mod_ids[0]);
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0))
 	seq_printf(m, "\nModule: [VB], Build Time[%s]\n", UTS_VERSION);
 #else
 	seq_printf(m, "\nModule: [VB]\n");
