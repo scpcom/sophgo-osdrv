@@ -421,10 +421,12 @@ static void pwm_cv_remove(struct platform_device *pdev)
 	struct cv_pwm_chip *chip = to_cv_pwm_chip(pchip);
 #endif
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0))
 	ret = pwmchip_remove(&chip->chip);
 	if (ret < 0)
 		return ret;
+#elif (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+	pwmchip_remove(&chip->chip);
 #else
 	pwmchip_remove(pchip);
 #endif
