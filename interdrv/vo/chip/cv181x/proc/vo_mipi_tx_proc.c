@@ -61,7 +61,7 @@ static int mipi_tx_proc_show(struct seq_file *m, void *v)
 		phy_data_rate = phy_data_rate % 10 ? phy_data_rate / 10 + 1 : phy_data_rate / 10;
 	}
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0))
 	seq_printf(m, "\nModule: [MIPI_TX], Build Time[%s]\n", UTS_VERSION);
 #else
 	seq_printf(m, "\nModule: [MIPI_TX]\n");
