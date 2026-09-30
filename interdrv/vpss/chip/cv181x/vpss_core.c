@@ -1705,7 +1705,7 @@ err_irq:
  * bmd_remove - device remove method.
  * @pdev: Pointer of platform device.
  */
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 11, 0))
 static int cvi_vpss_remove(struct platform_device *pdev)
 #else
 static void cvi_vpss_remove(struct platform_device *pdev)
@@ -1715,7 +1715,7 @@ static void cvi_vpss_remove(struct platform_device *pdev)
 
 	if (!pdev) {
 		dev_err(&pdev->dev, "invalid param");
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 11, 0))
 		return -EINVAL;
 #else
 		return;
@@ -1730,7 +1730,7 @@ static void cvi_vpss_remove(struct platform_device *pdev)
 	dev = dev_get_drvdata(&pdev->dev);
 	if (!dev) {
 		dev_err(&pdev->dev, "Can not get cvi_vpss drvdata");
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 11, 0))
 		return -EINVAL;
 #else
 		return;
@@ -1748,7 +1748,7 @@ static void cvi_vpss_remove(struct platform_device *pdev)
 	misc_deregister(&dev->miscdev);
 	dev_set_drvdata(&pdev->dev, NULL);
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 11, 0))
 	return 0;
 #endif
 }

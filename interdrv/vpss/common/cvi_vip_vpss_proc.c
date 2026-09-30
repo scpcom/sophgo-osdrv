@@ -175,7 +175,7 @@ static int vpss_ctx_proc_show(struct seq_file *m, void *v)
 	struct cvi_vpss_ctx **pVpssCtx = vpss_get_shdw_ctx();
 
 	// Module Param
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0))
 	seq_printf(m, "\nModule: [VPSS], Build Time[%s]\n", UTS_VERSION);
 #else
 	seq_printf(m, "\nModule: [VPSS]\n");
