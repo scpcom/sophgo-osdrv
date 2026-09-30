@@ -1629,7 +1629,7 @@ struct mutex vcodec_mutex;
 
 void vcodec_lock(void)
 {
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0))
 	mutex_lock_interruptible(&vcodec_mutex);
 #else
 	int ret = mutex_lock_interruptible(&vcodec_mutex);
