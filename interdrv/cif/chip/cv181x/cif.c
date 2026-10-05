@@ -1872,7 +1872,7 @@ static int _cif_set_mac_clk(struct cvi_cif_dev *cdev, uint32_t devno,
 		clk_set_parent(cdev->vip_sys2.clk_o, cdev->clk_disppll.clk_o);
 	}
 
-#if defined(CONFIG_COMMON_CLK_CVITEK)
+#if (defined(CONFIG_COMMON_CLK_CVITEK) || defined(CONFIG_CLK_SOPHGO_CV1800))
 	{
 	/* target = source * (1 + ratio) / 32, ratio <= 0x1F */
 	u32 tmp = clk_val * 32 / cdev->max_mac_clk;
@@ -2199,7 +2199,7 @@ static inline int cif_set_lvds_fp_vs(struct cvi_cif_dev *dev,
 	return 0;
 }
 
-#if defined(CONFIG_COMMON_CLK_CVITEK)
+#if (defined(CONFIG_COMMON_CLK_CVITEK) || defined(CONFIG_CLK_SOPHGO_CV1800))
 struct cam_pll_s {
 //	uint32_t	pll_rate;
 	uint32_t	clk_rate;
@@ -2283,7 +2283,7 @@ static int _cif_enable_snsr_clk(struct device *dev,
 
 		/* camera interface. */
 		// PINMUX_CONFIG(CAM_MCLK0, CAM_MCLK0);
-	#if defined(CONFIG_COMMON_CLK_CVITEK)
+	#if (defined(CONFIG_COMMON_CLK_CVITEK) || defined(CONFIG_CLK_SOPHGO_CV1800))
 		(void)value;
 		/* set rate of clk_cam0pll */
 		// clk_set_rate(clk_get_parent(cdev->clk_cam0.clk_o), clk->pll_rate);
@@ -2356,7 +2356,7 @@ static int _cif_enable_snsr_clk(struct device *dev,
 
 		/* camera interface. */
 		// PINMUX_CONFIG(CAM_MCLK1, CAM_MCLK1);
-	#if defined(CONFIG_COMMON_CLK_CVITEK)
+	#if (defined(CONFIG_COMMON_CLK_CVITEK) || defined(CONFIG_CLK_SOPHGO_CV1800))
 		(void)value;
 		/* set rate of clk_cam1pll */
 		// clk_set_rate(clk_get_parent(cdev->clk_cam1.clk_o), clk->pll_rate);
@@ -3426,6 +3426,9 @@ static int cvi_cif_probe(struct platform_device *pdev)
 {
 	int rc = 0;
 	struct cvi_cif_dev *dev;
+#if (!defined(CONFIG_COMMON_CLK_CVITEK) && defined(CONFIG_CLK_SOPHGO_CV1800))
+	struct clk *rx_clk;
+#endif
 
 	/* allocate main cif state structure */
 	dev = devm_kzalloc(&pdev->dev, sizeof(*dev), GFP_KERNEL);
@@ -3438,6 +3441,17 @@ static int cvi_cif_probe(struct platform_device *pdev)
 
 	dev_set_drvdata(&pdev->dev, dev);
 	platform_set_drvdata(pdev, dev);
+
+#if (!defined(CONFIG_COMMON_CLK_CVITEK) && defined(CONFIG_CLK_SOPHGO_CV1800))
+	/* CSI0 reception needs a separate gate from CSI_MAC0. The modern
+	 * clock framework disables unclaimed gates after boot. Own this clock
+	 * while the receiver is bound, with balanced devres cleanup on failure.
+	 */
+	rx_clk = devm_clk_get_enabled(&pdev->dev, "csi0_rx");
+	if (IS_ERR(rx_clk))
+		return dev_err_probe(&pdev->dev, PTR_ERR(rx_clk),
+				     "cannot enable CSI0 receiver clock\n");
+#endif
 
 	rc = cif_init_miscdev(pdev, dev);
 	if (rc < 0)
