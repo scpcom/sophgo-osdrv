@@ -1118,7 +1118,7 @@ static const struct file_operations npu_fops = {
 	.compat_ioctl = cvi_tpu_ioctl,
 };
 
-int cvi_tpu_register_cdev(struct cvi_tpu_device *ndev)
+static int cvi_tpu_register_cdev(struct cvi_tpu_device *ndev)
 {
 	int ret;
 

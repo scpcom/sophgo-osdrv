@@ -123,7 +123,7 @@ static spinlock_t tpu_int_got_spinlock;
 static uint8_t tpu_sync_backup;
 static uint8_t tpu_suspend_handle_int;
 static struct tpu_reg_backup_info tpu_reg_backup;
-void platform_clear_int(struct cvi_tpu_device *ndev)
+static void platform_clear_int(struct cvi_tpu_device *ndev)
 {
 	u32 reg_value, int_status;
 
