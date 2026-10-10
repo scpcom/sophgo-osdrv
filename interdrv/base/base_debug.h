@@ -29,5 +29,21 @@ extern u32 base_log_lv;
 		} \
 	} while (0)
 
+#define CVI_TRACE_BASE_RATELIMITED(level, fmt, ...) \
+	do { \
+		if (level <= base_log_lv) { \
+			if (level == CVI_BASE_DBG_ERR) \
+				pr_err_ratelimited("%s:%d(): " fmt, __func__, __LINE__, ##__VA_ARGS__); \
+			else if (level == CVI_BASE_DBG_WARN) \
+				pr_warn_ratelimited("%s:%d(): " fmt, __func__, __LINE__, ##__VA_ARGS__); \
+			else if (level == CVI_BASE_DBG_NOTICE) \
+				pr_notice_ratelimited("%s:%d(): " fmt, __func__, __LINE__, ##__VA_ARGS__); \
+			else if (level == CVI_BASE_DBG_INFO) \
+				pr_info_ratelimited("%s:%d(): " fmt, __func__, __LINE__, ##__VA_ARGS__); \
+			else if (level == CVI_BASE_DBG_DEBUG) \
+				printk(KERN_DEBUG "%s:%d(): " fmt, __func__, __LINE__, ##__VA_ARGS__); \
+		} \
+	} while (0)
+
 #endif /* _BASE_DEBUG_H_ */
 
