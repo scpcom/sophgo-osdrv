@@ -114,7 +114,7 @@ static int dhd_wlan_set_reset(int onoff)
 }
 
 #ifdef CUSTOMER_HW_CVITEK
-extern int cvi_sdio_rescan(void);
+#include <soc/cvitek/cvitek_sdhci.h>
 #endif /* CUSTOMER_HW_CVITEK */
 static int dhd_wlan_set_carddetect(int present)
 {
