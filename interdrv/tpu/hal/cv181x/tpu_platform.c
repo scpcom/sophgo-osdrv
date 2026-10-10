@@ -796,8 +796,6 @@ int platform_run_pio(struct cvi_tpu_device *ndev, struct tpu_tdma_pio_info *info
 	tdma_reg_t reg;
 	uint32_t pio_array[16] = {0};
 	int32_t ret = -1;
-	unsigned long tdma_expire = jiffies + msecs_to_jiffies(TIMEOUT_MS);
-	uint32_t reg_value = 0;
 
 	reset_tdma_reg(&reg);
 	reinit_completion(&ndev->tdma_done);
