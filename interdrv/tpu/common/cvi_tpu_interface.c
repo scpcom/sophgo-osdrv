@@ -309,7 +309,7 @@ static int cvi_tpu_prepare_buffer(struct cvi_list_node *node)
 	struct dma_hdr_t *header;
 
 	node->dma_buf = dma_buf_get(node->dmabuf_fd);
-	pr_debug("dma_buf=0x%llx, dmabuf_fd=%d\n", (uint64_t)node->dma_buf, node->dmabuf_fd);
+	pr_debug("dma_buf=0x%zx, dmabuf_fd=%d\n", (size_t)node->dma_buf, node->dmabuf_fd);
 
 	if (IS_ERR(node->dma_buf)) {
 		pr_debug("get dma failed\n");
@@ -324,7 +324,7 @@ static int cvi_tpu_prepare_buffer(struct cvi_list_node *node)
 
 	buffer = node->dma_buf->priv;
 	node->dmabuf_vaddr = buffer->vaddr;
-	pr_debug("v=0x%llx\n", (uint64_t)node->dmabuf_vaddr);
+	pr_debug("v=0x%zx\n", (size_t)node->dmabuf_vaddr);
 
 	if (IS_ERR(node->dmabuf_vaddr)) {
 		pr_err("got v_addr failed\n");
@@ -335,7 +335,7 @@ static int cvi_tpu_prepare_buffer(struct cvi_list_node *node)
 
 	node->dmabuf_paddr = buffer->paddr;
 	fp = (struct file *)(node->dma_buf->file);
-	pr_debug("p=0x%llx, ref_count=%lld\n", (uint64_t)node->dmabuf_paddr, file_count(fp));
+	pr_debug("p=0x%llx, ref_count=%ld\n", (uint64_t)node->dmabuf_paddr, file_count(fp));
 
 	// Check parameters
 	header = (struct dma_hdr_t *)node->dmabuf_vaddr;
@@ -344,7 +344,7 @@ static int cvi_tpu_prepare_buffer(struct cvi_list_node *node)
 	}
 
 	if (node->dmabuf_paddr & 0xFFF) {
-		pr_err("error: dmabuf_paddr=0x%p\n", node->dmabuf_paddr);
+		pr_err("error: dmabuf_paddr=0x%llx\n", (uint64_t)node->dmabuf_paddr);
 	}
 
 	return 0;
@@ -360,7 +360,7 @@ static void cvi_tpu_cleanup_buffer(struct cvi_list_node *node)
 		dma_buf_end_cpu_access(node->dma_buf, DMA_TO_DEVICE);
 		dma_buf_put(node->dma_buf);
 		fp = (struct file *)(node->dma_buf->file);
-		pr_debug("ref_count=%lld\n", file_count(fp));
+		pr_debug("ref_count=%ld\n", file_count(fp));
 
 	}
 }
