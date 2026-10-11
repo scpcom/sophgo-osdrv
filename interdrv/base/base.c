@@ -78,7 +78,9 @@ struct base_state {
 	struct pid *state_pid;
 	const struct cred *cred;
 	void __user *state_context;
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0))
 	u32 secid;
+#endif
 };
 
 static void __iomem *top_base;
@@ -459,10 +461,12 @@ static int base_open(struct inode *inode, struct file *filp)
 	INIT_LIST_HEAD(&ps->list);
 	ps->state_pid = get_pid(task_pid(current));
 	ps->cred = get_current_cred();
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 13, 0))
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 13, 0))
 	security_task_getsecid(current, &ps->secid);
 #else
 	security_task_getsecid_obj(current, &ps->secid);
+#endif
 #endif
 	/* memory barrier in smp case. */
 	smp_wmb();
