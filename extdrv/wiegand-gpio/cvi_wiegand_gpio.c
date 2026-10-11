@@ -26,6 +26,11 @@
 
 #include "cvi_wiegand_gpio.h"
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
+#define del_timer timer_delete
+#define from_timer timer_container_of
+#endif
+
 #define CVI_WIEGAND_CDEV_NAME "cvi-wiegand"
 #define CVI_WIEGAND_CLASS_NAME "cvi-wiegand"
 
