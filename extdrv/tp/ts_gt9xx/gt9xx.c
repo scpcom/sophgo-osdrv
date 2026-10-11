@@ -1756,8 +1756,13 @@ static s8 gtp_request_irq(struct goodix_ts_data *ts)
         GTP_GPIO_AS_INPUT(gtp_int_gpio);
         GTP_GPIO_FREE(gtp_int_gpio);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 15, 0)
         hrtimer_init(&ts->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
         ts->timer.function = goodix_ts_timer_handler;
+#else
+	hrtimer_setup(&ts->timer, goodix_ts_timer_handler, CLOCK_MONOTONIC,
+		      HRTIMER_MODE_REL);
+#endif
         hrtimer_start(&ts->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
         return -1;
     }
@@ -2687,6 +2692,7 @@ static void goodix_ts_resume(struct goodix_ts_data *ts)
 
 
 #if   defined(CONFIG_FB)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
 /* frame buffer notifier block control the suspend/resume procedure */
 static int gtp_fb_notifier_callback(struct notifier_block *noti, unsigned long event, void *data)
 {
@@ -2709,6 +2715,7 @@ static int gtp_fb_notifier_callback(struct notifier_block *noti, unsigned long e
 
 	return 0;
 }
+#endif
 #elif defined(CONFIG_PM)
 /* bus control the suspend/resume procedure */
 static int gtp_pm_suspend(struct device *dev)
@@ -2766,9 +2773,10 @@ static void gtp_early_resume(struct early_suspend *h)
 static int gtp_register_powermanger(struct goodix_ts_data *ts)
 {
 #if   defined(CONFIG_FB)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
 	ts->notifier.notifier_call = gtp_fb_notifier_callback;
 	fb_register_client(&ts->notifier);
-
+#endif
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
     ts->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
 	ts->early_suspend.suspend = goodix_ts_early_suspend;
@@ -2782,8 +2790,9 @@ static int gtp_register_powermanger(struct goodix_ts_data *ts)
 static int gtp_unregister_powermanger(struct goodix_ts_data *ts)
 {
 #if   defined(CONFIG_FB)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
 		fb_unregister_client(&ts->notifier);
-
+#endif
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 		unregister_early_suspend(&ts->early_suspend);
 #endif

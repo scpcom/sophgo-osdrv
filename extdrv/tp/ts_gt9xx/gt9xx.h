@@ -105,7 +105,9 @@ struct goodix_ts_data {
     u8  pnl_init_error;
 
 #if   defined(CONFIG_FB)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
 	struct notifier_block notifier;
+#endif
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 	struct early_suspend early_suspend;
 #endif
