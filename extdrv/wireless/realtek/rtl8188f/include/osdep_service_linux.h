@@ -346,6 +346,11 @@ __inline static _list	*get_list_head(_queue	*queue)
 	return &(queue->queue);
 }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0))
+#define del_timer_sync timer_delete_sync
+#define from_timer timer_container_of
+#endif
+
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
 static inline void timer_hdl(struct timer_list *in_timer)
 #else
