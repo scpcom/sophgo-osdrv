@@ -803,11 +803,17 @@ static int btsdio_probe(struct sdio_func *func,
 	hdev->send     = btsdio_send_frame;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 1)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 16, 0))
+	hci_set_quirk(hdev, HCI_QUIRK_RESET_ON_CLOSE);
+#else
 	set_bit(HCI_QUIRK_RESET_ON_CLOSE, &hdev->quirks);
+#endif
 	BT_DBG("set_bit(HCI_QUIRK_RESET_ON_CLOSE, &hdev->quirks);");
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 14, 0))
+	hci_set_quirk(hdev, HCI_QUIRK_SIMULTANEOUS_DISCOVERY);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
 	set_bit(HCI_QUIRK_SIMULTANEOUS_DISCOVERY, &hdev->quirks);
 #endif
 
