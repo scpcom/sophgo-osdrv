@@ -31,6 +31,12 @@ EXTRA_CFLAGS := -I$(KBUILD_TOP) -I$(KBUILD_TOP)/include
 #DEF_PARSER_H = $(KBUILD_TOP)/include/ssv_conf_parser.h
 #$(shell env ccflags="$(ccflags-y)" $(KBUILD_TOP)/parser-conf.sh $(DEF_PARSER_H))
 
+ifneq ($(KERNELRELEASE),)
+
+ccflags-y += $(EXTRA_CFLAGS)
+
+endif
+
 #------------------------------
 # ssvdevice/
 KERN_SRCS := ssvdevice/ssvdevice.c

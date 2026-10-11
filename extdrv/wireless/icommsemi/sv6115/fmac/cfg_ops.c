@@ -1628,7 +1628,11 @@ void ssv_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
  *	have changed. The actual parameter values are available in
  *	struct wiphy. If returning an error, no value should be changed.
  */
-static int ssv_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+static int ssv_cfg80211_set_wiphy_params(struct wiphy *wiphy,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0))
+	int radio_idx,
+#endif
+	u32 changed)
 {
     SSV_LOG_DBG("[%s][%d]\n", __FUNCTION__, __LINE__);
     return 0;
@@ -1645,6 +1649,9 @@ static int ssv_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
 static int ssv_cfg80211_set_tx_power(struct wiphy *wiphy,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
                                       struct wireless_dev *wdev,
+#endif
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 17, 0))
+                                      int radio_idx,
 #endif
                                       enum nl80211_tx_power_setting type, int mbm)
 {

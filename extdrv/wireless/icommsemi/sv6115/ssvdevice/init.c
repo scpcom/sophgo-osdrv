@@ -42,6 +42,11 @@
 #include <fmac/fmac_msg_tx.h>
 #include <fmac/fmac_utils.h>
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
+#define del_timer_sync timer_delete_sync
+#define from_timer timer_container_of
+#endif
+
 MODULE_AUTHOR("iComm-semi, Ltd");
 MODULE_DESCRIPTION("Support for SSV6xxx wireless LAN cards.");
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
