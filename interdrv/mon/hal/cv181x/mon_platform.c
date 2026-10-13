@@ -9,6 +9,10 @@
 #include <linux/version.h>
 #include "mon_platform.h"
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+#define strncpy strscpy_pad
+#endif
+
 struct AXIMON_INFO_PORT {
 	uint8_t port_name[16];
 	uint32_t bcnts_min;
