@@ -7,6 +7,10 @@
 #define PDE_DATA(i)	pde_data(i)
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+#define strncpy strscpy_pad
+#endif
+
 static void *gdc_shared_mem;
 static const char *const MOD_STRING[] = FOREACH_MOD(GENERATE_STRING);
 /*************************************************************************
