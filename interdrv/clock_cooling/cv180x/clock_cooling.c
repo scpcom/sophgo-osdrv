@@ -260,6 +260,9 @@ cv180x_cooling_device_register(struct device *dev)
 
 	cvcdev->clk_state = 0;
 	cdev = thermal_of_cooling_device_register(dev->of_node,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+						  0,
+#endif
 						  "cv180x_cooling", cvcdev,
 						  &cv180x_cooling_ops);
 	if (IS_ERR(cdev))
