@@ -47,6 +47,12 @@
 
 #include "lpm.h"
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
+#define del_timer timer_delete
+#define del_timer_sync timer_delete_sync
+#define from_timer timer_container_of
+#endif
+
 /*
  * #define BT_SLEEP_DBG
  */

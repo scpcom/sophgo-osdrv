@@ -29,6 +29,11 @@
 #include "aicwf_manager.h"
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
+#define del_timer timer_delete
+#define del_timer_sync timer_delete_sync
+#define from_timer timer_container_of
+#endif
 
 #ifndef IEEE80211_MAX_CHAINS
 #define IEEE80211_MAX_CHAINS 4
@@ -2171,6 +2176,11 @@ u8 rwnx_rxdataind_aicwf(struct rwnx_hw *rwnx_hw, void *hostid, void *rx_priv)
 	if (hw_rxhdr->flags_upload)
 		status |= RX_STAT_FORWARD;
 
+#ifndef CONFIG_RWNX_MON_DATA
+	if (status & RX_STAT_MONITOR)
+		status &= ~RX_STAT_FORWARD;
+#endif
+
 	/* Check if we need to delete the buffer */
 	if (status & RX_STAT_DELETE) {
 		/* Remove the SK buffer from the rxbuf_elems table */
@@ -2233,11 +2243,21 @@ u8 rwnx_rxdataind_aicwf(struct rwnx_hw *rwnx_hw, void *hostid, void *rx_priv)
         } else {
     #ifdef CONFIG_RWNX_MON_DATA
         skb_monitor = skb_copy_expand(skb, rtap_len, 0, GFP_ATOMIC);
-        skb_monitor->data += (msdu_offset + 2); //sdio/usb word allign
+        if (skb_monitor) {
+            skb_monitor->data += (msdu_offset + 2); //sdio/usb word allign
 
-        //Save frame length
-        frm_len = le32_to_cpu(hw_rxhdr->hwvect.len);
+            //Save frame length
+            frm_len = le32_to_cpu(hw_rxhdr->hwvect.len);
+        }
     #endif
+        }
+
+        if (!skb_monitor) {
+            if (status == RX_STAT_MONITOR) {
+                dev_kfree_skb(skb);
+                goto end;
+            }
+            goto check_len_update;
         }
 
         skb_reset_tail_pointer(skb_monitor);
@@ -2282,7 +2302,11 @@ check_len_update:
 #ifdef CONFIG_GKI
 			rwnx_cfg80211_rx_spurious_frame(rwnx_vif->ndev, hdr->addr2, GFP_ATOMIC);
 #else
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 17, 0)
             cfg80211_rx_spurious_frame(rwnx_vif->ndev, hdr->addr2, GFP_ATOMIC);
+#else
+            cfg80211_rx_spurious_frame(rwnx_vif->ndev, hdr->addr2, -1, GFP_ATOMIC);
+#endif
 #endif
 		}
 		goto end;
@@ -2594,7 +2618,11 @@ check_len_update:
 													   sta->mac_addr, GFP_ATOMIC);
 #else
                     cfg80211_rx_unexpected_4addr_frame(rwnx_vif->ndev,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 17, 0)
                                                        sta->mac_addr, GFP_ATOMIC);
+#else
+                                                       sta->mac_addr, -1, GFP_ATOMIC);
+#endif
 #endif
 				}
 			}
