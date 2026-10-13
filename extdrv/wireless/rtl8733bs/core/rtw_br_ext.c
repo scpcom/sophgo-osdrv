@@ -96,7 +96,11 @@ static __inline__ unsigned char *__nat25_find_pppoe_tag(struct pppoe_hdr *ph, un
 	unsigned char *cur_ptr, *start_ptr;
 	unsigned short tagLen, tagType;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+	start_ptr = cur_ptr = (unsigned char *)ph + sizeof(*ph);
+#else
 	start_ptr = cur_ptr = (unsigned char *)ph->tag;
+#endif
 	while ((cur_ptr - start_ptr) < ntohs(ph->length)) {
 		/* prevent un-alignment access */
 		tagType = (unsigned short)((cur_ptr[0] << 8) + cur_ptr[1]);
@@ -112,6 +116,7 @@ static __inline__ unsigned char *__nat25_find_pppoe_tag(struct pppoe_hdr *ph, un
 static __inline__ int __nat25_add_pppoe_tag(struct sk_buff *skb, struct pppoe_tag *tag)
 {
 	struct pppoe_hdr *ph = (struct pppoe_hdr *)(skb->data + ETH_HLEN);
+	unsigned char *ph_tag;
 	int data_len;
 
 	data_len = tag->tag_len + TAG_HDR_LEN;
@@ -122,9 +127,14 @@ static __inline__ int __nat25_add_pppoe_tag(struct sk_buff *skb, struct pppoe_ta
 
 	skb_put(skb, data_len);
 	/* have a room for new tag */
-	memmove(((unsigned char *)ph->tag + data_len), (unsigned char *)ph->tag, ntohs(ph->length));
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+	ph_tag = (unsigned char *)ph + sizeof(*ph);
+#else
+	ph_tag = (unsigned char *)ph->tag;
+#endif
+	memmove(((unsigned char *)ph_tag + data_len), (unsigned char *)ph_tag, ntohs(ph->length));
 	ph->length = htons(ntohs(ph->length) + data_len);
-	memcpy((unsigned char *)ph->tag, tag, data_len);
+	memcpy((unsigned char *)ph_tag, tag, data_len);
 	return data_len;
 }
 
@@ -907,8 +917,10 @@ int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method)
 		 (protocol == __constant_htons(ETH_P_AARP))) {
 		unsigned char ipx_header[2] = {0xFF, 0xFF};
 		struct ipxhdr	*ipx = NULL;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 2, 0)
 		struct elapaarp	*ea = NULL;
 		struct ddpehdr	*ddp = NULL;
+#endif
 		unsigned char *framePtr = skb->data + ETH_HLEN;
 
 		if (protocol == __constant_htons(ETH_P_IPX)) {
@@ -937,11 +949,15 @@ int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method)
 					} else if (!memcmp(aarp_snap_id, framePtr, 5)) {
 						framePtr += 5;	/* eliminate the SNAP header */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 2, 0)
 						ea = (struct elapaarp *)framePtr;
+#endif
 					} else if (!memcmp(ddp_snap_id, framePtr, 5)) {
 						framePtr += 5;	/* eliminate the SNAP header */
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 2, 0)
 						ddp = (struct ddpehdr *)framePtr;
+#endif
 					} else {
 						DEBUG_WARN("NAT25: Protocol=Ethernet SNAP %02x%02x%02x%02x%02x\n", framePtr[0],
 							framePtr[1], framePtr[2], framePtr[3], framePtr[4]);
@@ -1029,6 +1045,7 @@ int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method)
 		} else
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 2, 0)
 		/*   AARP  */
 		if (ea != NULL) {
 			/* Sanity check fields. */
@@ -1118,6 +1135,7 @@ int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method)
 				return -1;
 			}
 		}
+#endif
 
 		return -1;
 	}
@@ -1141,20 +1159,31 @@ int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method)
 				if (ph->code == PADI_CODE || ph->code == PADR_CODE) {
 					if (priv->ethBrExtInfo.addPPPoETag) {
 						struct pppoe_tag *tag, *pOldTag;
+						unsigned char *tag_data;
 						unsigned char tag_buf[40];
 						int old_tag_len = 0;
 
 						tag = (struct pppoe_tag *)tag_buf;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+						tag_data = (unsigned char *)tag + sizeof(*tag);
+#else
+						tag_data = (unsigned char *)tag_data;
+#endif
 						pOldTag = (struct pppoe_tag *)__nat25_find_pppoe_tag(ph, ntohs(PTT_RELAY_SID));
 						if (pOldTag) { /* if SID existed, copy old value and delete it */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+							unsigned char *old_tag_data = (unsigned char *)pOldTag + sizeof(*pOldTag);
+#else
+							unsigned char *old_tag_data = (unsigned char *)pOldTag->tag_data;
+#endif
 							old_tag_len = ntohs(pOldTag->tag_len);
 							if (old_tag_len + TAG_HDR_LEN + MAGIC_CODE_LEN + RTL_RELAY_TAG_LEN > sizeof(tag_buf)) {
 								DEBUG_ERR("SID tag length too long!\n");
 								return -1;
 							}
 
-							memcpy(tag->tag_data + MAGIC_CODE_LEN + RTL_RELAY_TAG_LEN,
-							       pOldTag->tag_data, old_tag_len);
+							memcpy(tag_data + MAGIC_CODE_LEN + RTL_RELAY_TAG_LEN,
+							       old_tag_data, old_tag_len);
 
 							if (skb_pull_and_merge(skb, (unsigned char *)pOldTag, TAG_HDR_LEN + old_tag_len) < 0) {
 								DEBUG_ERR("call skb_pull_and_merge() failed in PADI/R packet!\n");
@@ -1167,9 +1196,9 @@ int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method)
 						tag->tag_len = htons(MAGIC_CODE_LEN + RTL_RELAY_TAG_LEN + old_tag_len);
 
 						/* insert the magic_code+client mac in relay tag */
-						pMagic = (unsigned short *)tag->tag_data;
+						pMagic = (unsigned short *)tag_data;
 						*pMagic = htons(MAGIC_CODE);
-						memcpy(tag->tag_data + MAGIC_CODE_LEN, skb->data + ETH_ALEN, ETH_ALEN);
+						memcpy(tag_data + MAGIC_CODE_LEN, skb->data + ETH_ALEN, ETH_ALEN);
 
 						/* Add relay tag */
 						if (__nat25_add_pppoe_tag(skb, tag) < 0)
@@ -1211,6 +1240,7 @@ int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method)
 			if (ph->code == PADO_CODE || ph->code == PADS_CODE) {
 				if (priv->ethBrExtInfo.addPPPoETag) {
 					struct pppoe_tag *tag;
+					unsigned char *tag_data;
 					unsigned char *ptr;
 					unsigned short tagType, tagLen;
 					int offset = 0;
@@ -1222,6 +1252,11 @@ int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method)
 					}
 
 					tag = (struct pppoe_tag *)ptr;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+					tag_data = (unsigned char *)tag + sizeof(*tag);
+#else
+					tag_data = (unsigned char *)tag_data;
+#endif
 					tagType = (unsigned short)((ptr[0] << 8) + ptr[1]);
 					tagLen = (unsigned short)((ptr[2] << 8) + ptr[3]);
 
@@ -1230,14 +1265,14 @@ int nat25_db_handle(_adapter *priv, struct sk_buff *skb, int method)
 						return -1;
 					}
 
-					pMagic = (unsigned short *)tag->tag_data;
+					pMagic = (unsigned short *)tag_data;
 					if (ntohs(*pMagic) != MAGIC_CODE) {
 						DEBUG_ERR("Can't find MAGIC_CODE in %s packet!\n",
 							(ph->code == PADO_CODE ? "PADO" : "PADS"));
 						return -1;
 					}
 
-					memcpy(skb->data, tag->tag_data + MAGIC_CODE_LEN, ETH_ALEN);
+					memcpy(skb->data, tag_data + MAGIC_CODE_LEN, ETH_ALEN);
 
 					if (tagLen > MAGIC_CODE_LEN + RTL_RELAY_TAG_LEN)
 						offset = TAG_HDR_LEN;
