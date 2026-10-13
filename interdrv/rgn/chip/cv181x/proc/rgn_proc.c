@@ -7,6 +7,10 @@
 #define PDE_DATA(i)	pde_data(i)
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+#define strncpy strscpy_pad
+#endif
+
 static const char *const MOD_STRING[] = FOREACH_MOD(GENERATE_STRING);
 extern struct cvi_rgn_ctx rgn_prc_ctx;
 /*************************************************************************
