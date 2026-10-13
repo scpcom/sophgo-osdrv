@@ -2,10 +2,15 @@
 #include <linux/hashtable.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
+#include <linux/version.h>
 
 #include "sys.h"
 #include "vb.h"
 #include "queue.h"
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+#define strncpy strscpy_pad
+#endif
 
 CVI_U32 vb_max_pools = 512;
 module_param(vb_max_pools, uint, 0644);
