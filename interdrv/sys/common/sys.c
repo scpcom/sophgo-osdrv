@@ -18,6 +18,10 @@
 #include <vi_cb.h>
 #include <vpss_cb.h>
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+#define strncpy strscpy_pad
+#endif
+
 enum enum_cache_op {
 	enum_cache_op_invalid,
 	enum_cache_op_flush,
