@@ -18,6 +18,10 @@
 #define PDE_DATA(i)	pde_data(i)
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+#define strncpy strscpy_pad
+#endif
+
 // for proc info
 static int proc_vpss_mode;
 static const char * const str_src[] = {"ISP", "DWA", "MEM"};
