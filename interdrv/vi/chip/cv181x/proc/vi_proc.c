@@ -8,6 +8,10 @@
 #define PDE_DATA(i)	pde_data(i)
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+#define strncpy strscpy_pad
+#endif
+
 static void *vi_shared_mem;
 /*************************************************************************
  *	VI proc functions

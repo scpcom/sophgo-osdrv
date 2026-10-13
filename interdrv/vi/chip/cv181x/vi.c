@@ -24,6 +24,10 @@
 #define from_timer timer_container_of
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+#define strncpy strscpy_pad
+#endif
+
 /*******************************************************
  *  MACRO defines
  ******************************************************/
