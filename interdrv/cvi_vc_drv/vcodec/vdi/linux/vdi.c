@@ -20,6 +20,7 @@
 #include <linux/delay.h>
 #include <linux/mutex.h>
 #include <linux/sched.h>
+#include <linux/version.h>
 #include <vc_ctx.h>
 #include "../vdi.h"
 #include "../vdi_osal.h"
@@ -28,6 +29,10 @@
 #include "driver/vcodec.h"
 #include "wave/common/common_regdefine.h"
 #include "wave/wave4/wave4_regdefine.h"
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+#define strncpy strscpy_pad
+#endif
 
 #define VCODEC_DEVICE_NAME "/dev/vcodec"
 typedef struct mutex MUTEX_HANDLE;
