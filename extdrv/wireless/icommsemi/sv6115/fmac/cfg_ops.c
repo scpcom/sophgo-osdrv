@@ -432,13 +432,21 @@ END:
  * @add_key: add a key with the given parameters. @mac_addr will be %NULL
  *	when adding a group key.
  */
-static int ssv_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev
+static int ssv_cfg80211_add_key(struct wiphy *wiphy
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+	, struct wireless_dev *wdev
+#else
+	, struct net_device *netdev
+#endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
 	, int link_id
 #endif
                                  , u8 key_index, bool pairwise, const u8 *mac_addr,
                                  struct key_params *params)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+    struct net_device *netdev = wdev->netdev;
+#endif
     struct ssv_softc *sc = wiphy_priv(wiphy);
     struct ssv_vif *vif = netdev_priv(netdev);
     int i, error = 0;
@@ -526,7 +534,12 @@ static int ssv_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev
  *	not possible to retrieve the key, -ENOENT if it doesn't exist.
  *
  */
-static int ssv_cfg80211_get_key(struct wiphy *wiphy, struct net_device *netdev
+static int ssv_cfg80211_get_key(struct wiphy *wiphy
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+	, struct wireless_dev *wdev
+#else
+	, struct net_device *netdev
+#endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
 	, int link_id
 #endif
@@ -543,12 +556,20 @@ static int ssv_cfg80211_get_key(struct wiphy *wiphy, struct net_device *netdev
  * @del_key: remove a key given the @mac_addr (%NULL for a group key)
  *	and @key_index, return -ENOENT if the key doesn't exist.
  */
-static int ssv_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netdev
+static int ssv_cfg80211_del_key(struct wiphy *wiphy
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+	, struct wireless_dev *wdev
+#else
+	, struct net_device *netdev
+#endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
 	, int link_id
 #endif
                                  , u8 key_index, bool pairwise, const u8 *mac_addr)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+    struct net_device *netdev = wdev->netdev;
+#endif
     struct ssv_softc *sc = wiphy_priv(wiphy);
     struct ssv_vif *vif = netdev_priv(netdev);
     int error;
@@ -587,7 +608,11 @@ static int ssv_cfg80211_set_default_key(struct wiphy *wiphy,
  * @set_default_mgmt_key: set the default management frame key on an interface
  */
 static int ssv_cfg80211_set_default_mgmt_key(struct wiphy *wiphy,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+					      struct wireless_dev *wdev
+#else
                                               struct net_device *netdev
+#endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
 	, int link_id
 #endif
@@ -637,7 +662,9 @@ RETRY_CONNECT:
         key_params.key_len = sme->key_len;
         key_params.seq_len = 0;
         key_params.cipher = sme->crypto.cipher_group;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+	ssv_cfg80211_add_key(wiphy, &ssv_vif->wdev, 0, sme->key_idx, false, NULL, &key_params);
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 0))
         ssv_cfg80211_add_key(wiphy, dev, 0, sme->key_idx, false, NULL, &key_params);
 #else
 	ssv_cfg80211_add_key(wiphy, dev, sme->key_idx, false, NULL, &key_params);
@@ -740,7 +767,12 @@ static int ssv_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
  * @add_station: Add a new station.
  */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
-static int ssv_cfg80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+static int ssv_cfg80211_add_station(struct wiphy *wiphy,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+				     struct wireless_dev *wdev,
+#else
+				     struct net_device *dev,
+#endif
                                      const u8 *mac, struct station_parameters *params)
 
 #else
@@ -748,6 +780,9 @@ static int ssv_cfg80211_add_station(struct wiphy *wiphy, struct net_device *dev,
                                      u8 *mac, struct station_parameters *params)
 #endif
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+    struct net_device *dev = wdev->netdev;
+#endif
     struct ssv_softc *sc = wiphy_priv(wiphy);
     struct ssv_vif *ssv_vif = netdev_priv(dev);
     struct me_sta_add_cfm me_sta_add_cfm;
@@ -862,7 +897,12 @@ static int ssv_cfg80211_add_station(struct wiphy *wiphy, struct net_device *dev,
  * @del_station: Remove a station
  */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 19, 0)
-static int ssv_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev,
+static int ssv_cfg80211_del_station(struct wiphy *wiphy,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+			      struct wireless_dev *wdev,
+#else
+			      struct net_device *dev,
+#endif
                               struct station_del_parameters *params)
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
 static int ssv_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev,
@@ -872,6 +912,9 @@ static int ssv_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev,
                               u8 *mac)
 #endif
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+    struct net_device *dev = wdev->netdev;
+#endif
     struct ssv_softc *sc = wiphy_priv(wiphy);
     struct ssv_vif *ssv_vif = netdev_priv(dev);
     struct ssv_sta *cur, *tmp;
@@ -1040,13 +1083,21 @@ void ssv_gen_probe_resp_template(struct cfg80211_ap_settings *settings, struct s
  *	cfg80211_check_station_change() to validate the information.
  */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
-static int ssv_cfg80211_change_station(struct wiphy *wiphy, struct net_device *dev,
+static int ssv_cfg80211_change_station(struct wiphy *wiphy,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+				        struct wireless_dev *wdev,
+#else
+				        struct net_device *dev,
+#endif
                                         const u8 *mac, struct station_parameters *params)
 #else
 static int ssv_cfg80211_change_station(struct wiphy *wiphy, struct net_device *dev,
                                         u8 *mac, struct station_parameters *params)
 #endif
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+    struct net_device *dev = wdev->netdev;
+#endif
     struct ssv_softc *sc = wiphy_priv(wiphy);
     struct ssv_vif *vif = netdev_priv(dev);
     struct ssv_sta *sta;
@@ -1482,7 +1533,9 @@ static int ssv_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev
     /* delete any remaining STA*/
     while (!list_empty(&ssv_vif->ap.sta_list))
     {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 19, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+        ssv_cfg80211_del_station(wiphy, &ssv_vif->wdev, &params);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 19, 0)
         ssv_cfg80211_del_station(wiphy, dev, &params);
 #else
         ssv_cfg80211_del_station(wiphy, dev, NULL);
@@ -1761,7 +1814,17 @@ ssv_cfg80211_remain_on_channel(struct wiphy *wiphy,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
                                 enum nl80211_channel_type channel_type,
 #endif
-                                unsigned int duration, u64 *cookie)
+                                unsigned int duration, u64 *cookie
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+				/*
+				 * 7.2 added an optional receive address filter for the off-channel
+				 * period. cfg80211 refuses a non-NULL one unless the driver sets
+				 * NL80211_EXT_FEATURE_ROC_ADDR_FILTER, which this one does not, so it
+				 * is always NULL here. mac80211 ignores it in the same way.
+				 */
+				, const u8 *rx_addr
+#endif
+				)
 {
     struct ssv_softc *sc = wiphy_priv(wiphy);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
@@ -2178,7 +2241,11 @@ static int ssv_cfg80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
                                                            NL80211_CHAN_NO_HT,
 #endif
-                                                           30, &cookie);
+                                                           30, &cookie
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+							   , NULL
+#endif
+							   );
 
                     if (error)
                     {
@@ -2368,7 +2435,11 @@ end:
  * @get_station: get station information.
  */
 static int ssv_cfg80211_get_station(struct wiphy *wiphy, 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 1, 0)
+			        struct wireless_dev *wdev,
+#else
 				struct net_device *dev,
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
                 const u8 *mac,
 #else

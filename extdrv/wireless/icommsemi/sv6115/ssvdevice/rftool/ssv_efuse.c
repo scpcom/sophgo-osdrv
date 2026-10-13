@@ -10,6 +10,10 @@
 #include "ssv_efuse.h"
 #include "ssv_debug.h"
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
+#define strncpy strscpy_pad
+#endif
+
 struct _6030b1_efuse_st
 {
     uint32_t sku_id;
