@@ -35,6 +35,10 @@ extern int sunxi_wlan_get_bus_index(void);
 static int aicbsp_bus_index = -1;
 #endif
 
+#ifdef CONFIG_PLATFORM_CVITEK
+extern int cvi_sdio_rescan(void);
+#endif
+
 #ifdef CONFIG_PLATFORM_AMLOGIC//for AML
 #include <linux/amlogic/aml_gpio_consumer.h>
 extern void sdio_reinit(void);
@@ -531,6 +535,9 @@ static int aicbsp_platform_power_on(void)
 	mdelay(50);
 	sunxi_mmc_rescan_card(aicbsp_bus_index);
 #endif //CONFIG_PLATFORM_ALLWINNER
+#ifdef CONFIG_PLATFORM_CVITEK
+	cvi_sdio_rescan();
+#endif
 
 	if (down_timeout(&aic_chipup_sem, msecs_to_jiffies(2000)) == 0) {
 		aicbsp_unreg_sdio_notify();

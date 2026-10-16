@@ -89,6 +89,7 @@ endif
 CONFIG_PLATFORM_ROCKCHIP ?= n
 CONFIG_PLATFORM_ROCKCHIP2 ?= n
 CONFIG_PLATFORM_ALLWINNER ?=n
+CONFIG_PLATFORM_CVITEK := $(CONFIG_ARCH_CVITEK)
 CONFIG_PLATFORM_INGENIC_T20 ?= n
 CONFIG_PLATFORM_AMLOGIC ?= n
 CONFIG_PLATFORM_UBUNTU ?= y
@@ -113,6 +114,10 @@ KDIR  ?= /home/yaya/E/Allwinner/r818/Android10/lichee/kernel/linux-4.9/
 ARCH ?= arm64
 CROSS_COMPILE ?= /home/yaya/E/Allwinner/r818/Android10/android/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 
+endif
+
+ifeq ($(CONFIG_PLATFORM_CVITEK), y)
+ccflags-$(CONFIG_PLATFORM_CVITEK) += -DCONFIG_PLATFORM_CVITEK
 endif
 
 ifeq ($(CONFIG_PLATFORM_INGENIC_T20), y)
