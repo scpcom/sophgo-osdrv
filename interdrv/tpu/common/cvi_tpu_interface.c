@@ -867,6 +867,7 @@ static int work_thread_main(void *data)
 static int work_thread_init(struct cvi_tpu_device *ndev)
 {
 	struct cvi_kernel_work *kernel_work = &ndev->kernel_work;
+	int ret = 0;
 
 	init_waitqueue_head(&kernel_work->task_wait_queue);
 	init_waitqueue_head(&kernel_work->done_wait_queue);
@@ -879,10 +880,11 @@ static int work_thread_init(struct cvi_tpu_device *ndev)
 		kthread_run(work_thread_main, ndev, "cvitask_tpu_wor");
 	if (IS_ERR(kernel_work->work_thread)) {
 		dev_err(ndev->dev, "kthread run fail\n");
-		return PTR_ERR(kernel_work->work_thread);
+		ret = PTR_ERR(kernel_work->work_thread);
+		kernel_work->work_thread = NULL;
 	}
 
-	return 0;
+	return ret;
 }
 
 static int cvi_tpu_wait_dmabuf(struct cvi_tpu_device *ndev, unsigned long arg)
@@ -1270,7 +1272,10 @@ static void cvi_tpu_remove(struct platform_device *pdev)
 	struct cvi_tpu_device *ndev = platform_get_drvdata(pdev);
 	struct cvi_kernel_work *kernel_work = &ndev->kernel_work;
 
-	kthread_stop(kernel_work->work_thread);
+	if (kernel_work->work_thread != NULL) {
+		kthread_stop(kernel_work->work_thread);
+		kernel_work->work_thread = NULL;
+	}
 
 	//put clock related
 	if (ndev->clk_tpu_axi)
