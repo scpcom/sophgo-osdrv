@@ -4559,6 +4559,7 @@ int vi_create_thread(struct cvi_vi_dev *vdev, enum E_VI_TH th_id)
 								vdev->vi_th[th_id].th_name);
 		if (IS_ERR(vdev->vi_th[th_id].w_thread)) {
 			pr_err("Unable to start %s.\n", vdev->vi_th[th_id].th_name);
+			vdev->vi_th[th_id].w_thread = NULL;
 			return -1;
 		}
 
