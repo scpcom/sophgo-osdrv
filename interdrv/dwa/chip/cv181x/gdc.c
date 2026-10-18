@@ -612,6 +612,12 @@ int cvi_gdc_init(struct cvi_dwa_vdev *wdev)
 	wdev->thread = kthread_run(kthread_worker_fn, &wdev->worker,
 				   "gdc_work");
 
+	if (IS_ERR(wdev->thread)) {
+		CVI_TRACE_DWA(CVI_DBG_ERR, "failed to create gdc thread\n");
+		wdev->thread = NULL;
+		return -1;
+	}
+
 	// Same as sched_set_fifo in linux 5.x
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 	tsk.sched_priority = MAX_USER_RT_PRIO / 2;
@@ -621,11 +627,6 @@ int cvi_gdc_init(struct cvi_dwa_vdev *wdev)
 	ret = sched_setscheduler(wdev->thread, SCHED_FIFO, &tsk);
 	if (ret)
 		CVI_TRACE_DWA(CVI_DBG_WARN, "gdc thread priority update failed: %d\n", ret);
-
-	if (IS_ERR(wdev->thread)) {
-		CVI_TRACE_DWA(CVI_DBG_ERR, "failed to create gdc kthread\n");
-		return -1;
-	}
 
 	gdc_proc_ctx = wdev->shared_mem;
 
