@@ -378,6 +378,7 @@ static int work_thread_main(void *data)
 static int work_thread_init(struct cvi_mon_device *ndev)
 {
 	struct cvi_mon_work *mon_work = &ndev->mon_work;
+	int ret = 0;
 
 	init_waitqueue_head(&mon_work->task_wait_queue);
 	init_waitqueue_head(&mon_work->done_wait_queue);
@@ -390,10 +391,11 @@ static int work_thread_init(struct cvi_mon_device *ndev)
 		kthread_run(work_thread_main, ndev, "cvi_mon_work");
 	if (IS_ERR(mon_work->work_thread)) {
 		dev_err(ndev->dev, "kthread run fail\n");
-		return PTR_ERR(mon_work->work_thread);
+		ret = PTR_ERR(mon_work->work_thread);
+		mon_work->work_thread = NULL;
 	}
 
-	return 0;
+	return ret;
 }
 
 static long cvi_mon_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
@@ -574,7 +576,10 @@ static void cvi_mon_remove(struct platform_device *pdev)
 	struct cvi_mon_device *ndev = platform_get_drvdata(pdev);
 	struct cvi_mon_work *mon_work = &ndev->mon_work;
 
-	kthread_stop(mon_work->work_thread);
+	if (mon_work->work_thread != NULL) {
+		kthread_stop(mon_work->work_thread);
+		mon_work->work_thread = NULL;
+	}
 	device_destroy(mon_class, mon_cdev_id);
 
 	cdev_del(&ndev->cdev);
