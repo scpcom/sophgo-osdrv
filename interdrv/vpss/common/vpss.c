@@ -5146,6 +5146,8 @@ static void vpss_start_handler(void)
 			&handler_ctx[u8VpssDev], thread_name);
 		if (IS_ERR(handler_ctx[u8VpssDev].thread)) {
 			pr_err("failed to create vpss kthread, u8VpssDev=%d\n", u8VpssDev);
+			handler_ctx[u8VpssDev].thread = NULL;
+			continue;
 		}
 
 		ret = sched_setscheduler(handler_ctx[u8VpssDev].thread, SCHED_FIFO, &tsk);
