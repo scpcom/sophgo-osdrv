@@ -916,8 +916,10 @@ CVI_S32 CVI_VDEC_DestroyChn(VDEC_CHN VdChn)
 	pVbCtx = pChnHandle->pVbCtx;
 
 	if (IF_WANNA_DISABLE_BIND_MODE()) {
-		kthread_stop(pVbCtx->thread);
-		pVbCtx->thread = NULL;
+		if (pVbCtx->thread != NULL) {
+			kthread_stop(pVbCtx->thread);
+			pVbCtx->thread = NULL;
+		}
 		pVbCtx->currBindMode = CVI_FALSE;
 	}
 
@@ -1091,6 +1093,14 @@ CVI_S32 CVI_VDEC_SendStream(VDEC_CHN VdChn, const VDEC_STREAM_S *pstStream,
 		pVbCtx->currBindMode = CVI_TRUE;
 		pVbCtx->thread = kthread_run(vdec_event_handler,
 				(CVI_VOID *) pChnHandle, "vdec_handler%d", VdChn);
+		if (IS_ERR(pVbCtx->thread)) {
+			CVI_VDEC_ERR(
+				"failed to create vdec binde mode thread for chn %d\n",
+				VdChn);
+			pVbCtx->thread = NULL;
+			return CVI_FAILURE;
+		}
+
 		sched_setscheduler(pVbCtx->thread, SCHED_RR, &param);
 	}
 

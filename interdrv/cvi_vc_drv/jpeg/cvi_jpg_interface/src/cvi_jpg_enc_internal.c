@@ -1641,6 +1641,7 @@ int cviJpgEncStart(CVIJpgHandle jpgHandle, void *data)
 						 "chn%dVencJpgWaitEncodeDone", pJpgInst->s32ChnNum);
 		if (IS_ERR(pEncInfo->tPthreadId)) {
 			CVI_JPG_DBG_ERR("pfnJpgWaitEncodeDone task error!\n");
+			pEncInfo->tPthreadId = NULL;
 			return JPG_RET_FAILURE;
 		}
 	}

@@ -1035,6 +1035,7 @@ static int initEncOneFrame(stTestEncoder *pTestEnc, TestEncConfig *pEncConfig)
 						 "cvitask_vc_wt%d", pEncCfg->s32ChnNum);
 		if (IS_ERR(pTestEnc->tPthreadId)) {
 			CVI_VC_ERR("WaitEncodeDone task error!\n");
+			pTestEnc->tPthreadId = NULL;
 			return RETCODE_FAILURE;
 		}
 		sched_setscheduler(pTestEnc->tPthreadId, SCHED_FIFO, &param);
@@ -6431,6 +6432,7 @@ int cvitest_venc_main(int argc, char **argv)
 
 		if (IS_ERR(thread_id[i])) {
 			CVI_VC_ERR("pthread_create error!\n");
+			thread_id[i] = NULL;
 			ret = 0;
 			goto BAILOUT;
 		}

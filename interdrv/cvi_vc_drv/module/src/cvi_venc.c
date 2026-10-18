@@ -3099,6 +3099,7 @@ CVI_S32 CVI_VENC_StartRecvFrame(VENC_CHN VeChn,
 				CVI_VENC_ERR(
 					"failed to create venc binde mode thread for chn %d\n",
 					VeChn);
+				pVbCtx->thread = NULL;
 				return CVI_FAILURE;
 			}
 			sched_setscheduler(pVbCtx->thread, SCHED_RR, &param);
@@ -3138,8 +3139,10 @@ CVI_S32 CVI_VENC_StopRecvFrame(VENC_CHN VeChn)
 		SEMA_POST(&pChnVars->sem_release);
 		pChnHandle->bChnEnable = CVI_FALSE;
 		SEMA_POST(&pVbCtx->vb_jobs.sem);
-		kthread_stop(pVbCtx->thread);
-		pVbCtx->thread = NULL;
+		if (pVbCtx->thread != NULL) {
+			kthread_stop(pVbCtx->thread);
+			pVbCtx->thread = NULL;
+		}
 		pVbCtx->currBindMode = CVI_FALSE;
 		SEMA_POST(&pChnVars->sem_send);
 		CVI_VENC_SYNC("venc_event_handler end\n");
@@ -6944,6 +6947,7 @@ CVI_S32 cvi_VENC_CB_SendFrame(CVI_S32 VpssGrp, CVI_S32 VpssChn, CVI_S32 VpssChn1
 					CVI_VENC_ERR(
 						"venc-sbm-send_frame_threadfor chn %d\n",
 						priChn);
+					pSbmHandle->pSBMSendFrameThread = NULL;
 					goto SBM_CB_FAILURE;
 				}
 				sched_setscheduler(pSbmHandle->pSBMSendFrameThread, SCHED_RR, &param);
