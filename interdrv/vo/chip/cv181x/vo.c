@@ -1326,6 +1326,7 @@ int vo_create_thread(struct cvi_vo_dev *vdev, enum E_VO_TH th_id)
 								vdev->vo_th[th_id].th_name);
 		if (IS_ERR(vdev->vo_th[th_id].w_thread)) {
 			CVI_TRACE_VO(CVI_DBG_ERR, "Unable to start %s.\n", vdev->vo_th[th_id].th_name);
+			vdev->vo_th[th_id].w_thread = NULL;
 			return -1;
 		}
 		sched_setscheduler(vdev->vo_th[th_id].w_thread, SCHED_FIFO, &param);
