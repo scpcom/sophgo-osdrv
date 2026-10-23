@@ -31,6 +31,9 @@
 #define REG_FREQ_DONE_NUM		0xC0
 #define REG_PWM_OE				0xD0
 
+#ifdef CONFIG_PWM_SYSFS_CVITEK
+#include "cvi_pwm.h"
+#else
 #define PWM_REG_NUM				0x80
 
 /**
@@ -42,6 +45,8 @@
 struct cv_pwm_channel {
 	u32 period;
 	u32 hlperiod;
+	u32 out_count;
+	bool count_mode;
 };
 
 /**
@@ -60,6 +65,7 @@ struct cv_pwm_chip {
 #endif
 	void __iomem *base;
 	struct clk *base_clk;
+	u64 clk_rate;
 	u8 polarity_mask;
 	bool no_polarity;
 	uint32_t pwm_saved_regs[PWM_REG_NUM];
@@ -67,6 +73,7 @@ struct cv_pwm_chip {
 	struct cv_pwm_channel channel[];
 #endif
 };
+#endif
 
 
 static inline
@@ -139,6 +146,10 @@ static int pwm_cv_config(struct pwm_chip *chip, struct pwm_device *pwm_dev,
 
 	channel->period = period_count;
 	channel->hlperiod = channel->period - duty_count;
+#ifndef CONFIG_PWM_SYSFS_CVITEK
+	channel->count_mode = false;
+	channel->out_count = 0;
+#endif
 
 	pr_debug("%s: period_ns=%d, duty_ns=%d\n", __func__, period_ns, duty_ns);
 
@@ -203,6 +214,7 @@ static int pwm_cv_enable(struct pwm_chip *chip, struct pwm_device *pwm_dev)
 	return 0;
 }
 
+#ifdef CONFIG_PWM_SYSFS_CVITEK
 static int pwm_get_out_count(struct pwm_chip *chip, struct pwm_device *pwm)
 {
 	struct cv_pwm_chip *our_chip = to_cv_pwm_chip(chip);
@@ -256,6 +268,7 @@ static void pwm_shift_disable(struct pwm_chip *chip)
 
 	writel(0x0, our_chip->base + REG_SHIFTSTART);
 }
+#endif
 
 static void pwm_cv_disable(struct pwm_chip *chip, struct pwm_device *pwm_dev)
 {
@@ -407,10 +420,12 @@ static const struct pwm_ops pwm_cv_ops = {
 #endif
 	.apply		= pwm_cv_apply,
 	.capture	= pwm_cv_capture,
+#ifdef CONFIG_PWM_SYSFS_CVITEK
 	.shift_config = pwm_shift_config,
 	.get_out_count = pwm_get_out_count,
 	.shift_enable = pwm_shift_enable,
 	.shift_disable = pwm_shift_disable,
+#endif
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0))
 	.owner		= THIS_MODULE,
 #endif
