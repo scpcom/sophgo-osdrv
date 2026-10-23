@@ -607,9 +607,11 @@ struct cvi_vip_isp_tnr_config {
 	__u8  tdnr_pixel_lp;
 	__u8  tdnr_comp_gain_enable;
 	__u16 tdnr_ee_comp_gain;
+#ifdef WANT_VI_COEF_RGB
 	__u16 coef_r;
 	__u16 coef_g;
 	__u16 coef_b;
+#endif
 	struct cvi_isp_tnr_tun_cfg      tnr_cfg;
 	struct cvi_isp_tnr_tun_1_cfg    tnr_1_cfg;
 	struct cvi_isp_tnr_tun_2_cfg    tnr_2_cfg;
