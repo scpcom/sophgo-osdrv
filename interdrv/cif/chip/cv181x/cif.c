@@ -3502,14 +3502,14 @@ static void cvi_cif_remove(struct platform_device *pdev)
 }
 
 #ifdef CONFIG_PM_SLEEP
-void sensor_i2c_write(struct isp_i2c_data *i2c_data, unsigned short reg_addr, unsigned short data)
+static void sensor_i2c_write(struct isp_i2c_data *i2c_data, unsigned short reg_addr, unsigned short data)
 {
 	i2c_data->reg_addr = reg_addr;
 	i2c_data->data = data;
 	vip_sys_cmm_cb_i2c(CVI_SNS_I2C_WRITE, (void *)i2c_data);
 }
 
-void sensor_standby_restart(struct cvi_cif_dev *dev, bool enable)
+static void sensor_standby_restart(struct cvi_cif_dev *dev, bool enable)
 {
 	int i;
 	struct isp_i2c_data *i2c_data;
