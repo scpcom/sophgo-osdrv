@@ -5200,7 +5200,8 @@ static int ai_isp_resolve_cfg(struct cvi_vi_dev *vdev, ai_isp_cfg_t cfg)
 			}
 
 			if (cfg.param_size == sizeof(ai_isp_bnr_cfg_t)) {
-				copy_from_user(&bnr_cfg, (void *)(uintptr_t)cfg.param_addr, cfg.param_size);
+				if (copy_from_user(&bnr_cfg, (void __user *)(uintptr_t)cfg.param_addr, cfg.param_size))
+					return -EFAULT;
 				ctx->isp_pipe_cfg[raw_num].is_rgbmap_ai_isp = bnr_cfg.ai_rgbmap;
 				vi_pr(VI_INFO, "is ai isp rgbmap %d\n", ctx->isp_pipe_cfg[raw_num].is_rgbmap_ai_isp);
 			} else {
