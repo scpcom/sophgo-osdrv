@@ -1059,14 +1059,19 @@ CVI_S32 CVI_VENC_CreateChn(VENC_CHN VeChn, const VENC_CHN_ATTR_S *pstAttr)
 	pChnHandle = handle->chn_handle[VeChn];
 	pEncCtx = &pChnHandle->encCtx;
 
+	pChnHandle->bSbSkipFrm = false;
+	pChnHandle->sbm_state = VENC_SBM_STATE_IDLE;
+
 	s32Ret = pEncCtx->base.open(handle, pChnHandle);
 	if (s32Ret != CVI_SUCCESS) {
 		CVI_VENC_ERR("venc_init_encoder\n");
+		/* Context initialization already owns jobs, semaphores and channel
+		 * memory. A failed hardware/firmware open must release them too.
+		 * The backend close tolerates an unopened handle.
+		 */
+		CVI_VENC_DestroyChn(VeChn);
 		return s32Ret;
 	}
-
-	pChnHandle->bSbSkipFrm = false;
-	pChnHandle->sbm_state = VENC_SBM_STATE_IDLE;
 	handle->chn_status[VeChn] = VENC_CHN_STATE_INIT;
 
 	CVI_VENC_TRACE("\n");
