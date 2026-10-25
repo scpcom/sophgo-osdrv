@@ -1248,14 +1248,20 @@ static int vpu_probe(struct platform_device *pdev)
 	if (vdev->pdata->quirks & VCODEC_QUIRK_SUPPORT_REMAP_DDR)
 		cviConfigDDR(vdev);
 
+	/* Register access and IRQ handlers require clocks even before the first
+	 * encoder channel is opened, notably after a complete module reload. */
+	if (vdev->pdata->ops && vdev->pdata->ops->clk_get)
+		vdev->pdata->ops->clk_get(vdev);
+	if (vdev->vpu_clock_error) {
+		err = vdev->vpu_clock_error;
+		goto ERROR_PROBE_DEVICE;
+	}
+
 	err = cvi_vcodec_register_cdev(vdev);
 	if (err < 0) {
 		VCODEC_DBG_ERR("cvi_vcodec_register_cdev\n");
 		goto ERROR_PROBE_DEVICE;
 	}
-
-	if (vdev->pdata->ops && vdev->pdata->ops->clk_get)
-		vdev->pdata->ops->clk_get(vdev);
 
 	err = cviCfgIrq(pdev);
 	if (err) {
@@ -1292,6 +1298,9 @@ static int vpu_probe(struct platform_device *pdev)
 	return 0;
 
 ERROR_PROBE_DEVICE:
+
+	if (vdev->vpu_clock_holds && vdev->pdata->ops && vdev->pdata->ops->clk_put)
+		vdev->pdata->ops->clk_put(vdev);
 
 	if (vdev->s_vpu_major)
 		unregister_chrdev_region(vdev->cdev_id, 1);
@@ -1617,6 +1626,10 @@ static void vpu_remove(struct platform_device *pdev)
 	}
 
 	cviFreeIrq();
+
+	/* CV181x retains bounded references while the device is present. */
+	if (vdev->vpu_clock_holds && vdev->pdata->ops && vdev->pdata->ops->clk_put)
+		vdev->pdata->ops->clk_put(vdev);
 
 	cviReleaseRegResource(vdev);
 

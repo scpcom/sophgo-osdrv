@@ -8,18 +8,22 @@
 #include <linux/module.h>
 #include <linux/cdev.h>
 #include <linux/clk.h>
+#include <linux/mutex.h>
 #include <linux/of.h>
 #include <linux/io.h>
 #include "cvi_vcodec.h"
 #include "vcodec_common.h"
 
 static void vpu_cfg_clk_enable(struct cvi_vpu_device *vdev, int mask);
+static void vpu_cfg_clk_put(struct cvi_vpu_device *vdev);
+static void vpu_cfg_clk_get(struct cvi_vpu_device *vdev);
+static DEFINE_MUTEX(vpu_clock_lock);
 static void vpu_cfg_clk_disable(struct cvi_vpu_device *vdev, int mask);
 static void vpu_fpga_init(struct cvi_vpu_device *vdev, int mask);
 
 const struct vpu_ops asic_vpu_ops = {
-	.clk_get = vpu_clk_get,
-	.clk_put = vpu_clk_put,
+	.clk_get = vpu_cfg_clk_get,
+	.clk_put = vpu_cfg_clk_put,
 	.clk_enable = vpu_cfg_clk_enable,
 	.clk_disable = vpu_cfg_clk_disable,
 	.config_ddr = NULL,
@@ -81,46 +85,93 @@ static void sram_share_config(vpudrv_buffer_t *pReg, int mask)
 	}
 }
 
+/* Based on patch from dormancygrace/NanoKVM-OS */
+/* Keep the vendor no-gating policy, but own at most one reference per clock.
+ * Both core clocks must be enabled during a new core's SRAM transition. */
 static void vpu_cfg_clk_enable(struct cvi_vpu_device *vdev, int mask)
 {
-	vpudrv_buffer_t *pReg = &vcodec_dev.ctrl_register;
+	struct clk *clocks[] = {vdev->clk_vc_src0, vdev->clk_cfg_reg_vc,
+		vdev->clk_axi_video_codec, vdev->clk_h264c, vdev->clk_apb_h264c,
+		vdev->clk_h265c, vdev->clk_apb_h265c};
+	u32 before, added;
+	int i, err;
 
-	VCODEC_DBG_TRACE("mask = 0x%X\n", mask);
-
-	WARN_ON(!vdev->clk_h264c);
-	WARN_ON(!vdev->clk_apb_h264c);
-	WARN_ON(!vdev->clk_h265c);
-	WARN_ON(!vdev->clk_apb_h265c);
-
-	WARN_ON(!vdev->clk_vc_src0);
-	WARN_ON(!vdev->clk_cfg_reg_vc);
-	WARN_ON(!vdev->clk_axi_video_codec);
-
-	if ((mask & BIT(H264_CORE_IDX)) && (mask & BIT(H265_CORE_IDX))) {
-		VCODEC_DBG_WARN("not supported mask\n");
-		return;
+	if ((mask & BIT(H264_CORE_IDX)) && (mask & BIT(H265_CORE_IDX))) return;
+	mutex_lock(&vpu_clock_lock);
+	before = vdev->vpu_clock_holds;
+	for (i = 0; i < ARRAY_SIZE(clocks); ++i) {
+		if (!(vdev->vpu_clock_holds & BIT(i))) {
+			err = clk_prepare_enable(clocks[i]);
+			if (err) goto rollback;
+			vdev->vpu_clock_holds |= BIT(i);
+		}
+		if (i == 2) sram_share_config(&vcodec_dev.ctrl_register, mask);
 	}
-
-	clk_prepare_enable(vdev->clk_vc_src0);
-	clk_prepare_enable(vdev->clk_cfg_reg_vc);
-	clk_prepare_enable(vdev->clk_axi_video_codec);
-
-	sram_share_config(pReg, mask);
-
-	// Enable both H264/H265 clk first
-	// then to disable unnecessary one
-	clk_prepare_enable(vdev->clk_h264c);
-	clk_prepare_enable(vdev->clk_apb_h264c);
-	clk_prepare_enable(vdev->clk_h265c);
-	clk_prepare_enable(vdev->clk_apb_h265c);
-
-	if (mask & BIT(H264_CORE_IDX)) {
-		clk_disable_unprepare(vdev->clk_h265c);
-		clk_disable_unprepare(vdev->clk_apb_h265c);
-	} else if (mask & BIT(H265_CORE_IDX)) {
-		clk_disable_unprepare(vdev->clk_h264c);
-		clk_disable_unprepare(vdev->clk_apb_h264c);
+	/* Drop only temporary references acquired by this call. Never steal a
+	 * reference retained for a previously used core or another clock owner. */
+	added = vdev->vpu_clock_holds & ~before;
+	for (i = 6; i >= 3; --i) {
+		bool other = (i >= 5 && (mask & BIT(H264_CORE_IDX))) ||
+		             (i <= 4 && (mask & BIT(H265_CORE_IDX)));
+		if (other && (added & BIT(i))) {
+			clk_disable_unprepare(clocks[i]);
+			vdev->vpu_clock_holds &= ~BIT(i);
+		}
 	}
+	mutex_unlock(&vpu_clock_lock);
+	return;
+rollback:
+	dev_err(vdev->dev, "VPU clock enable failed: %d\n", err);
+	for (--i; i >= 0; --i) {
+		if ((vdev->vpu_clock_holds & ~before) & BIT(i))
+			clk_disable_unprepare(clocks[i]);
+	}
+	vdev->vpu_clock_holds = before;
+	mutex_unlock(&vpu_clock_lock);
+}
+
+/* Hold register clocks before IRQ registration and higher-level driver access.
+ * A zero mask preserves SRAM selection and retains both core clocks. */
+static void vpu_cfg_clk_get(struct cvi_vpu_device *vdev)
+{
+	struct clk *clocks[9];
+	int i;
+
+	vdev->vpu_clock_error = 0;
+	vpu_clk_get(vdev);
+	clocks[0] = vdev->clk_vc_src0;
+	clocks[1] = vdev->clk_cfg_reg_vc;
+	clocks[2] = vdev->clk_axi_video_codec;
+	clocks[3] = vdev->clk_h264c;
+	clocks[4] = vdev->clk_apb_h264c;
+	clocks[5] = vdev->clk_h265c;
+	clocks[6] = vdev->clk_apb_h265c;
+	clocks[7] = vdev->clk_vc_src1;
+	clocks[8] = vdev->clk_vc_src2;
+	for (i = 0; i < ARRAY_SIZE(clocks); ++i) {
+		if (IS_ERR_OR_NULL(clocks[i])) {
+			vdev->vpu_clock_error = clocks[i] ? PTR_ERR(clocks[i]) : -ENOENT;
+			return;
+		}
+	}
+	vpu_cfg_clk_enable(vdev, 0);
+	if (vdev->vpu_clock_holds != GENMASK(6, 0))
+		vdev->vpu_clock_error = -EIO;
+}
+
+static void vpu_cfg_clk_put(struct cvi_vpu_device *vdev)
+{
+	struct clk *clocks[] = {vdev->clk_vc_src0, vdev->clk_cfg_reg_vc,
+		vdev->clk_axi_video_codec, vdev->clk_h264c, vdev->clk_apb_h264c,
+		vdev->clk_h265c, vdev->clk_apb_h265c};
+	int i;
+
+	mutex_lock(&vpu_clock_lock);
+	for (i = ARRAY_SIZE(clocks) - 1; i >= 0; --i)
+		if (vdev->vpu_clock_holds & BIT(i)) clk_disable_unprepare(clocks[i]);
+	vdev->vpu_clock_holds = 0;
+	mutex_unlock(&vpu_clock_lock);
+	vpu_clk_put(vdev);
 }
 
 static void vpu_cfg_clk_disable(struct cvi_vpu_device *vdev, int mask)

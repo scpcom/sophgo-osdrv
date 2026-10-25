@@ -93,6 +93,8 @@ struct cvi_vpu_device {
 	struct cvi_vcodec_context *pvctx;
 
 	const struct vpu_pltfm_data *pdata;
+	u32 vpu_clock_holds; /* CV181x references owned until device removal */
+	int vpu_clock_error; /* probe must not expose registers without clocks */
 
 };
 
