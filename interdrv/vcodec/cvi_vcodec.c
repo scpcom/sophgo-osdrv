@@ -1642,12 +1642,8 @@ struct mutex vcodec_mutex;
 
 void vcodec_lock(void)
 {
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 6, 0))
-	mutex_lock_interruptible(&vcodec_mutex);
-#else
-	int ret = mutex_lock_interruptible(&vcodec_mutex);
-	(void)(ret);
-#endif
+	/* The void API promises the caller owns this mutex on return. */
+	mutex_lock(&vcodec_mutex);
 }
 EXPORT_SYMBOL(vcodec_lock);
 
