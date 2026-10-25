@@ -2236,8 +2236,8 @@ int JpgEncEncodeHeader(JpgEncHandle handle, JpgEncParamSet *para)
 
 JpgRet JpgEnterLock(void)
 {
-	int ret = mutex_lock_interruptible(&jpgLock);
-	(void)(ret);
+	/* Existing callers require ownership and do not handle lock interruption. */
+	mutex_lock(&jpgLock);
 
 	return JPG_RET_SUCCESS;
 }
