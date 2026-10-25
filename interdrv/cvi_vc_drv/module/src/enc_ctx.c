@@ -1145,7 +1145,6 @@ static CVI_S32 vidEnc_get_stream(CVI_VOID *ctx, VENC_STREAM_S *pstStream,
 	stStreamPack *psp;
 	VENC_PACK_S *ppack;
 	CVI_U32 idx = 0;
-	int mlr;
 	status = cviVEncGetStream(pEncCtx->ext.vid.pHandle, pStreamInfo,
 				  s32MilliSec);
 	CVI_VENC_INFO("cviVEncGetStream status %d\n", status);
@@ -1162,8 +1161,8 @@ static CVI_S32 vidEnc_get_stream(CVI_VOID *ctx, VENC_STREAM_S *pstStream,
 		return CVI_ERR_VENC_NULL_PTR;
 	}
 
-	mlr = MUTEX_LOCK(&psp->packMutex);
-	(void)(mlr);
+	/* A retrieved stream must be published with packet ownership protected. */
+	mutex_lock(&psp->packMutex);
 	pstStream->u32PackCount = 0;
 	for (idx = 0; (idx < psp->totalPacks) && (idx < MAX_NUM_PACKS); idx++) {
 		ppack = &pstStream->pstPack[idx];

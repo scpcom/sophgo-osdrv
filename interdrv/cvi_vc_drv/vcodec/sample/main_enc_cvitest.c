@@ -1108,10 +1108,9 @@ static int cviH264SpsAddVui(stTestEncoder *pTestEnc)
 	stStreamPack *psp = &pTestEnc->streamPack;
 	cviH264Vui *pVui = &pTestEnc->encConfig.cviEc.h264Vui;
 	int i;
-	int ret;
 
-	ret = MUTEX_LOCK(&psp->packMutex);
-	(void)(ret);
+	/* Packet updates/cleanup must finish with this mutex held. */
+	mutex_lock(&psp->packMutex);
 	for (i = 0; i < psp->totalPacks; i++) {
 		if (psp->pack[i].cviNalType == NAL_SPS) {
 			H264SpsAddVui(pVui, &psp->pack[i].addr,
@@ -1130,10 +1129,9 @@ static int cviH265SpsAddVui(stTestEncoder *pTestEnc)
 	stStreamPack *psp = &pTestEnc->streamPack;
 	cviH265Vui *pVui = &pTestEnc->encConfig.cviEc.h265Vui;
 	int i;
-	int ret;
 
-	ret = MUTEX_LOCK(&psp->packMutex);
-	(void)(ret);
+	/* Packet updates/cleanup must finish with this mutex held. */
+	mutex_lock(&psp->packMutex);
 	for (i = 0; i < psp->totalPacks; i++) {
 		if (psp->pack[i].cviNalType == NAL_SPS) {
 			H265SpsAddVui(pVui, &psp->pack[i].addr,
@@ -3124,8 +3122,8 @@ static int cviGetOneStream(void *handle, cviVEncStreamInfo *pStreamInfo,
 
 		// if drop IDR, need clear vps sps pps header
 		if (pTestEnc->encParam.is_idr_frame) {
-			int mlr = MUTEX_LOCK(&pTestEnc->streamPack.packMutex);
-			(void)(mlr);
+			/* Packet updates/cleanup must finish with this mutex held. */
+			mutex_lock(&pTestEnc->streamPack.packMutex);
 			cviDropEsPacks(&pTestEnc->streamPack);
 			MUTEX_UNLOCK(&pTestEnc->streamPack.packMutex);
 		}
@@ -3276,8 +3274,8 @@ static int cviReEncodeIDR(stTestEncoder *pTestEnc,
 
 	pTestEnc->encParam.idr_request = TRUE;
 
-	ret = MUTEX_LOCK(&pStreamInfo->psp->packMutex);
-	(void)(ret);
+	/* Packet updates/cleanup must finish with this mutex held. */
+	mutex_lock(&pStreamInfo->psp->packMutex);
 	// only drop latest super frame
 	totalPacks = pStreamInfo->psp->totalPacks;
 	if (totalPacks >= 1) {
@@ -3342,8 +3340,8 @@ int cviVEncReleaseStream(void *handle, cviVEncStreamInfo *pStreamInfo)
 
 	CVI_VC_IF("\n");
 
-	ret = MUTEX_LOCK(&psp->packMutex);
-	(void)(ret);
+	/* Packet updates/cleanup must finish with this mutex held. */
+	mutex_lock(&psp->packMutex);
 	if (psp->totalPacks) {
 		for (idx = 0; idx < psp->totalPacks; idx++) {
 			pPack = &psp->pack[idx];
@@ -5053,7 +5051,6 @@ static int cviVEncGetRoi(stTestEncoder *pTestEnc, void *arg)
 static int cviVEncStart(stTestEncoder *pTestEnc, void *arg)
 {
 	TestEncConfig *pEncConfig = vmalloc(sizeof(TestEncConfig));
-	int mlr;
 	int ret = 0;
 	int idx;
 	stStreamPack *psp;
@@ -5073,8 +5070,8 @@ static int cviVEncStart(stTestEncoder *pTestEnc, void *arg)
 	}
 
 	psp = &pTestEnc->streamPack;
-	mlr = MUTEX_LOCK(&psp->packMutex);
-	(void)(mlr);
+	/* Packet updates/cleanup must finish with this mutex held. */
+	mutex_lock(&psp->packMutex);
 	if (psp->totalPacks) {
 		for (idx = 0; idx < psp->totalPacks; idx++) {
 			pPack = &psp->pack[idx];
