@@ -1188,7 +1188,9 @@ int vdi_disp_lock(unsigned long core_idx)
 	ret = MUTEX_LOCK((MUTEX_HANDLE *)vdi->vpu_disp_mutex);
 
 	// might see we already hold the mutex, which means that we lock it more than one time
-	(void)(ret);
+	if (ret != 0) {
+		return -1;
+	}
 #else
 	if (MUTEX_LOCK((MUTEX_HANDLE *)vdi->vpu_disp_mutex) != 0) {
 		CVI_VC_ERR("failed to pthread_mutex_lock\n");
