@@ -1,4 +1,5 @@
 #include <vi.h>
+#include <vi_interfaces.h>
 #include <linux/cvi_base_ctx.h>
 #include <linux/of_gpio.h>
 #include <proc/vi_dbg_proc.h>
@@ -271,7 +272,7 @@ static void pre_raw_num_enq(struct _isp_sof_raw_num_q *q, struct _isp_raw_num_n 
 	spin_unlock_irqrestore(&raw_num_lock, flags);
 }
 
-void cvi_isp_buf_queue(struct cvi_vi_dev *vdev, struct cvi_isp_buf *b)
+static void cvi_isp_buf_queue(struct cvi_vi_dev *vdev, struct cvi_isp_buf *b)
 {
 	unsigned long flags;
 
@@ -342,7 +343,7 @@ struct cvi_isp_buf *_cvi_isp_next_buf(struct cvi_vi_dev *vdev, const u8 chn_num)
 	return b;
 }
 
-int cvi_isp_rdy_buf_empty(struct cvi_vi_dev *vdev, const u8 chn_num)
+static int cvi_isp_rdy_buf_empty(struct cvi_vi_dev *vdev, const u8 chn_num)
 {
 	unsigned long flags;
 	int empty = 0;
@@ -354,7 +355,7 @@ int cvi_isp_rdy_buf_empty(struct cvi_vi_dev *vdev, const u8 chn_num)
 	return empty;
 }
 
-void cvi_isp_rdy_buf_pop(struct cvi_vi_dev *vdev, const u8 chn_num)
+static void cvi_isp_rdy_buf_pop(struct cvi_vi_dev *vdev, const u8 chn_num)
 {
 	unsigned long flags;
 
@@ -363,7 +364,7 @@ void cvi_isp_rdy_buf_pop(struct cvi_vi_dev *vdev, const u8 chn_num)
 	spin_unlock_irqrestore(&vdev->qbuf_lock, flags);
 }
 
-void cvi_isp_rdy_buf_remove(struct cvi_vi_dev *vdev, const u8 chn_num)
+static void cvi_isp_rdy_buf_remove(struct cvi_vi_dev *vdev, const u8 chn_num)
 {
 	unsigned long flags;
 	struct cvi_isp_buf *b = NULL;
@@ -432,7 +433,7 @@ void isp_fill_rgbmap(struct isp_ctx *ctx, enum cvi_isp_raw raw_num, const u8 chn
 	}
 }
 
-void _vi_yuv_dma_setup(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
+static void _vi_yuv_dma_setup(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 {
 	struct isp_buffer *b;
 	uint32_t bufsize_yuyv = 0;
@@ -633,7 +634,7 @@ static void _isp_yuvtop_dma_dump(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 	vi_pr(VI_INFO, "*************************************************\n");
 }
 
-void _isp_preraw_fe_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_num)
+static void _isp_preraw_fe_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_num)
 {
 	uint64_t bufaddr = 0;
 	uint32_t bufsize = 0;
@@ -767,7 +768,7 @@ EXIT:
 	_isp_preraw_fe_dma_dump(ictx, raw_num);
 }
 
-void _isp_preraw_be_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
+static void _isp_preraw_be_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 {
 	uint64_t bufaddr = 0;
 	uint32_t bufsize = 0;
@@ -870,7 +871,7 @@ EXIT:
 	_isp_preraw_be_dma_dump(ictx, raw_max);
 }
 
-void _isp_rawtop_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
+static void _isp_rawtop_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 {
 	uint64_t bufaddr = 0;
 	uint32_t bufsize = 0;
@@ -948,7 +949,7 @@ EXIT:
 	_isp_rawtop_dma_dump(ictx, raw_max);
 }
 
-void _isp_rgbtop_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
+static void _isp_rgbtop_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 {
 	uint64_t bufaddr = 0;
 	uint32_t bufsize = 0;
@@ -1055,7 +1056,7 @@ EXIT:
 	_isp_rgbtop_dma_dump(ictx, raw_max);
 }
 
-void _isp_yuvtop_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
+static void _isp_yuvtop_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 {
 	uint64_t bufaddr = 0;
 	uint64_t tmp_bufaddr = 0;
@@ -1122,7 +1123,7 @@ EXIT:
 	_isp_yuvtop_dma_dump(ictx, raw_max);
 }
 
-void _vi_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
+static void _vi_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 {
 	enum cvi_isp_raw raw_num = ISP_PRERAW_A;
 
@@ -1138,7 +1139,7 @@ void _vi_dma_setup(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 	_isp_yuvtop_dma_setup(ictx, raw_max);
 }
 
-void _vi_dma_set_sw_mode(struct isp_ctx *ctx)
+static void _vi_dma_set_sw_mode(struct isp_ctx *ctx)
 {
 	ispblk_dma_set_sw_mode(ctx, ISP_BLK_ID_DMA_CTL4, false); //be_le_rdma_ctl
 	ispblk_dma_set_sw_mode(ctx, ISP_BLK_ID_DMA_CTL5, false); //be_se_rdma_ctl
@@ -1201,7 +1202,7 @@ void _vi_dma_set_sw_mode(struct isp_ctx *ctx)
 	ispblk_dma_set_sw_mode(ctx, ISP_BLK_ID_DMA_CTL49, true); //ldci_iir_r
 }
 
-void _vi_yuv_get_dma_size(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
+static void _vi_yuv_get_dma_size(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 {
 	uint32_t bufsize_yuyv = 0;
 	uint8_t  i = 0;
@@ -1227,7 +1228,7 @@ void _vi_yuv_get_dma_size(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 	}
 }
 
-void _vi_pre_fe_get_dma_size(struct isp_ctx *ictx, enum cvi_isp_raw  raw_num)
+static void _vi_pre_fe_get_dma_size(struct isp_ctx *ictx, enum cvi_isp_raw  raw_num)
 {
 	uint32_t bufsize = 0;
 	uint8_t  i = 0;
@@ -1321,7 +1322,7 @@ EXIT:
 	return;
 }
 
-void _vi_pre_be_get_dma_size(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
+static void _vi_pre_be_get_dma_size(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 {
 	uint32_t bufsize = 0;
 	uint8_t  buf_num = 0;
@@ -1380,7 +1381,7 @@ EXIT:
 	return;
 }
 
-void _vi_rawtop_get_dma_size(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
+static void _vi_rawtop_get_dma_size(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 {
 	uint32_t bufsize = 0;
 
@@ -1437,7 +1438,7 @@ EXIT:
 	return;
 }
 
-void _vi_rgbtop_get_dma_size(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
+static void _vi_rgbtop_get_dma_size(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 {
 	uint32_t bufsize = 0;
 
@@ -1506,7 +1507,7 @@ EXIT:
 	return;
 }
 
-void _vi_yuvtop_get_dma_size(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
+static void _vi_yuvtop_get_dma_size(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 {
 	uint32_t bufsize = 0;
 	uint64_t bufaddr = 0;
@@ -1551,7 +1552,7 @@ EXIT:
 	return;
 }
 
-void _vi_get_dma_buf_size(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
+static void _vi_get_dma_buf_size(struct isp_ctx *ictx, enum cvi_isp_raw raw_max)
 {
 	enum cvi_isp_raw raw_num = ISP_PRERAW_A;
 
@@ -2226,7 +2227,7 @@ void vi_event_queue(struct cvi_vi_dev *vdev, const u32 type, const u32 frm_num)
 	wake_up(&vdev->isp_event_wait_q);
 }
 
-void cvi_isp_dqbuf_list(struct cvi_vi_dev *vdev, const u32 frm_num, const u8 raw_id, const u8 chn_id)
+static void cvi_isp_dqbuf_list(struct cvi_vi_dev *vdev, const u32 frm_num, const u8 raw_id, const u8 chn_id)
 {
 	unsigned long flags;
 	struct _isp_dqbuf_n *n;
@@ -2246,7 +2247,7 @@ void cvi_isp_dqbuf_list(struct cvi_vi_dev *vdev, const u32 frm_num, const u8 raw
 	spin_unlock_irqrestore(&dq_lock, flags);
 }
 
-int vi_dqbuf(struct _vi_buffer *b)
+static int vi_dqbuf(struct _vi_buffer *b)
 {
 	unsigned long flags;
 	struct _isp_dqbuf_n *n = NULL;
@@ -2396,7 +2397,7 @@ static int _isp_yuv_bypass_trigger(struct cvi_vi_dev *vdev, const enum cvi_isp_r
 	return 0;
 }
 
-void _vi_postraw_ctrl_setup(struct cvi_vi_dev *vdev)
+static void _vi_postraw_ctrl_setup(struct cvi_vi_dev *vdev)
 {
 	struct isp_ctx *ctx = &vdev->ctx;
 	u8 cfg_post = false;
@@ -2416,7 +2417,7 @@ void _vi_postraw_ctrl_setup(struct cvi_vi_dev *vdev)
 	ispblk_isptop_config(ctx);
 }
 
-void _vi_pre_fe_ctrl_setup(enum cvi_isp_raw raw_num, struct cvi_vi_dev *vdev)
+static void _vi_pre_fe_ctrl_setup(enum cvi_isp_raw raw_num, struct cvi_vi_dev *vdev)
 {
 	struct isp_ctx *ictx = &vdev->ctx;
 	u32 blc_le_id, blc_se_id, wbg_le_id, wbg_se_id;
@@ -2487,7 +2488,7 @@ void _vi_pre_fe_ctrl_setup(enum cvi_isp_raw raw_num, struct cvi_vi_dev *vdev)
 	}
 }
 
-void _vi_ctrl_init(enum cvi_isp_raw raw_num, struct cvi_vi_dev *vdev)
+static void _vi_ctrl_init(enum cvi_isp_raw raw_num, struct cvi_vi_dev *vdev)
 {
 	struct isp_ctx *ictx = &vdev->ctx;
 	enum cvi_isp_raw raw = ISP_PRERAW_A;
@@ -2633,7 +2634,7 @@ void _vi_ctrl_init(enum cvi_isp_raw raw_num, struct cvi_vi_dev *vdev)
 	}
 }
 
-void _vi_scene_ctrl(struct cvi_vi_dev *vdev, enum cvi_isp_raw *raw_max)
+static void _vi_scene_ctrl(struct cvi_vi_dev *vdev, enum cvi_isp_raw *raw_max)
 {
 	struct isp_ctx *ctx = &vdev->ctx;
 	enum cvi_isp_raw raw_num = ISP_PRERAW_A;
@@ -2787,7 +2788,7 @@ void _vi_scene_ctrl(struct cvi_vi_dev *vdev, enum cvi_isp_raw *raw_max)
 	ctx->is_slice_buf_on = false;
 }
 
-void _viBWCalSet(struct cvi_vi_dev *vdev)
+static void _viBWCalSet(struct cvi_vi_dev *vdev)
 {
 	struct isp_ctx *ctx = &vdev->ctx;
 	struct cvi_vi_ctx *pviProcCtx = NULL;
@@ -5046,7 +5047,7 @@ EXIT:
 }
 #endif
 
-void _vi_sdk_release(struct cvi_vi_dev *vdev)
+static void _vi_sdk_release(struct cvi_vi_dev *vdev)
 {
 	u8 i = 0;
 
@@ -7047,7 +7048,7 @@ static void _vi_err_retrig_preraw(struct cvi_vi_dev *vdev, const enum cvi_isp_ra
 	}
 }
 
-void _vi_err_handler(struct cvi_vi_dev *vdev, const enum cvi_isp_raw err_raw_num)
+static void _vi_err_handler(struct cvi_vi_dev *vdev, const enum cvi_isp_raw err_raw_num)
 {
 	struct isp_ctx *ctx = &vdev->ctx;
 	uintptr_t tnr = ctx->phys_regs[ISP_BLK_ID_TNR];
@@ -7258,7 +7259,7 @@ static inline void vi_err_wake_up_th(struct cvi_vi_dev *vdev, enum cvi_isp_raw e
 	wake_up(&vdev->vi_th[E_VI_TH_ERR_HANDLER].wq);
 }
 
-u32 isp_err_chk(
+static u32 isp_err_chk(
 	struct cvi_vi_dev *vdev,
 	struct isp_ctx *ctx,
 	union REG_ISP_CSI_BDG_INTERRUPT_STATUS_0 cbdg_0_sts,

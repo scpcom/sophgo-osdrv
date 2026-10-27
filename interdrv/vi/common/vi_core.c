@@ -77,7 +77,7 @@ const struct file_operations vi_fops = {
 	.poll = vi_core_poll,
 };
 
-int vi_core_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
+static int vi_core_cb(void *dev, enum ENUM_MODULES_ID caller, u32 cmd, void *arg)
 {
 	return vi_cb(dev, caller, cmd, arg);
 }

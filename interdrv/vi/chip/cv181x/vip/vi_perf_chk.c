@@ -1,4 +1,5 @@
 #include <vi_defines.h>
+#include "vi_perf_chk.h"
 #include <linux/math64.h>
 
 // #define ISP_PERF_MEASURE

@@ -1744,7 +1744,7 @@ void ispblk_post_yuv_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_
 	_ispblk_yuvtop_cfg_update(ctx, raw_num);
 }
 
-void _ispblk_lsc_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
+static void _ispblk_lsc_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 {
 	uintptr_t lsc = ctx->phys_regs[ISP_BLK_ID_LSC];
 
@@ -1774,7 +1774,7 @@ void _ispblk_lsc_cfg_update(struct isp_ctx *ctx, const enum cvi_isp_raw raw_num)
 	ISP_WR_REG(lsc, REG_ISP_LSC_T, LSC_INITY0, reg_lsc_imgy0);
 }
 
-void _ispblk_ldci_cfg_update(struct isp_ctx *ctx)
+static void _ispblk_ldci_cfg_update(struct isp_ctx *ctx)
 {
 	uintptr_t ldci = ctx->phys_regs[ISP_BLK_ID_LDCI];
 	union REG_ISP_LDCI_BLK_SIZE_X          blk_size_x;
@@ -2250,7 +2250,7 @@ void isp_slice_buf_trig(struct isp_ctx *ctx, enum cvi_isp_raw raw_num)
 	}
 }
 
-void _ispblk_dma_slice_config(struct isp_ctx *ctx, int dmaid, int en)
+static void _ispblk_dma_slice_config(struct isp_ctx *ctx, int dmaid, int en)
 {
 	uintptr_t dmab = ctx->phys_regs[dmaid];
 

@@ -1043,7 +1043,7 @@ void ispblk_bnr_tun_cfg(
 	ISP_WO_BITS(bnr, REG_ISP_BNR_T, SHADOW_RD_SEL, SHADOW_RD_SEL, 1);
 }
 
-void ispblk_clut_partial_update(
+static void ispblk_clut_partial_update(
 	struct isp_ctx *ctx,
 	struct cvi_vip_isp_clut_config *cfg,
 	const enum cvi_isp_raw raw_num)
