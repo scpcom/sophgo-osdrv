@@ -1,4 +1,8 @@
 #include <linux/version.h>
+#include <linux/ktime.h>
+#include <linux/math64.h>
+#include <linux/time.h>
+#include <linux/timekeeping.h>
 #include <proc/vi_dbg_proc.h>
 
 #define VI_DBG_PROC_NAME	"cvitek/vi_dbg"
@@ -25,7 +29,7 @@ static inline void _vi_dbg_proc_show(struct seq_file *m, void *v)
 	struct isp_ctx *ctx = &vdev->ctx;
 	enum cvi_isp_raw raw_num = ISP_PRERAW_A;
 	enum cvi_isp_raw raw_max = ISP_PRERAW_MAX - 1;
-	struct timespec64 ts1, ts2;
+
 	u32 frmCnt_start[ISP_PRERAW_VIRT_MAX], sofCnt_start[ISP_PRERAW_VIRT_MAX];
 	u32 frmCnt_end[ISP_PRERAW_VIRT_MAX], sofCnt_end[ISP_PRERAW_VIRT_MAX];
 	u64 t2 = 0, t1 = 0;
@@ -42,22 +46,30 @@ static inline void _vi_dbg_proc_show(struct seq_file *m, void *v)
 					: vdev->postraw_frame_number[raw_num];
 	}
 
-	ktime_get_real_ts64(&ts1);
-	t1 = ts1.tv_sec * 1000000 + ts1.tv_nsec / 1000;
-
-	msleep(940);
-	do {
-		for (raw_num = ISP_PRERAW_A; raw_num < ISP_PRERAW_VIRT_MAX; raw_num++) {
-			if (!ctx->isp_pipe_enable[raw_num])
-				continue;
-			sofCnt_end[raw_num] = vdev->pre_fe_sof_cnt[raw_num][ISP_FE_CH0];
-			frmCnt_end[raw_num] = vdev->ctx.isp_pipe_cfg[raw_num].is_yuv_bypass_path
-						? vdev->pre_fe_frm_num[raw_num][ISP_FE_CH0]
-						: vdev->postraw_frame_number[raw_num];
-		}
-		ktime_get_real_ts64(&ts2);
-		t2 = ts2.tv_sec * 1000000 + ts2.tv_nsec / 1000;
-	} while ((t2 - t1) < 1000000);
+	/* Based on patch from dormancygrace/NanoKVM-OS */
+	/* OneKVM's video-path review highlighted intrusive VI diagnostics.
+	 * Sample over a sleeping interval: the vendor 940ms sleep followed by a
+	 * busy loop burned CPU on the single C906 and used adjustable wall time.
+	 * This does not reprogram CSI or change the capture ownership model.
+	 */
+	t1 = ktime_get_ns();
+	/* Diagnostic delay, not an uninterruptible resource wait. Keep the
+	 * complete interval even if another wakeup arrives early.
+	 */
+	{
+		long remaining = msecs_to_jiffies(1000);
+		while (remaining > 0)
+			remaining = schedule_timeout_idle(remaining);
+	}
+	for (raw_num = ISP_PRERAW_A; raw_num < ISP_PRERAW_VIRT_MAX; raw_num++) {
+		if (!ctx->isp_pipe_enable[raw_num])
+			continue;
+		sofCnt_end[raw_num] = vdev->pre_fe_sof_cnt[raw_num][ISP_FE_CH0];
+		frmCnt_end[raw_num] = vdev->ctx.isp_pipe_cfg[raw_num].is_yuv_bypass_path
+					? vdev->pre_fe_frm_num[raw_num][ISP_FE_CH0]
+					: vdev->postraw_frame_number[raw_num];
+	}
+	t2 = ktime_get_ns();
 
 	for (raw_num = ISP_PRERAW_A; raw_num < ISP_PRERAW_VIRT_MAX; raw_num++) {
 		if (!ctx->isp_pipe_enable[raw_num])
@@ -95,8 +107,8 @@ static inline void _vi_dbg_proc_show(struct seq_file *m, void *v)
 		seq_printf(m, "VIInImgWidth\t\t:%4d\n", ctx->isp_pipe_cfg[raw_num].csibdg_width);
 		seq_printf(m, "VIInImgHeight\t\t:%4d\n", ctx->isp_pipe_cfg[raw_num].csibdg_height);
 
-		seq_printf(m, "VIDevFPS\t\t:%4d\n", sofCnt_end[raw_num] - sofCnt_start[raw_num]);
-		seq_printf(m, "VIFPS\t\t\t:%4d\n", frmCnt_end[raw_num] - frmCnt_start[raw_num]);
+		seq_printf(m, "VIDevFPS\t\t:%4d\n", (u32)div64_u64((u64)(u32)(sofCnt_end[raw_num] - sofCnt_start[raw_num]) * NSEC_PER_SEC + (t2 - t1) / 2, t2 - t1));
+		seq_printf(m, "VIFPS\t\t\t:%4d\n", (u32)div64_u64((u64)(u32)(frmCnt_end[raw_num] - frmCnt_start[raw_num]) * NSEC_PER_SEC + (t2 - t1) / 2, t2 - t1));
 
 		seq_printf(m, "VISofCh0Cnt\t\t:%4d\n", vdev->pre_fe_sof_cnt[raw_num][ISP_FE_CH0]);
 		if (ctx->isp_pipe_cfg[raw_num].is_hdr_on)
