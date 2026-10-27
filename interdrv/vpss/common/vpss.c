@@ -2825,6 +2825,7 @@ static CVI_VOID vpss_handle_online(struct vpss_handler_ctx *ctx)
  */
 static CVI_S32 vpss_try_schedule_offline(struct vpss_handler_ctx *ctx)
 {
+	CVI_S32 fill_ret;
 	VPSS_GRP workingGrp = ctx->workingGrp;
 	VPSS_CHN VpssChn;
 	CVI_U8 workingMask = 0;
@@ -2871,8 +2872,12 @@ static CVI_S32 vpss_try_schedule_offline(struct vpss_handler_ctx *ctx)
 		goto vpss_next_job;
 	}
 
-	if (fill_buffers(workingGrp, vpss_ctx, ctx->online_from_isp) != CVI_SUCCESS) {
-		CVI_TRACE_VPSS(CVI_DBG_ERR, "grp(%d) fill buffer NG.\n", workingGrp);
+	fill_ret = fill_buffers(workingGrp, vpss_ctx, ctx->online_from_isp);
+	if (fill_ret != CVI_SUCCESS) {
+		if (fill_ret == CVI_ERR_VPSS_NOBUF)
+			CVI_TRACE_VPSS_ERR_RATELIMITED("grp(%d) fill buffer NG.\n", workingGrp);
+		else
+			CVI_TRACE_VPSS(CVI_DBG_ERR, "grp(%d) fill buffer NG.\n", workingGrp);
 		vpssCtx[workingGrp]->stGrpWorkStatus.u32StartFailCnt++;
 		goto vpss_next_job;
 	}

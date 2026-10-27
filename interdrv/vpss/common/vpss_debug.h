@@ -2,6 +2,7 @@
 #define _VPSS_DEBUG_H_
 
 #include <linux/debugfs.h>
+#include <linux/ratelimit.h>
 
 extern u32 vpss_log_lv;
 
@@ -27,7 +28,16 @@ extern u32 vpss_log_lv;
 				printk(KERN_DEBUG "%s:%d(): " fmt, __func__, __LINE__, ##__VA_ARGS__); \
 		} \
 	} while (0)
+/* Pool backpressure can recur for every input frame while no client drains it.
+ * Keep initial errors and periodic diagnostics without flooding the console.
+ */
+#define CVI_TRACE_VPSS_ERR_RATELIMITED(fmt, ...) \
+	do { \
+		if (CVI_DBG_ERR <= vpss_log_lv) \
+			pr_err_ratelimited("%s:%d(): " fmt, __func__, __LINE__, ##__VA_ARGS__); \
+	} while (0)
 #else
+#define CVI_TRACE_VPSS_ERR_RATELIMITED(fmt, ...)
 #define CVI_TRACE_VPSS(level, fmt, ...)
 #endif
 
