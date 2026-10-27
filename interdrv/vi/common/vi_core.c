@@ -1,6 +1,17 @@
 #include <vi_core.h>
 #include <base_cb.h>
 
+static const char * const clk_sys_name[] = {
+	"clk_sys_0", "clk_sys_1", "clk_sys_2", "clk_sys_3"
+};
+static const char * const clk_isp_name[] = {
+	"clk_axi", "clk_csi_be", "clk_raw", "clk_isp_top"
+};
+static const char * const clk_mac_name[] = {
+	"clk_csi_mac0", "clk_csi_mac1", "clk_csi_mac2"
+};
+
+
 #define CVI_VI_IRQ_NAME            "isp"
 #define CVI_VI_CLASS_NAME          "cvi-vi"
 #define CVI_VI_DEV_NAME            "cvi-vi"
