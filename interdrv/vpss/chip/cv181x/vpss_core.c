@@ -1591,6 +1591,8 @@ static int cvi_vpss_probe(struct platform_device *pdev)
 {
 	int rc = 0;
 	struct cvi_vip_dev *dev;
+	union sclr_intr intr_mask, pending;
+	union sclr_intr disabled = { .raw = 0 };
 
 	/* allocate main structure */
 	dev = devm_kzalloc(&pdev->dev, sizeof(*dev), GFP_KERNEL);
@@ -1644,6 +1646,16 @@ static int cvi_vpss_probe(struct platform_device *pdev)
 	//	clk_set_rate(dev->clk_sys[1], dev->clk_sys1_freq);
 
 	sclr_ctrl_init(false);
+	/* Based on patch from dormancygrace/NanoKVM-OS */
+	/* U-Boot may leave scaler/display completion events pending. Keep
+	 * delivery masked until the ISR's worker state and callbacks exist.
+	 */
+	intr_mask = sclr_get_intr_mask();
+	sclr_set_intr_mask(disabled);
+	pending = sclr_intr_status();
+	sclr_intr_clr(pending);
+	dev_info(&pdev->dev, "scaler handoff: pending IRQ status %#x\n", pending.raw);
+
 #if 0
 	if (smooth) {
 		sclr_disp_cfg_setup_from_reg();
@@ -1665,13 +1677,6 @@ static int cvi_vpss_probe(struct platform_device *pdev)
 
 	CVI_TRACE_VPSS(CVI_DBG_INFO, "hw init done\n");
 
-	if (devm_request_irq(&pdev->dev, dev->irq_num_scl, scl_isr, IRQF_SHARED,
-		 "CVI_VIP_SCL", dev)) {
-		dev_err(&pdev->dev, "Unable to request scl IRQ(%d)\n",
-				dev->irq_num_scl);
-		return -EINVAL;
-	}
-
 #if defined(CONFIG_SCLR_TEST)
 	/* scaler self test */
 	sclr_test_proc_init(dev);
@@ -1684,6 +1689,19 @@ static int cvi_vpss_probe(struct platform_device *pdev)
 	}
 
 	vpss_init(dev);
+
+	rc = devm_request_irq(&pdev->dev, dev->irq_num_scl, scl_isr,
+			      IRQF_SHARED, "CVI_VIP_SCL", dev);
+	if (rc) {
+		dev_err(&pdev->dev, "Unable to request scl IRQ(%d): %d\n",
+			dev->irq_num_scl, rc);
+		vpss_deinit();
+		vpss_core_rm_cb();
+		goto err_sc_reg;
+	}
+	/* Drop firmware events instead of delivering them as Linux jobs. */
+	sclr_intr_clr(sclr_intr_status());
+	sclr_set_intr_mask(intr_mask);
 
 	CVI_TRACE_VPSS(CVI_DBG_INFO, "done with rc(%d).\n", rc);
 	return rc;
