@@ -434,6 +434,16 @@ static int jpu_probe(struct platform_device *pdev)
 			jdev->jpu_control_register.size);
 	}
 
+	if (jdev->pdata->quirks & JPU_QUIRK_SUPPORT_CLOCK_CONTROL) {
+		if (jdev->pdata->ops->clk_get)
+			jdev->pdata->ops->clk_get(jdev);  // jpu_clk_get
+	}
+
+	if (jdev->jpu_clock_error) {
+		err = jdev->jpu_clock_error;
+		goto ERROR_PROBE_DEVICE;
+	}
+
 	err = cvi_jpu_register_cdev(jdev);
 
 	if (err < 0) {
@@ -441,10 +451,6 @@ static int jpu_probe(struct platform_device *pdev)
 		goto ERROR_PROBE_DEVICE;
 	}
 
-	if (jdev->pdata->quirks & JPU_QUIRK_SUPPORT_CLOCK_CONTROL) {
-		if (jdev->pdata->ops->clk_get)
-			jdev->pdata->ops->clk_get(jdev);  // jpu_clk_get
-	}
 
 	if (pdev)
 		res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);

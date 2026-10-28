@@ -101,6 +101,8 @@ struct cvi_jpu_device {
 	struct list_head s_jpu_inst_list_head;
 
 	const struct jpu_pltfm_data *pdata;
+	u32 jpu_clock_holds;
+	int jpu_clock_error;
 };
 
 struct jpu_ops {

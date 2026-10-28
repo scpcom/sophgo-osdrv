@@ -7,16 +7,20 @@
 
 #include <linux/module.h>
 #include <linux/clk.h>
+#include <linux/mutex.h>
+#include <linux/device.h>
 #include <linux/of.h>
 #include "cvi_jpeg.h"
 #include "jpeg_common.h"
 
 static void jpu_cfg_clk_enable(struct cvi_jpu_device *jdev);
+static void jpu_cfg_clk_get(struct cvi_jpu_device *jdev);
+static DEFINE_MUTEX(jpu_clock_lock);
 static void jpu_cfg_clk_disable(struct cvi_jpu_device *jdev);
 // static void jpu_fpga_init(struct cvi_jpu_device *jdev);
 
 const struct jpu_ops asic_jpu_ops = {
-	.clk_get = jpu_clk_get,
+	.clk_get = jpu_cfg_clk_get,
 	.clk_put = jpu_clk_put,
 	.clk_enable = jpu_cfg_clk_enable,
 	.clk_disable = jpu_cfg_clk_disable,
@@ -61,20 +65,77 @@ const struct of_device_id cvi_jpu_match_table[] = {
 
 MODULE_DEVICE_TABLE(of, cvi_jpu_match_table);
 
+/* Based on patch from dormancygrace/NanoKVM-OS */
+/* Retain one owned reference until device removal, never one per request. */
 static void jpu_cfg_clk_enable(struct cvi_jpu_device *jdev)
 {
-	WARN_ON(!jdev->clk_jpeg);
-	WARN_ON(!jdev->clk_apb_jpeg);
-	WARN_ON(!jdev->clk_vc_src0);
-	WARN_ON(!jdev->clk_cfg_reg_vc);
-	WARN_ON(!jdev->clk_axi_video_codec);
+	struct clk *clocks[] = {jdev->clk_vc_src0, jdev->clk_cfg_reg_vc,
+		jdev->clk_axi_video_codec, jdev->clk_jpeg, jdev->clk_apb_jpeg};
+	u32 before;
+	int i, err;
 
-	clk_prepare_enable(jdev->clk_jpeg);
-	clk_prepare_enable(jdev->clk_apb_jpeg);
+	mutex_lock(&jpu_clock_lock);
+	before = jdev->jpu_clock_holds;
+	for (i = 0; i < ARRAY_SIZE(clocks); ++i) {
+		if (jdev->jpu_clock_holds & BIT(i)) continue;
+		err = clk_prepare_enable(clocks[i]);
+		if (err) goto rollback;
+		jdev->jpu_clock_holds |= BIT(i);
+	}
+	mutex_unlock(&jpu_clock_lock);
+	return;
+rollback:
+	jdev->jpu_clock_error = err;
+	dev_err(jdev->dev, "JPU clock enable failed: %d\n", err);
+	for (--i; i >= 0; --i) {
+		if ((jdev->jpu_clock_holds & ~before) & BIT(i)) {
+			clk_disable_unprepare(clocks[i]);
+		}
+	}
+	jdev->jpu_clock_holds = before;
+	mutex_unlock(&jpu_clock_lock);
+}
 
-	clk_prepare_enable(jdev->clk_vc_src0);
-	clk_prepare_enable(jdev->clk_cfg_reg_vc);
-	clk_prepare_enable(jdev->clk_axi_video_codec);
+static void jpu_release_clocks(void *data)
+{
+	struct cvi_jpu_device *jdev = data;
+	struct clk *clocks[] = {jdev->clk_vc_src0, jdev->clk_cfg_reg_vc,
+		jdev->clk_axi_video_codec, jdev->clk_jpeg, jdev->clk_apb_jpeg};
+	int i;
+
+	mutex_lock(&jpu_clock_lock);
+	for (i = ARRAY_SIZE(clocks) - 1; i >= 0; --i) {
+		if (jdev->jpu_clock_holds & BIT(i)) {
+			clk_disable_unprepare(clocks[i]);
+		}
+	}
+	jdev->jpu_clock_holds = 0;
+	mutex_unlock(&jpu_clock_lock);
+}
+
+static void jpu_cfg_clk_get(struct cvi_jpu_device *jdev)
+{
+	struct clk *clocks[5];
+	int i;
+
+	jpu_clk_get(jdev);
+	clocks[0] = jdev->clk_vc_src0;
+	clocks[1] = jdev->clk_cfg_reg_vc;
+	clocks[2] = jdev->clk_axi_video_codec;
+	clocks[3] = jdev->clk_jpeg;
+	clocks[4] = jdev->clk_apb_jpeg;
+	for (i = 0; i < ARRAY_SIZE(clocks); ++i) {
+		if (IS_ERR_OR_NULL(clocks[i])) {
+			jdev->jpu_clock_error = clocks[i] ? PTR_ERR(clocks[i]) : -ENOENT;
+			return;
+		}
+	}
+	jpu_cfg_clk_enable(jdev);
+	if (jdev->jpu_clock_error) return;
+	/* Registered after clock handles: release runs before devm_clk_put, on
+	 * probe failure as well as normal removal, after register users stop. */
+	jdev->jpu_clock_error = devm_add_action_or_reset(jdev->dev,
+		jpu_release_clocks, jdev);
 }
 
 static void jpu_cfg_clk_disable(struct cvi_jpu_device *jdev)
