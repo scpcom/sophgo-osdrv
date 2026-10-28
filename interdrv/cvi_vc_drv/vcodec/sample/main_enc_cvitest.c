@@ -3103,9 +3103,23 @@ static int cviGetOneStream(void *handle, cviVEncStreamInfo *pStreamInfo,
 	CVI_VC_IF("\n");
 
 	ret = cviGetEncodedInfo(pTestEnc, s32MilliSec);
+	if (ret == TE_STA_ENC_TIMEOUT && s32MilliSec > 0) {
+		CVI_VC_ERR("Time out, flush_signals\n");
+		// without this cviVEncClose gets stuck at EnterVcodecLock and
+		// never returns. any task waiting for it gets stuck too
+		//  including reboot.
+		if (signal_pending(current)) {
+			flush_signals(current);
+		}
+		ret = cviGetEncodedInfo(pTestEnc, 15);
+		if (!ret) {
+			// always fail here
+			ret = RETCODE_FAILURE;
+		}
+	}
 	if (ret == TE_STA_ENC_TIMEOUT) {
 		//user should keep get frame until success
-		CVI_VC_TRACE("Time out please retry\n");
+		CVI_VC_ERR("Time out please retry\n");
 		return RET_VCODEC_TIMEOUT;
 	} else if (ret) {
 		CVI_VC_ERR("cviGetEncodedInfo, ret = %d\n", ret);
