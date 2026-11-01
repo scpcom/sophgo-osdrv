@@ -24,6 +24,7 @@ void jpu_clk_put(struct cvi_jpu_device *jdev);
 void cv1835_config_pll(struct cvi_jpu_device *jdev);
 
 int jpu_wait_interrupt(int timeout);
+bool jpu_has_interrupt(void);
 int jpu_set_clock_gate(int *pEnable);
 int jpu_get_instance_pool(jpudrv_buffer_t *p_jdb);
 int jpu_open_instance(unsigned long *pInstIdx);

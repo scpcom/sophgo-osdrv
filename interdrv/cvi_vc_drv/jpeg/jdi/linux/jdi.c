@@ -33,6 +33,7 @@ typedef sem_t MUTEX_HANDLE;
 #else
 typedef struct mutex MUTEX_HANDLE;
 extern int jpu_wait_interrupt(int timeout);
+extern bool jpu_has_interrupt(void);
 extern int jpu_set_clock_gate(int *pEnable);
 extern int jpu_get_instance_pool(jpudrv_buffer_t *p_jdb);
 extern int jpu_open_instance(unsigned long *pInstIdx);
@@ -1196,19 +1197,23 @@ int jdi_get_clock_gate(void)
 
 int jdi_wait_interrupt(int timeout)
 {
-#if 0//def SUPPORT_INTERRUPT
-	int ret;
-	jdi_info_t *jdi;
+	if (jpu_has_interrupt()) {
+		/* The status register decides: a wakeup left by an earlier
+		 * picture is not the end of this one. */
+		const unsigned long deadline = jiffies + msecs_to_jiffies(timeout);
 
-	jdi = &s_jdi_info[0];
-	ret = jpu_wait_interrupt(timeout);
-	if (ret != 0)
-		ret = -1;
+		for (;;) {
+			long left;
 
-	// printf("receive a interrupt ......, ret = %d\n", ret);
-
-	return ret;
-#else
+			if (jdi_read_register(MJPEG_PIC_STATUS_REG))
+				return 0;
+			left = (long)(deadline - jiffies);
+			if (left <= 0)
+				return jdi_read_register(MJPEG_PIC_STATUS_REG) ? 0 : -1;
+			jpu_wait_interrupt(jiffies_to_msecs(left) + 1);
+		}
+	}
+	{
 	Int64 elapse, cur;
 	struct timespec64 tv;
 
@@ -1236,7 +1241,7 @@ int jdi_wait_interrupt(int timeout)
 		usleep_range(800, 1200);
 	}
 	return 0;
-#endif
+	}
 }
 
 void jdi_log(int cmd, int step)

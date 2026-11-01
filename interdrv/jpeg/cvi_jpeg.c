@@ -95,26 +95,33 @@ static void set_clock_enable(struct cvi_jpu_device *jdev, int enable)
 	}
 }
 
-static irqreturn_t __maybe_unused jpu_irq_handler(int irq, void *data)
+/* The end of a JPU picture: mask the interrupt until the next picture's
+ * software reset unmasks it, and wake the waiter. */
+static irqreturn_t jpu_irq_handler(int irq, void *data)
 {
 	struct cvi_jpu_device *jdev = data;
-	jpudrv_buffer_t *pReg = &jdev->jpu_register;
+	void __iomem *regs = (void __iomem *)jdev->jpu_register.virt_addr;
 
-	if (jpu_chn_idx == -1)
-		return IRQ_HANDLED;
-
-	writel(0xFF, pReg->virt_addr + MJPEG_INTR_MASK_REG);//disable_irq_nosync(jdev->jpu_irq);
-
-	if (jdev->async_queue)
-		kill_fasync(&jdev->async_queue, SIGIO,
-			    POLL_IN); // notify the interrupt to userspace
-
+	if (!regs || !readl(regs + MJPEG_PIC_STATUS_REG))
+		return IRQ_NONE;
+	writel(0xFF, regs + MJPEG_INTR_MASK_REG);
 	jdev->interrupt_flag = 1;
-	wake_up(&tWaitQueue[jpu_chn_idx]);
 	wake_up(&jdev->interrupt_wait_q);
-
 	return IRQ_HANDLED;
 }
+
+/* Whether jpu_wait_interrupt has an interrupt to wait for. use_irq=0 polls
+ * the status register as before (for comparison; switchable at runtime). */
+static bool jpu_irq_requested;
+static bool use_irq = true;
+module_param(use_irq, bool, 0644);
+MODULE_PARM_DESC(use_irq, "Wait for the JPU end of picture by its interrupt (0: poll the status)");
+
+bool jpu_has_interrupt(void)
+{
+	return jpu_irq_requested && READ_ONCE(use_irq);
+}
+EXPORT_SYMBOL(jpu_has_interrupt);
 
 // JDI_IOCTL_WAIT_INTERRUPT
 int jpu_wait_interrupt(int timeout)
@@ -452,22 +459,21 @@ static int jpu_probe(struct platform_device *pdev)
 	}
 
 
-	if (pdev)
-		res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-	// if platform driver is implemented
-	if (res) {
-		jdev->jpu_irq = res->start;
-		JPU_DBG_INFO("jpu irq number irq = %d\n", jdev->jpu_irq);
-	} else {
-		JPU_DBG_ERR("jpu irq number irq = %d\n", jdev->jpu_irq);
+	/* The device tree gives the interrupt. The vendor read it as an
+	 * IORESOURCE_IRQ resource, which this kernel does not fill in for it,
+	 * and logged "irq = 0" as an error on every probe. */
+	init_waitqueue_head(&jdev->interrupt_wait_q);
+	if (pdev && jdev->jpu_register.virt_addr) {
+		const int irq = platform_get_irq_optional(pdev, 0);
+
+		jdev->interrupt_flag = 0;
+		if (irq > 0 && request_irq(irq, jpu_irq_handler, 0, "jpeg", jdev) == 0) {
+			jdev->jpu_irq = irq;
+			jpu_irq_requested = true;
+		} else {
+			pr_warn("[JPUDRV] : no JPU interrupt, polling the status\n");
+		}
 	}
-#if 0
-	err = request_irq(jdev->jpu_irq, jpu_irq_handler, 0, "JPU_CODEC_IRQ", jdev);
-	if (err) {
-		pr_err("[JPUDRV] :  fail to register interrupt handler\n");
-		goto ERROR_PROBE_DEVICE;
-	}
-#endif
 #ifndef USE_VMALLOC_FOR_INSTANCE_POOL_MEMORY
 	if (jpu_allocate_memory(jdev, pdev) < 0) {
 		pr_err("[JPUDRV] :  fail to remap jpu memory\n");
@@ -602,6 +608,11 @@ static void jpu_remove(struct platform_device *pdev)
 	struct cvi_jpu_device *jdev = platform_get_drvdata(pdev);
 
 	pr_info("jpu_remove\n");
+
+	if (jpu_irq_requested) {
+		jpu_irq_requested = false;
+		free_irq(jdev->jpu_irq, jdev);
+	}
 
 	if (jdev->jpu_instance_pool.base) {
 #ifdef USE_VMALLOC_FOR_INSTANCE_POOL_MEMORY
