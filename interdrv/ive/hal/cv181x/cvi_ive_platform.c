@@ -1872,6 +1872,12 @@ inline CVI_S32 cvi_ive_go(struct cvi_ive_device *ndev, IVE_TOP_C *ive_top_c,
 		if (leavetime <= 0)
 			ret = CVI_FAILURE;
 	}
+	/* An operation that never finishes (an unsupported size, for example)
+	 * leaves the engine stuck: every later two-input operation then reads
+	 * its second image from a stale address. Reset the block so the next
+	 * operation starts clean. */
+	if (ret != CVI_SUCCESS)
+		cvi_ive_reset(ndev, 0);
 	if (ndev->tile_num == ndev->total_tile) {
 		complete(&ndev->op_done);
 	}
