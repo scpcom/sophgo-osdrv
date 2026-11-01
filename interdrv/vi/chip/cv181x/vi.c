@@ -62,8 +62,8 @@
 /*******************************************************
  *  Global variables
  ******************************************************/
-//u32 vi_log_lv = VI_ERR | VI_WARN | VI_NOTICE | VI_INFO | VI_DBG;
-u32 vi_log_lv = 0;
+/* Enable INFO at runtime with vi_log_lv=15; DBG also needs a debug build. */
+u32 vi_log_lv = VI_ERR | VI_WARN | VI_NOTICE;
 module_param(vi_log_lv, int, 0644);
 
 
@@ -2957,7 +2957,8 @@ int vi_start_streaming(struct cvi_vi_dev *vdev)
 	enum cvi_isp_raw raw_max = ISP_PRERAW_MAX - 1;
 	int rc = 0;
 
-	vi_pr(VI_DBG, "+\n");
+	/* A timeline mark for logs: NOTICE stays on by default. */
+	vi_pr(VI_NOTICE, "start streaming\n");
 
 	_vi_mempool_reset();
 
