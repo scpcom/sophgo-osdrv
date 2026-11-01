@@ -2415,7 +2415,16 @@ CVI_S32 CVI_VENC_SendFrame(VENC_CHN VeChn, const VIDEO_FRAME_INFO_S *pstFrame,
 
 		if (pChnHandle->pChnAttr->stVencAttr.enType == PT_H264 ||
 		    pChnHandle->pChnAttr->stVencAttr.enType == PT_H265) {
-			_cviVencRegVbBuf(VeChn);
+			/* Without its reconstruction buffers (or the bitstream
+			 * buffer allocated before them) the encoder must not
+			 * run: encoding the headers reads the missing
+			 * bitstream buffer and faults in __memcpy. Report the
+			 * shortage; the caller destroys the channel. */
+			s32Ret = _cviVencRegVbBuf(VeChn);
+			if (s32Ret != CVI_SUCCESS) {
+				CVI_VENC_ERR("_cviVencRegVbBuf, %d\n", s32Ret);
+				return CVI_ERR_VENC_NOBUF;
+			}
 		}
 
 		pChnVars->u32FirstPixelFormat =
