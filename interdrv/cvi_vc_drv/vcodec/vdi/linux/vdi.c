@@ -16,6 +16,7 @@
 #endif
 
 #include <linux/time.h>
+#include <linux/moduleparam.h>
 #include <linux/dma-buf.h>
 #include <linux/delay.h>
 #include <linux/mutex.h>
@@ -2287,6 +2288,11 @@ int vdi_wait_bus_busy(unsigned long core_idx, int timeout,
 	return 0;
 }
 
+/* Diagnostic A/B knob: zero retains vendor polling. */
+static unsigned int busy_poll_sleep_us;
+module_param(busy_poll_sleep_us, uint, 0644);
+MODULE_PARM_DESC(busy_poll_sleep_us, "VPU busy poll delay in us, 0=spin, capped at 1000");
+
 int vdi_wait_vpu_busy(unsigned long core_idx, int timeout,
 		      unsigned int addr_bit_busy_flag)
 {
@@ -2320,6 +2326,11 @@ int vdi_wait_vpu_busy(unsigned long core_idx, int timeout,
 			if (vdi_fio_read_register(core_idx,
 						  addr_bit_busy_flag) == 0)
 				break;
+		}
+
+		if (READ_ONCE(busy_poll_sleep_us) && !in_atomic() && !irqs_disabled()) {
+			unsigned int delay = min(READ_ONCE(busy_poll_sleep_us), 1000U);
+			usleep_range(delay, delay + 50);
 		}
 
 		if (timeout > 0) {
