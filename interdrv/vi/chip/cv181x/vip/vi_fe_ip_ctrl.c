@@ -464,6 +464,11 @@ void ispblk_csibdg_yuv_bypass_config(struct isp_ctx *ctx, const enum cvi_isp_raw
 									(chn_num > 0) ? true : false);
 		//only chn0 support avg mode
 		ISP_WR_BITS(csibdg, REG_ISP_CSI_BDG_T, CSI_BDG_DMA_DPCM_MODE, AVG_MODE, true);
+	} else {
+		/* The 420 writer stays on across VI restarts: the 4:2:2 dump turns it off. */
+		ISP_WR_BITS(csibdg, REG_ISP_CSI_BDG_T, CSI_BDG_TOP_CTRL, CH0_DMA_420_WR_ENABLE, false);
+		ISP_WR_BITS(csibdg, REG_ISP_CSI_BDG_T, CSI_BDG_TOP_CTRL, CH1_DMA_420_WR_ENABLE, false);
+		ISP_WR_BITS(csibdg, REG_ISP_CSI_BDG_T, CSI_BDG_DMA_DPCM_MODE, AVG_MODE, false);
 	}
 
 	ISP_WR_BITS(csibdg, REG_ISP_CSI_BDG_T, CH0_SIZE, CH0_FRAME_WIDTHM1,

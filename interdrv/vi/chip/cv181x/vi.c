@@ -75,6 +75,17 @@ module_param(stop_stream_en, int, 0644);
 bool ctrl_flow = false;
 module_param(ctrl_flow, bool, 0644);
 
+/*
+ * A single YUV receiver (HDMI bridge) normally dumps its packed 4:2:2 frame,
+ * which the VPSS converts for the encoders. With nk_yuv420 the CSI bridge's
+ * 4:2:2 to 4:2:0 DMA writer stores it as NV21 instead (Y plane, VU plane), as
+ * the vendor does only for a second or third YUV sensor; the VI channel must be
+ * NV21. Read when VI starts streaming.
+ */
+static bool nk_yuv420;
+module_param(nk_yuv420, bool, 0644);
+MODULE_PARM_DESC(nk_yuv420, "Single YUV sensor: write NV21 with the CSI bridge 4:2:0 writer");
+
 VI_DEV_ATTR_S tmp_dev_attr;
 VI_PIPE_ATTR_S tmp_pipe_attr;
 VI_CHN_ATTR_S tmp_chn_attr;
@@ -2477,12 +2488,17 @@ static void _vi_pre_fe_ctrl_setup(enum cvi_isp_raw raw_num, struct cvi_vi_dev *v
 	struct cif_yuv_swap_s swap = {0};
 
 	if (ictx->isp_pipe_cfg[raw_num].is_yuv_bypass_path) {//YUV sensor
-		if (ictx->isp_pipe_cfg[raw_num].is_422_to_420) {//uyvy to yuyv to 420
-			swap.devno = raw_num;
-			swap.yc_swap = 1;
-			swap.uv_swap = 1;
-			_vi_call_cb(E_MODULE_CIF, CVI_MIPI_SET_YUV_SWAP, &swap);
-		}
+		/*
+		 * The 420 writer needs the CIF byte order swapped. The vendor's Y/C
+		 * and U/V swap gives a broken picture with the LT6911 receivers and no
+		 * swap gives red and blue exchanged: their UYVY needs the U/V swap
+		 * only. The CIF keeps a swap after the VI stops, so the 4:2:2 dump
+		 * clears it.
+		 */
+		swap.devno = raw_num;
+		swap.yc_swap = 0;
+		swap.uv_swap = ictx->isp_pipe_cfg[raw_num].is_422_to_420 ? 1 : 0;
+		_vi_call_cb(E_MODULE_CIF, CVI_MIPI_SET_YUV_SWAP, &swap);
 
 		ispblk_csibdg_yuv_bypass_config(ictx, raw_num);
 
@@ -2776,7 +2792,10 @@ static void _vi_scene_ctrl(struct cvi_vi_dev *vdev, enum cvi_isp_raw *raw_max)
 		//Currently don't support single yuv sensor online to scaler or on-the-fly
 		if (ctx->isp_pipe_cfg[ISP_PRERAW_A].is_yuv_bypass_path) {
 			ctx->isp_pipe_cfg[ISP_PRERAW_A].is_offline_scaler = true;
-			ctx->isp_pipe_cfg[ISP_PRERAW_A].is_422_to_420 = false;
+			// if 422to420, chnAttr must be NV21 (as for a second YUV sensor)
+			ctx->isp_pipe_cfg[ISP_PRERAW_A].is_422_to_420 = nk_yuv420 &&
+				ctx->isp_pipe_cfg[ISP_PRERAW_A].muxMode == VI_WORK_MODE_1Multiplex &&
+				gViCtx->chnAttr[0].enPixelFormat == PIXEL_FORMAT_NV21;
 			ctx->is_slice_buf_on = false;
 		}
 

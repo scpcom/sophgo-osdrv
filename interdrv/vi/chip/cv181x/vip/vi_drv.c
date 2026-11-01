@@ -883,8 +883,7 @@ void ispblk_dma_set_sw_mode(struct isp_ctx *ctx, uint32_t dmaid, bool is_sw_mode
 			raw = ISP_PRERAW_C; break;
 		default: break;
 		}
-		if (raw >= 0 && ctx->isp_pipe_cfg[raw].is_yuv_bypass_path
-			&& !ctx->isp_pipe_cfg[raw].is_422_to_420)
+		if (raw >= 0 && ctx->isp_pipe_cfg[raw].is_yuv_bypass_path)
 			sys_ctrl.bits.STRIDE_SEL = 1;
 	}
 #endif
@@ -2163,8 +2162,11 @@ u32 ispblk_dma_yuv_bypass_config(struct isp_ctx *ctx, uint32_t dmaid, uint64_t b
 
 	len = VI_ALIGN(len);
 	/* VI buffers advertise DEFAULT_ALIGN byte pitches to VPSS. Keep the
-	 * payload length separate, but write rows at that same pitch. */
-	if (!ctx->isp_pipe_cfg[raw_num].is_422_to_420)
+	 * payload length separate, but write rows at that same pitch. The 4:2:0
+	 * writer's Y and VU rows hold one byte per pixel. */
+	if (ctx->isp_pipe_cfg[raw_num].is_422_to_420)
+		stride = ALIGN(ctx->isp_pipe_cfg[raw_num].csibdg_width, DEFAULT_ALIGN);
+	else
 		stride = ALIGN(stride, DEFAULT_ALIGN);
 
 	ISP_WR_REG(dmab, REG_ISP_DMA_CTL_T, DMA_SEGLEN, len);
@@ -2172,8 +2174,7 @@ u32 ispblk_dma_yuv_bypass_config(struct isp_ctx *ctx, uint32_t dmaid, uint64_t b
 	ISP_WR_REG(dmab, REG_ISP_DMA_CTL_T, DMA_SEGNUM, num);
 	/* Automatic stride is tightly packed and ignores DMA_STRIDE. Override
 	 * only pitch; payload length and line count keep their existing modes. */
-	if (!ctx->isp_pipe_cfg[raw_num].is_422_to_420)
-		ISP_WR_BITS(dmab, REG_ISP_DMA_CTL_T, SYS_CONTROL, STRIDE_SEL, 1);
+	ISP_WR_BITS(dmab, REG_ISP_DMA_CTL_T, SYS_CONTROL, STRIDE_SEL, 1);
 
 	if (buf_addr)
 		ispblk_dma_setaddr(ctx, dmaid, buf_addr);
