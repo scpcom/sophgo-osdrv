@@ -1,4 +1,5 @@
 #include <linux/cvi_base_ctx.h>
+#include <linux/mm.h>
 #include <linux/of.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
