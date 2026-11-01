@@ -758,7 +758,12 @@ rwnx_tdls_send_mgmt_packet_data(struct rwnx_hw *rwnx_hw, struct rwnx_vif *rwnx_v
 					  initiator, extra_ies, extra_ies_len, oper_class, chandef);
 
 	if (action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) {
-		u64 cookie;
+		/*
+		 * Written by rwnx_start_mgmt_xmit() up to 7.2 and read by it from 7.3
+		 * on. cfg80211 has no pending transmission to match this frame against,
+		 * so 0, which also keeps its TX status from being reported.
+		 */
+		u64 cookie = 0;
 		#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
 		struct cfg80211_mgmt_tx_params params;
 

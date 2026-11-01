@@ -3203,7 +3203,17 @@ static void apm_probe_sta_work_process(struct work_struct *work)
 	   spin_unlock_bh(&rwnx_vif->rwnx_hw->cb_lock);
 
        printk("sta %pM found = %d\n", mac, found);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+       /*
+        * 7.3 added a link_id between the cookie and the acked flag, naming
+        * the MLO link the probe went out on. There is no MLO here, so -1,
+        * which is what the other non-MLO drivers pass.
+        */
+       if(found)
+               cfg80211_probe_status(rwnx_vif->ndev, mac, (u64)rwnx_vif->sta_probe.probe_id, -1, 1, 0, false, GFP_ATOMIC);
+       else
+               cfg80211_probe_status(rwnx_vif->ndev, mac, (u64)rwnx_vif->sta_probe.probe_id, -1, 0, 0, false, GFP_ATOMIC);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 17, 0)
        if(found)
                cfg80211_probe_status(rwnx_vif->ndev, mac, (u64)rwnx_vif->sta_probe.probe_id, 1, 0, false, GFP_ATOMIC);
        else
@@ -3215,7 +3225,10 @@ static void apm_probe_sta_work_process(struct work_struct *work)
                 cfg80211_probe_status(rwnx_vif->ndev, mac, (u64)rwnx_vif->sta_probe.probe_id, 0, GFP_ATOMIC);
 
 #endif
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 3, 0)
+       /* From 7.3 on the cookie is cfg80211's, so there is nothing to count */
        rwnx_vif->sta_probe.probe_id ++;
+#endif
 }
 /**
  * @change_station: Modify a given station. Note that flags changes are not much
@@ -3702,7 +3715,11 @@ int rwnx_cfg80211_set_monitor_channel_(struct wiphy *wiphy,
  *	later passes to cfg80211_probe_status().
  */
 static int rwnx_cfg80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+			const u8 *peer, u64 cookie)
+#else
 			const u8 *peer, u64 *cookie)
+#endif
 {
 //       struct rwnx_hw *rwnx_hw = wiphy_priv(wiphy);
        struct rwnx_vif *vif = netdev_priv(dev);
@@ -3725,9 +3742,19 @@ static int rwnx_cfg80211_probe_client(struct wiphy *wiphy, struct net_device *de
 
 
        memcpy(vif->sta_probe.sta_mac_addr, peer, 6);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+       /*
+        * Store it before the work is queued, not after:
+        * apm_probe_sta_work_process() hands it to cfg80211_probe_status(),
+        * and it can run as soon as queue_work() returns.
+        */
+       vif->sta_probe.probe_id = cookie;
+#endif
        queue_work(vif->sta_probe.apmprobesta_wq, &vif->sta_probe.apmprobestaWork);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 3, 0)
        *cookie = vif->sta_probe.probe_id;
+#endif
 
        return 0;
 
@@ -3976,6 +4003,14 @@ rwnx_cfg80211_remain_on_channel_(struct wiphy *wiphy, struct wireless_dev *wdev,
 	roc_elem->duration = duration;
 	roc_elem->mgmt_roc = mgmt_roc_flag;
 	roc_elem->on_chan = false;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+	/*
+	 * From 7.3 *cookie is the one cfg80211 assigned, handed in by
+	 * rwnx_cfg80211_remain_on_channel(). mgmt_tx starts its own RoC,
+	 * which cfg80211 never sees, so there is nothing to keep for that one.
+	 */
+	roc_elem->cookie = mgmt_roc_flag ? 0 : *cookie;
+#endif
 
 	/* Initialize the OFFCHAN TX queue to allow off-channel transmissions */
 	rwnx_txq_offchan_init(rwnx_vif);
@@ -4009,7 +4044,13 @@ rwnx_cfg80211_remain_on_channel_(struct wiphy *wiphy, struct wireless_dev *wdev,
 static int
 rwnx_cfg80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
 								struct ieee80211_channel *chan,
-								unsigned int duration, u64 *cookie
+								unsigned int duration,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+								/* 7.3: cfg80211 assigns the cookie, so it comes in by value */
+								u64 cookie
+#else
+								u64 *cookie
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
 								/*
 								 * 7.2 added an optional receive address filter for the off-channel
@@ -4021,7 +4062,11 @@ rwnx_cfg80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *wdev,
 #endif
 								)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+	return rwnx_cfg80211_remain_on_channel_(wiphy, wdev, chan, duration, &cookie, false);
+#else
 	return rwnx_cfg80211_remain_on_channel_(wiphy, wdev, chan, duration, cookie, false);
+#endif
 }
 
 /**
@@ -4160,7 +4205,12 @@ static int rwnx_cfg80211_get_channel(struct wiphy *wiphy,
 /**
  * @mgmt_tx: Transmit a management frame.
  */
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0))
+/* 7.3: cfg80211 assigns the cookie, so it comes in by value */
+static int rwnx_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+								 struct cfg80211_mgmt_tx_params *params,
+								 u64 cookie)
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
 static int rwnx_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
 								 struct cfg80211_mgmt_tx_params *params,
 								 u64 *cookie)
@@ -4273,7 +4323,15 @@ static int rwnx_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
 
 send_frame:
 	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+	/*
+	 * rwnx_start_mgmt_xmit() reads it rather than writes it from 7.3
+	 * on: it has to reach the TX confirm, which reports it to cfg80211.
+	 */
+	return rwnx_start_mgmt_xmit(rwnx_vif, rwnx_sta, params, offchan, &cookie);
+#else
 	return rwnx_start_mgmt_xmit(rwnx_vif, rwnx_sta, params, offchan, cookie);
+#endif
 	#else
 	return rwnx_start_mgmt_xmit(rwnx_vif, rwnx_sta, channel, offchan, wait, buf, len, no_cck, dont_wait_for_ack, cookie);
 	#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0) */
@@ -5462,7 +5520,11 @@ static struct cfg80211_ops rwnx_cfg80211_ops = {
 	.change_beacon = rwnx_cfg80211_change_beacon,
 	.stop_ap = rwnx_cfg80211_stop_ap,
 	.set_monitor_channel = rwnx_cfg80211_set_monitor_channel,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+	.probe_peer = rwnx_cfg80211_probe_client,
+#else
 	.probe_client = rwnx_cfg80211_probe_client,
+#endif
 //	.mgmt_frame_register = rwnx_cfg80211_mgmt_frame_register,
 	.set_wiphy_params = rwnx_cfg80211_set_wiphy_params,
 	.set_txq_params = rwnx_cfg80211_set_txq_params,
