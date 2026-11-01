@@ -1704,8 +1704,11 @@ static void _vpss_chn_hw_cfg_update(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, struct c
 			, pstHwCfg->csc_cfg.add[2]);
 #endif
 
-		// use designer provided table
-		mtrx = sclr_get_csc_mtrx(SCL_CSC_601_LIMIT_RGB2YUV);
+		// use designer provided table. Its names swap the ranges: the
+		// "601 LIMIT" RGB2YUV entry is full-range BT.601 (JFIF), the
+		// "709 FULL" one limited-range BT.709 (16-235).
+		mtrx = sclr_get_csc_mtrx(stChnCfg->stChnAttr.enVideoFormat == VIDEO_FORMAT_LINEAR_BT709
+			? SCL_CSC_709_FULL_RGB2YUV : SCL_CSC_601_LIMIT_RGB2YUV);
 		for (i = 0; i < 3; i++)
 			pstHwCfg->csc_cfg.coef[0][i] =
 				(mtrx->coef[0][i] * ctx->stChnCfgs[VpssChn].YRatio) / YRATIO_SCALE;

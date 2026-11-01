@@ -234,6 +234,9 @@ typedef enum _PIXEL_FORMAT_E {
 // ++++++++ If you want to change these interfaces, please contact the isp team. ++++++++
 typedef enum _VIDEO_FORMAT_E {
 	VIDEO_FORMAT_LINEAR = 0,
+	/* Linear; a VPSS channel converts to limited-range BT.709 YCbCr
+	 * instead of full-range BT.601 (JFIF). */
+	VIDEO_FORMAT_LINEAR_BT709,
 	VIDEO_FORMAT_MAX
 } VIDEO_FORMAT_E;
 // -------- If you want to change these interfaces, please contact the isp team. --------

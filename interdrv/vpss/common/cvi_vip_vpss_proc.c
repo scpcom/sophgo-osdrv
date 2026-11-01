@@ -351,7 +351,9 @@ static int vpss_ctx_proc_show(struct seq_file *m, void *v)
 					pVpssCtx[i]->stChnCfgs[j].stChnAttr.u32Height,
 					c,
 					(pVpssCtx[i]->stChnCfgs[j].stChnAttr.enVideoFormat
-						== VIDEO_FORMAT_LINEAR) ? "LINEAR" : "UNKNOWN",
+						== VIDEO_FORMAT_LINEAR) ? "LINEAR" :
+					(pVpssCtx[i]->stChnCfgs[j].stChnAttr.enVideoFormat
+						== VIDEO_FORMAT_LINEAR_BT709) ? "BT709" : "UNKNOWN",
 					pVpssCtx[i]->stChnCfgs[j].stChnWorkStatus.PoolId,
 					(pVpssCtx[i]->stChnCfgs[j].VbPool == VB_INVALID_POOLID) ? " " : "*",
 					pVpssCtx[i]->stChnCfgs[j].stChnWorkStatus.u32SendOk,
