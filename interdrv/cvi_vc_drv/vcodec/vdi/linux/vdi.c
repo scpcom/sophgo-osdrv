@@ -15,6 +15,8 @@
 #define MMAP mmap
 #endif
 
+#include <linux/ktime.h>
+#include <linux/timekeeping.h>
 #include <linux/time.h>
 #include <linux/moduleparam.h>
 #include <linux/dma-buf.h>
@@ -124,32 +126,30 @@ typedef struct {
 
 } vdi_info_t;
 
-typedef struct {
-	unsigned long tv_sec;
-	unsigned long tv_usec;
-} vdi_timeval_t;
+/*
+ * Poll timeouts. Most register polls end after a few reads, and reading the
+ * clocksource on every turn (as the vendor code did) cost more than the
+ * poll. The clock is read only every 64 turns, starting the deadline at the
+ * first read; the delay that adds to a timeout is a few microseconds.
+ * ktime_get_ns() also works with interrupts disabled, unlike jiffies.
+ */
+struct vdi_poll_deadline {
+	u64 end_ns;
+	unsigned int turns;
+};
 
-static void cviGetSysTime(vdi_timeval_t *pstTimeval)
+static bool vdi_poll_expired(struct vdi_poll_deadline *d, int timeout_ms)
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
-	struct timespec64 ts = {0};
-#else
-	struct timeval tv = {0};
-#endif
+	u64 now;
 
-	if (!pstTimeval)
-		return;
-
-	memset(pstTimeval, 0, sizeof(vdi_timeval_t));
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
-	ktime_get_real_ts64(&ts);
-	pstTimeval->tv_sec = ts.tv_sec;
-	pstTimeval->tv_usec = ts.tv_nsec/1000;
-#else
-		do_gettimeofday(&tv);
-		pstTimeval->tv_sec = tv.tv_sec;
-		pstTimeval->tv_usec = tv.tv_usec;
-#endif
+	if (timeout_ms <= 0 || (++d->turns & 63))
+		return false;
+	now = ktime_get_ns();
+	if (!d->end_ns) {
+		d->end_ns = now + (u64)timeout_ms * NSEC_PER_MSEC;
+		return false;
+	}
+	return now > d->end_ns;
 }
 
 vdi_info_t *s_vdi_info[MAX_NUM_VPU_CORE] = { 0 };
@@ -2241,14 +2241,10 @@ int vdi_get_clock_gate(unsigned long core_idx)
 int vdi_wait_bus_busy(unsigned long core_idx, int timeout,
 		      unsigned int gdi_busy_flag)
 {
-	Int64 elapse, cur;
-	vdi_timeval_t tv;
+	struct vdi_poll_deadline deadline = { 0 };
 	vdi_info_t *vdi;
 
 	vdi = s_vdi_info[core_idx];
-
-	cviGetSysTime(&tv);
-	elapse = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
 	while (1) {
 		if (vdi->product_code == WAVE420L_CODE) {
@@ -2274,10 +2270,7 @@ int vdi_wait_bus_busy(unsigned long core_idx, int timeout,
 		}
 
 		if (timeout > 0) {
-			cviGetSysTime(&tv);
-			cur = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-
-			if ((cur - elapse) > timeout) {
+			if (vdi_poll_expired(&deadline, timeout)) {
 				CVI_VC_ERR(
 					"[VDI] vdi_wait_bus_busy timeout, PC=0x%x\n",
 					vdi_read_register(core_idx, 0x018));
@@ -2296,13 +2289,9 @@ MODULE_PARM_DESC(busy_poll_sleep_us, "VPU busy poll delay in us, 0=spin, capped 
 int vdi_wait_vpu_busy(unsigned long core_idx, int timeout,
 		      unsigned int addr_bit_busy_flag)
 {
-	Int64 elapse, cur;
-	vdi_timeval_t tv;
+	struct vdi_poll_deadline deadline = { 0 };
 	Uint32 pc;
 	Uint32 code, normalReg = TRUE;
-
-	cviGetSysTime(&tv);
-	elapse = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
 	code = vdi_read_register(core_idx, VPU_PRODUCT_CODE_REGISTER);
 	/* read product code */
@@ -2330,14 +2319,16 @@ int vdi_wait_vpu_busy(unsigned long core_idx, int timeout,
 
 		if (READ_ONCE(busy_poll_sleep_us) && !in_atomic() && !irqs_disabled()) {
 			unsigned int delay = min(READ_ONCE(busy_poll_sleep_us), 1000U);
+			/* Sleeping polls need a deadline before the first sleep. */
+			if (timeout > 0 && !deadline.end_ns)
+				deadline.end_ns = ktime_get_ns() + (u64)timeout * NSEC_PER_MSEC;
 			usleep_range(delay, delay + 50);
+			/* Check after every sleep, even if the knob changes mid-poll. */
+			deadline.turns = 63;
 		}
 
 		if (timeout > 0) {
-			cviGetSysTime(&tv);
-			cur = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-
-			if ((cur - elapse) > timeout) {
+			if (vdi_poll_expired(&deadline, timeout)) {
 				Uint32 index;
 				for (index = 0; index < 50; index++) {
 					CVI_VC_ERR("[VDI] timeout, PC=0x%x\n",
@@ -2378,10 +2369,9 @@ int vdi_wait_interrupt(unsigned long coreIdx, int timeout,
 				 ((long int)intr_info.intr_tv_nsec / 1000);
 	}
 #else
-	vdi_timeval_t tv;
+	struct vdi_poll_deadline deadline = { 0 };
 	Uint32 intrStatusReg;
 	Uint32 pc;
-	Int32 startTime, endTime, elaspedTime;
 
 	UNREFERENCED_PARAMETER(intr_info);
 
@@ -2396,8 +2386,6 @@ int vdi_wait_interrupt(unsigned long coreIdx, int timeout,
 		return -1;
 	}
 
-	cviGetSysTime(&tv);
-	startTime = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 	while (TRUE) {
 		if (vdi_read_register(coreIdx, intrStatusReg)) {
 			intr_reason =
@@ -2406,9 +2394,7 @@ int vdi_wait_interrupt(unsigned long coreIdx, int timeout,
 				break;
 		}
 
-		cviGetSysTime(&tv);
-		endTime = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-		if (timeout > 0 && (endTime - startTime) >= timeout) {
+		if (vdi_poll_expired(&deadline, timeout)) {
 			return -1;
 		}
 	}
