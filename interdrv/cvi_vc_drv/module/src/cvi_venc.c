@@ -3344,7 +3344,9 @@ CVI_S32 CVI_VENC_GetStream(VENC_CHN VeChn, VENC_STREAM_S *pstStream,
 	}
 
 #if (KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE)
-	pstStream->pstPack = vzalloc(sizeof(VENC_PACK_S) * _cviGetNumPacks(pChnAttr->stVencAttr.enType));
+	/* A few packs per frame: slab memory, not a vmalloc mapping per frame. */
+	pstStream->pstPack = kvcalloc(_cviGetNumPacks(pChnAttr->stVencAttr.enType),
+				      sizeof(VENC_PACK_S), GFP_KERNEL);
 	if (pstStream->pstPack == NULL)
 		return CVI_ERR_VENC_NOMEM;
 #endif
@@ -3785,7 +3787,7 @@ CVI_S32 CVI_VENC_DestroyChn(VENC_CHN VeChn)
 					CVI_VENC_ReleaseStream(VeChn, &stStream);
 
 				if (stStream.pstPack)
-					MEM_FREE(stStream.pstPack);
+					kvfree(stStream.pstPack);
 			}
 		}
 

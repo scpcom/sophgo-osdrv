@@ -219,7 +219,7 @@ static long cvi_vc_drv_venc_ioctl(struct file *filp, u_int cmd, u_long arg)
 		if (s32Ret != CVI_SUCCESS) {
 #if (KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE)
 			if (stStream.pstPack) {
-				vfree(stStream.pstPack);
+				kvfree(stStream.pstPack);
 				stStream.pstPack = NULL;
 			}
 #endif
@@ -234,7 +234,7 @@ static long cvi_vc_drv_venc_ioctl(struct file *filp, u_int cmd, u_long arg)
 					 stStream.u32PackCount) != 0) {
 
 				if (stStream.pstPack) {
-					vfree(stStream.pstPack);
+					kvfree(stStream.pstPack);
 					stStream.pstPack = NULL;
 				}
 
@@ -243,7 +243,7 @@ static long cvi_vc_drv_venc_ioctl(struct file *filp, u_int cmd, u_long arg)
 			}
 
 			if (stStream.pstPack) {
-				vfree(stStream.pstPack);
+				kvfree(stStream.pstPack);
 				stStream.pstPack = NULL;
 			}
 		}
