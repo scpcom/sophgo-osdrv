@@ -14,6 +14,7 @@
 //
 //--=========================================================================--
 
+#include <linux/delay.h>
 #include "vpuapifunc.h"
 #include "product.h"
 #include "main_helper.h"
@@ -3604,7 +3605,7 @@ RetCode cviVPU_LockAndCheck(EncHandle handle, int targetState, int timeout_ms)
 			if (pCodecInst->state != targetState) {
 				CVI_VC_TRACE("state = %d\n", pCodecInst->state);
 				LeaveVcodecLock(pCodecInst->coreIdx);
-				cond_resched();
+				usleep_range(200, 400);
 			} else {
 				break;
 			}
