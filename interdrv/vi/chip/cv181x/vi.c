@@ -325,6 +325,46 @@ static void pre_raw_num_enq(struct _isp_sof_raw_num_q *q, struct _isp_raw_num_n 
 	spin_unlock_irqrestore(&raw_num_lock, flags);
 }
 
+/*
+ * A frame the error handler is woken for: it failed the CSI bridge checks
+ * (a short or long line or frame, a FIFO overflow; isp_err_chk) or another
+ * module asked for an ISP reset (VI_CB_RESET_ISP). The frame's end, in the
+ * same interrupt or a later one, does all its bookkeeping but does not
+ * publish the buffer, which takes the next frame instead. The error handler
+ * clears the mark after its reset, for a frame it aborted, and stream off
+ * clears it for the next stream. Indexed like pre_fe_frm_num.
+ */
+static atomic_t nk_frame_damaged[ISP_PRERAW_VIRT_MAX];
+/*
+ * From the wake of the error handler thread until after its retrigger, the
+ * handler owns restarting the pipe: the retrigger counts the armed buffer
+ * back and triggers once after the reset, and no other trigger runs. A frame
+ * end in that time neither publishes, counts back nor triggers; it only
+ * notes its channel in nk_eof_held. nk_err_recovery_release then restarts
+ * the noted channels, also when the handler returns before its reset (a
+ * wait or the abort failed).
+ */
+static atomic_t nk_err_recovering[ISP_PRERAW_VIRT_MAX];
+static atomic_t nk_eof_held[ISP_PRERAW_VIRT_MAX][ISP_FE_CHN_MAX];
+static atomic_t nk_err_generation;
+
+/* A nonzero number per wake of the handler thread, kept in
+ * nk_err_recovering: a handler gives back only its own recovery. */
+static int nk_err_next_generation(void)
+{
+	int generation = atomic_inc_return(&nk_err_generation);
+
+	return generation ? generation : atomic_inc_return(&nk_err_generation);
+}
+/*
+ * A YUV bypass buffer the DMA was given: counted out of qbuf_num and still
+ * first in the ready queue, until its frame end publishes it or counts it
+ * back. The error handler's retrigger counts back only such a buffer; with
+ * an empty queue (all buffers with the application) it counted back one
+ * that was not there and triggered the DMA into the last published buffer.
+ */
+static atomic_t nk_buf_out[ISP_PRERAW_VIRT_MAX][ISP_FE_CHN_MAX];
+
 static void cvi_isp_buf_queue(struct cvi_vi_dev *vdev, struct cvi_isp_buf *b)
 {
 	unsigned long flags;
@@ -2374,6 +2414,7 @@ static void _isp_yuv_bypass_buf_enq(struct cvi_vi_dev *vdev, const enum cvi_isp_
 		vi_pr(VI_WARN, "no buffer\n");
 		return;
 	}
+	atomic_set(&nk_buf_out[raw_num][hw_chn_num], 1);
 
 	vi_pr(VI_DBG, "update yuv bypass outbuf: 0x%llx raw_%d chn_num(%d)\n",
 			b->buf.planes[0].addr, raw_num, buf_chn);
@@ -2441,7 +2482,9 @@ static void _isp_yuv_bypass_buf_enq(struct cvi_vi_dev *vdev, const enum cvi_isp_
 	}
 }
 
-static int _isp_yuv_bypass_trigger(struct cvi_vi_dev *vdev, const enum cvi_isp_raw raw_num, const u8 hw_chn_num)
+/* The YUV bypass trigger itself; the error handler's retrigger calls it while
+ * it owns the pipe, everyone else through _isp_yuv_bypass_trigger. */
+static int __isp_yuv_bypass_trigger(struct cvi_vi_dev *vdev, const enum cvi_isp_raw raw_num, const u8 hw_chn_num)
 {
 	struct isp_ctx *ctx = &vdev->ctx;
 	u8 buf_chn;
@@ -2454,11 +2497,34 @@ static int _isp_yuv_bypass_trigger(struct cvi_vi_dev *vdev, const enum cvi_isp_r
 			return -1;
 		}
 		buf_chn = (raw_num == ISP_PRERAW_A) ? hw_chn_num : vdev->ctx.rawb_chnstr_num + hw_chn_num;
+		/* No ready buffer: the DMA would write into the one it had last,
+		 * which the application may hold (a retried tasklet trigger). */
+		if (cvi_isp_rdy_buf_empty(vdev, buf_chn)) {
+			atomic_set(&vdev->pre_fe_state[raw_num][hw_chn_num], ISP_PRERAW_IDLE);
+			vi_pr(VI_DBG, "fe_%d chn_num_%d no ready buffer\n", raw_num, hw_chn_num);
+			return -1;
+		}
 
 		_isp_yuv_bypass_buf_enq(vdev, raw_num, buf_chn);
 		isp_pre_trig(ctx, raw_num, hw_chn_num);
 	}
 	return 0;
+}
+
+/*
+ * While the error handler recovers the pipe only its retrigger arms the DMA:
+ * a trigger from the queue's tasklet would be wiped by the reset and leave
+ * the state running. Refused, the tasklet keeps its retry pending
+ * (isp_triggered), and the handler reschedules it when it gives the pipe
+ * back.
+ */
+static int _isp_yuv_bypass_trigger(struct cvi_vi_dev *vdev, const enum cvi_isp_raw raw_num, const u8 hw_chn_num)
+{
+	if (atomic_read(&nk_err_recovering[raw_num])) {
+		vi_pr(VI_DBG, "fe_%d chn_num_%d trigger during error recovery\n", raw_num, hw_chn_num);
+		return -1;
+	}
+	return __isp_yuv_bypass_trigger(vdev, raw_num, hw_chn_num);
 }
 
 static void _vi_postraw_ctrl_setup(struct cvi_vi_dev *vdev)
@@ -3274,6 +3340,16 @@ int vi_stop_streaming(struct cvi_vi_dev *vdev)
 		vdev->qbuf_num[i] = 0;
 		INIT_LIST_HEAD(&vdev->qbuf_list[i]);
 		spin_unlock_irqrestore(&vdev->qbuf_lock, flags);
+	}
+	for (i = 0; i < ISP_PRERAW_VIRT_MAX; i++) {
+		int j;
+
+		atomic_set(&nk_frame_damaged[i], 0);
+		atomic_set(&nk_err_recovering[i], 0);
+		for (j = 0; j < ISP_FE_CHN_MAX; j++) {
+			atomic_set(&nk_eof_held[i][j], 0);
+			atomic_set(&nk_buf_out[i][j], 0);
+		}
 	}
 
 	spin_lock_irqsave(&dq_lock, flags);
@@ -7065,6 +7141,68 @@ static void _vi_show_debug_info(void)
 	gOverflowInfo = NULL;
 }
 
+static void nk_err_recovery_clear(const enum cvi_isp_raw raw_num)
+{
+	int i;
+
+	atomic_set(&nk_frame_damaged[raw_num], 0);
+	for (i = 0; i < ISP_FE_CHN_MAX; i++)
+		atomic_set(&nk_eof_held[raw_num][i], 0);
+}
+
+/*
+ * The handler gives the pipe back, after its retrigger or when it returns
+ * before its reset: unless a newer error already woke the next handler, which
+ * then owns it. Each channel whose frame end was held back since restarts as
+ * that frame end would have (the buffer counted back, then the trigger), and
+ * the queue's tasklet, refused meanwhile, runs again. Bottom halves are off,
+ * so no tasklet trigger comes in between.
+ */
+static void nk_err_recovery_release(struct cvi_vi_dev *vdev, const enum cvi_isp_raw raw_num, int generation)
+{
+	u8 hw_chn_num;
+
+	local_bh_disable();
+	if (atomic_cmpxchg(&nk_err_recovering[raw_num], generation, 0) != generation) {
+		local_bh_enable();
+		return;
+	}
+
+	for (hw_chn_num = 0; hw_chn_num < ISP_FE_CHN_MAX; hw_chn_num++) {
+		u8 buf_chn = (raw_num == ISP_PRERAW_A) ? hw_chn_num : vdev->ctx.rawb_chnstr_num + hw_chn_num;
+		unsigned long flags;
+
+		if (!atomic_xchg(&nk_eof_held[raw_num][hw_chn_num], 0))
+			continue;
+		atomic_set(&nk_frame_damaged[raw_num], 0); /* that frame was the marked one */
+		if (atomic_read(&vdev->pre_fe_state[raw_num][hw_chn_num]) != ISP_PRERAW_IDLE ||
+			!atomic_xchg(&nk_buf_out[raw_num][hw_chn_num], 0))
+			continue;
+
+		spin_lock_irqsave(&vdev->qbuf_lock, flags);
+		vdev->qbuf_num[buf_chn]++;
+		spin_unlock_irqrestore(&vdev->qbuf_lock, flags);
+		_isp_yuv_bypass_trigger(vdev, raw_num, hw_chn_num);
+	}
+	if (vdev->is_yuv_trigger)
+		tasklet_hi_schedule(&vdev->job_work);
+	local_bh_enable();
+}
+
+/*
+ * The handler returns before its reset (the wait for the other stages timed
+ * out, or the bridge abort did not finish): the device was not reset. Clear
+ * the handler flag, which the vendor left set (with it set, no later error
+ * would wake a handler again), then give the pipe back.
+ */
+static void nk_err_recovery_abandon(struct cvi_vi_dev *vdev, const enum cvi_isp_raw raw_num, int generation)
+{
+	/* The flag first: an error from here on wakes the next handler, which
+	 * takes the pipe over from this release. */
+	atomic_set(&vdev->isp_err_handle_flag, 0);
+	nk_err_recovery_release(vdev, raw_num, generation);
+}
+
 static void _vi_err_retrig_preraw(struct cvi_vi_dev *vdev, const enum cvi_isp_raw err_raw_num)
 {
 	struct isp_ctx *ctx = &vdev->ctx;
@@ -7078,10 +7216,9 @@ static void _vi_err_retrig_preraw(struct cvi_vi_dev *vdev, const enum cvi_isp_ra
 		if (!ctx->isp_pipe_enable[wait_fe])
 			continue;
 
-		if (vdev->isp_err_times[wait_fe]++ > 30) {
-			vi_pr(VI_ERR, "raw_%d too much errors happened\n", wait_fe);
-			continue;
-		}
+		/* The vendor stopped retriggering here for good past 30 errors;
+		 * _vi_err_handler backs off before the retrigger instead. */
+		vdev->isp_err_times[wait_fe]++;
 
 		vi_pr(VI_WARN, "fe_%d isp_pre_trig retry %d times\n", wait_fe, vdev->isp_err_times[wait_fe]);
 
@@ -7092,7 +7229,8 @@ static void _vi_err_retrig_preraw(struct cvi_vi_dev *vdev, const enum cvi_isp_ra
 			for (fe_chn = ISP_FE_CH0; fe_chn < fe_max; fe_chn++) {
 				u8 buf_chn = (wait_fe == ISP_PRERAW_A) ? fe_chn : vdev->ctx.rawb_chnstr_num + fe_chn;
 
-				if (wait_fe == err_raw_num) //if yuv sensor err need push, that's right qbuf num.
+				if (wait_fe == err_raw_num && //if yuv sensor err need push, that's right qbuf num.
+					atomic_xchg(&nk_buf_out[wait_fe][fe_chn], 0))
 					vdev->qbuf_num[buf_chn]++;
 
 				if (cvi_isp_rdy_buf_empty(vdev, buf_chn)) {
@@ -7100,7 +7238,7 @@ static void _vi_err_retrig_preraw(struct cvi_vi_dev *vdev, const enum cvi_isp_ra
 					continue;
 				}
 
-				_isp_yuv_bypass_trigger(vdev, wait_fe, fe_chn);
+				__isp_yuv_bypass_trigger(vdev, wait_fe, fe_chn);
 			}
 		} else { //rgb sensor
 			wait_fe = (ctx->isp_pipe_cfg[wait_fe].is_mux
@@ -7121,6 +7259,8 @@ static void _vi_err_handler(struct cvi_vi_dev *vdev, const enum cvi_isp_raw err_
 	struct isp_ctx *ctx = &vdev->ctx;
 	uintptr_t tnr = ctx->phys_regs[ISP_BLK_ID_TNR];
 	u8 wait_fe = ISP_PRERAW_A, count = 10;
+	/* The recovery this handler owns (nk_err_recovering, set by its wake). */
+	const int nk_generation = atomic_read(&nk_err_recovering[err_raw_num]);
 
 	//Stop pre/postraw trigger go
 	atomic_set(&vdev->isp_err_handle_flag, 1);
@@ -7199,12 +7339,15 @@ static void _vi_err_handler(struct cvi_vi_dev *vdev, const enum cvi_isp_raw err_
 		} else {
 			vi_pr(VI_ERR, "isp status post(%d)\n", atomic_read(&vdev->postraw_state));
 		}
+		nk_err_recovery_abandon(vdev, err_raw_num, nk_generation);
 		return;
 	}
 
 	//step 3 : set csibdg sw abort and wait abort done
-	if (isp_frm_err_handler(ctx, err_raw_num, 3) < 0)
+	if (isp_frm_err_handler(ctx, err_raw_num, 3) < 0) {
+		nk_err_recovery_abandon(vdev, err_raw_num, nk_generation);
 		return;
+	}
 
 	//step 4 : isp sw reset and vip reset pull up
 	isp_frm_err_handler(ctx, err_raw_num, 4);
@@ -7225,8 +7368,11 @@ static void _vi_err_handler(struct cvi_vi_dev *vdev, const enum cvi_isp_raw err_
 	isp_frm_err_handler(ctx, err_raw_num, 5);
 
 	//step 6 : wait ISP idle
+	/* The reset is done whether or not the ISP reports idle in time, and
+	 * it dropped the armed DMA: restart (the vendor returned here, and
+	 * capture stopped until the stream was restarted). */
 	if (isp_frm_err_handler(ctx, err_raw_num, 6) < 0)
-		return;
+		vi_pr(VI_WARN, "fe_%d not idle after the reset, restarting\n", err_raw_num);
 
 	//step 7 : reset sw state to idle
 	if (_is_be_post_online(ctx)) {
@@ -7267,6 +7413,10 @@ static void _vi_err_handler(struct cvi_vi_dev *vdev, const enum cvi_isp_raw err_
 	//step 10 : show overflow info
 	_vi_show_debug_info();
 
+	/* The retrigger below restarts the pipe and counts its buffer back,
+	 * also for a frame end held back until here. */
+	nk_err_recovery_clear(err_raw_num);
+
 	//Let postraw trigger go
 	atomic_set(&vdev->isp_err_handle_flag, 0);
 
@@ -7274,8 +7424,28 @@ static void _vi_err_handler(struct cvi_vi_dev *vdev, const enum cvi_isp_raw err_
 		_postraw_clear_inbuf(vdev);
 	}
 
+	/* Past 30 recoveries without a good frame in between the vendor's
+	 * retrigger gave up for good: no frame then came, so no error woke a
+	 * handler again, and capture stayed stopped until the stream restarted
+	 * (a source switching its resolution gives 30 errors in half a second).
+	 * Wait instead, still owning the pipe: 1, 2, 4, then 8 s, so a source
+	 * that stays wrong logs its errors a few times a minute at most. A
+	 * stream stopped (and perhaps started again) meanwhile is no longer
+	 * this recovery's. */
+	if (vdev->isp_err_times[err_raw_num] > 30) {
+		u32 backoff = min_t(u32, vdev->isp_err_times[err_raw_num] - 31, 3);
+
+		if (backoff == 0)
+			vi_pr(VI_ERR, "raw_%d too much errors happened, retrying at up to 8 s\n", err_raw_num);
+		msleep(1000 << backoff);
+		if (atomic_read(&nk_err_recovering[err_raw_num]) != nk_generation)
+			return;
+	}
+
 	//Let preraw trgger, err_handler we stop all dev
 	_vi_err_retrig_preraw(vdev, err_raw_num);
+
+	nk_err_recovery_release(vdev, err_raw_num, nk_generation);
 }
 
 static int _vi_err_handler_thread(void *arg)
@@ -7310,6 +7480,7 @@ static int _vi_err_handler_thread(void *arg)
 
 static inline void vi_err_wake_up_th(struct cvi_vi_dev *vdev, enum cvi_isp_raw err_raw)
 {
+	atomic_set(&nk_frame_damaged[err_raw], 1);
 	if (atomic_read(&vdev->isp_err_handle_flag) == 1) {
 		vi_pr(VI_WARN, "work on err_handler\n");
 		if (vdev->vi_th[E_VI_TH_ERR_HANDLER].flag != err_raw + 1) {
@@ -7322,6 +7493,7 @@ static inline void vi_err_wake_up_th(struct cvi_vi_dev *vdev, enum cvi_isp_raw e
 	//Stop pre/postraw trigger go
 	atomic_set(&vdev->isp_err_handle_flag, 1);
 
+	atomic_set(&nk_err_recovering[err_raw], nk_err_next_generation());
 	vdev->vi_th[E_VI_TH_ERR_HANDLER].flag = err_raw + 1;
 
 	wake_up(&vdev->vi_th[E_VI_TH_ERR_HANDLER].wq);
@@ -7884,13 +8056,37 @@ static void _isp_yuv_bypass_handler(struct cvi_vi_dev *vdev, const enum cvi_isp_
 
 	atomic_set(&vdev->pre_fe_state[raw_num][hw_chn_num], ISP_PRERAW_IDLE);
 
-	cvi_isp_rdy_buf_remove(vdev, buf_chn);
+	if (atomic_read(&nk_err_recovering[raw_num])) {
+		/* The error handler restarts the pipe after its reset; a trigger
+		 * here would be wiped by it and leave the state running. The
+		 * buffer stays first in the ready queue, and the mark stays. */
+		atomic_set(&nk_eof_held[raw_num][hw_chn_num], 1);
+		vi_pr(VI_DBG, "fe_%d chn_num_%d frame end during error recovery\n", raw_num, buf_chn);
+		return;
+	}
 
-	cvi_isp_dqbuf_list(vdev, vdev->pre_fe_frm_num[raw_num][hw_chn_num], raw_num, buf_chn);
+	if (atomic_xchg(&nk_frame_damaged[raw_num], 0)) {
+		unsigned long flags;
 
-	vdev->vi_th[E_VI_TH_EVENT_HANDLER].flag = raw_num + 1;
+		/* Failed the CSI checks: the buffer stays first in the ready
+		 * queue and takes the next frame. Its trigger counted it out
+		 * of qbuf_num, and the trigger below counts it again: give
+		 * that count back, as _vi_err_retrig_preraw does. */
+		atomic_set(&nk_buf_out[raw_num][hw_chn_num], 0);
+		spin_lock_irqsave(&vdev->qbuf_lock, flags);
+		vdev->qbuf_num[buf_chn]++;
+		spin_unlock_irqrestore(&vdev->qbuf_lock, flags);
+		vi_pr(VI_DBG, "fe_%d chn_num_%d damaged frame not published\n", raw_num, buf_chn);
+	} else {
+		atomic_set(&nk_buf_out[raw_num][hw_chn_num], 0);
+		cvi_isp_rdy_buf_remove(vdev, buf_chn);
 
-	wake_up(&vdev->vi_th[E_VI_TH_EVENT_HANDLER].wq);
+		cvi_isp_dqbuf_list(vdev, vdev->pre_fe_frm_num[raw_num][hw_chn_num], raw_num, buf_chn);
+
+		vdev->vi_th[E_VI_TH_EVENT_HANDLER].flag = raw_num + 1;
+
+		wake_up(&vdev->vi_th[E_VI_TH_EVENT_HANDLER].wq);
+	}
 
 	if (cvi_isp_rdy_buf_empty(vdev, buf_chn))
 		vi_pr(VI_INFO, "fe_%d chn_num_%d yuv bypass outbuf is empty\n", raw_num, buf_chn);
