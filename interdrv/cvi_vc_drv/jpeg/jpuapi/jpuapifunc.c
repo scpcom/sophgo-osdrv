@@ -2260,16 +2260,12 @@ JpgRet JpgEnterTryLock(void)
 JpgRet JpgEnterTimeLock(int timeout_ms)
 {
 	int ret = 0;
-	int wait_cnt_ms = 1;
+	const unsigned long deadline = jiffies + msecs_to_jiffies(timeout_ms > 0 ? timeout_ms : 0);
 
-	while (mutex_is_locked(&jpgLock)) {
-		set_current_state(TASK_INTERRUPTIBLE);
-		schedule_timeout(usecs_to_jiffies(1000));
-		if (wait_cnt_ms >= timeout_ms) {
-			break;
-		}
-		wait_cnt_ms++;
-	}
+	/* Poll the lock against a deadline: a 1 ms sleep is a whole tick
+	 * (4 ms at HZ=250). */
+	while (timeout_ms > 0 && mutex_is_locked(&jpgLock) && time_before(jiffies, deadline))
+		usleep_range(100, 200);
 
 	ret = mutex_trylock(&jpgLock);
 	// mutex_trylock returns 1 if the mutex has been acquired successfully,

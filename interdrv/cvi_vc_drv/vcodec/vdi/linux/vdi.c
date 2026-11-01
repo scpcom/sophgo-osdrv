@@ -1099,18 +1099,14 @@ int vdi_vcodec_timelock(unsigned long core_idx, int timeout_ms)
 {
 	int ret;
 
-	do {
-		int wait_cnt_ms = 1;
+	{
+		const unsigned long deadline = jiffies + msecs_to_jiffies(timeout_ms > 0 ? timeout_ms : 0);
 
-		while (vcodec_is_locked()) {
-			set_current_state(TASK_INTERRUPTIBLE);
-			schedule_timeout(usecs_to_jiffies(1000));
-			if (wait_cnt_ms >= timeout_ms) {
-				break;
-			}
-			wait_cnt_ms++;
-		}
-	} while (0);
+		/* Poll the lock against a deadline: a 1 ms sleep is a whole
+		 * tick (4 ms at HZ=250). */
+		while (timeout_ms > 0 && vcodec_is_locked() && time_before(jiffies, deadline))
+			usleep_range(100, 200);
+	}
 
 	ret = vcodec_trylock();
 	// mutex_trylock returns 1 if the mutex has been acquired successfully,
