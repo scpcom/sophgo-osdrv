@@ -1618,9 +1618,8 @@ static void vpu_remove(struct platform_device *pdev)
 
 	if (vdev->s_vpu_major > 0) {
 		VCODEC_DBG_INFO("vdev %p vdev->cdev %p\n", vdev, &vdev->cdev);
-		device_destroy(vdev->vpu_class, vdev->cdev_id);
+		/* Registration made the class and the device number only. */
 		class_destroy(vdev->vpu_class);
-		cdev_del(&vdev->cdev);
 		unregister_chrdev_region(vdev->cdev_id, 1);
 		vdev->s_vpu_major = 0;
 	}

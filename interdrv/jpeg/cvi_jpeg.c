@@ -654,9 +654,8 @@ static void cvi_jpu_unregister_cdev(struct platform_device *pdev)
 	struct cvi_jpu_device *jdev = platform_get_drvdata(pdev);
 
 	if (jdev->s_jpu_major > 0) {
-		device_destroy(jdev->jpu_class, jdev->cdev_id);
+		/* Registration made the class and the device number only. */
 		class_destroy(jdev->jpu_class);
-		cdev_del(&jdev->cdev);
 		unregister_chrdev_region(jdev->cdev_id, 1);
 		jdev->s_jpu_major = 0;
 	}
