@@ -264,6 +264,8 @@ CVI_S32 base_get_chn_buffer(MMF_CHN_S chn, VB_BLK *blk, CVI_S32 timeout_ms)
 			vb_release_block(s->blk);
 		TAILQ_REMOVE(&jobs->snap_jobs, s, tailq);
 		mutex_unlock(&jobs->dlock);
+		/* A short poll that finds no frame is not an error. */
+		if (timeout_ms < 0 || timeout_ms >= 100)
 		CVI_TRACE_BASE_RATELIMITED(CVI_BASE_DBG_ERR, "Mod(%s) Grp(%d) Chn(%d), jobs wait(%d) work(%d) done(%d)\n"
 			, sys_get_modname(chn.enModId), chn.s32DevId, chn.s32ChnId
 			, FIFO_SIZE(&jobs->waitq), FIFO_SIZE(&jobs->workq), FIFO_SIZE(&jobs->doneq));

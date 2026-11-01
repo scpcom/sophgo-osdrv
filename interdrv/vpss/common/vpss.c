@@ -3040,7 +3040,8 @@ static void vpss_handle_offline(struct vpss_handler_ctx *ctx)
 		return;
 	}
 	if (!vpssCtx[workingGrp] || !vpssCtx[workingGrp]->isStarted) {
-		CVI_TRACE_VPSS(CVI_DBG_WARN, "Grp(%d) invalid,\n", workingGrp);
+		/* A job of a group that was just stopped; nothing to do. */
+		CVI_TRACE_VPSS(CVI_DBG_DEBUG, "Grp(%d) invalid,\n", workingGrp);
 		ctx->workingGrp = VPSS_MAX_GRP_NUM;
 		ctx->workingMask = 0;
 		atomic_set(&ctx->events, 0);
@@ -4574,7 +4575,9 @@ CVI_S32 vpss_get_chn_frame(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, VIDEO_FRAME_INFO_
 	memset(pstFrameInfo, 0, sizeof(*pstFrameInfo));
 	ret = base_get_chn_buffer(chn, &blk, s32MilliSec);
 	if (ret != 0 || blk == VB_INVALID_HANDLE) {
-		if (s32MilliSec != 0)
+		/* Only a wait of 100 ms or more that ends without a frame is an
+		 * error; shorter waits poll for a frame that may not be due. */
+		if (s32MilliSec < 0 || s32MilliSec >= 100)
 			CVI_TRACE_VPSS(CVI_DBG_ERR, "Grp(%d) Chn(%d) get chn frame fail, s32MilliSec=%d, ret=%d\n",
 					VpssGrp, VpssChn, s32MilliSec, ret);
 		return CVI_ERR_VPSS_BUF_EMPTY;

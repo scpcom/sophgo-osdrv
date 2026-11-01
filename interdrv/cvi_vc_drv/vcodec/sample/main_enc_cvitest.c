@@ -2479,8 +2479,9 @@ static int cviGetEncodedInfo(stTestEncoder *pTestEnc, int s32MilliSec)
 
 		if (int_reason == -1) {
 			if (s32MilliSec >= 0) {
-				CVI_VC_ERR(
-					"Error : encoder timeout happened in non_block mode\n");
+				/* A poll: the caller retries. */
+				CVI_VC_TRACE(
+					"encoder timeout happened in non_block mode\n");
 				return TE_STA_ENC_TIMEOUT;
 			}
 
