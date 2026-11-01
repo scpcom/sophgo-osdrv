@@ -165,6 +165,7 @@ typedef struct _cviEncOnePicCfg_ {
 	unsigned char *picMotionMap;
 	int picMotionMapSize;
 	CVI_U64 u64Pts;
+	int packedFormat; /* 0 planar/semi-planar, 1 YUYV, 2 UYVY */
 } cviEncOnePicCfg;
 
 typedef struct _cviDispFrameCfg_ {

@@ -1067,6 +1067,12 @@ static CVI_S32 vidEnc_enc_one_pic(CVI_VOID *ctx,
 		pPicCfg->cbcrInterleave = 1;
 		pPicCfg->nv21 = 1;
 		break;
+	case PIXEL_FORMAT_UYVY:
+	case PIXEL_FORMAT_YUYV:
+		pPicCfg->cbcrInterleave = 0;
+		pPicCfg->nv21 = 0;
+		pPicCfg->packedFormat = pstFrame->stVFrame.enPixelFormat == PIXEL_FORMAT_UYVY ? 2 : 1;
+		break;
 	case PIXEL_FORMAT_YUV_PLANAR_420:
 	default:
 		pPicCfg->cbcrInterleave = 0;

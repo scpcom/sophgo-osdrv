@@ -2936,6 +2936,10 @@ static int cviVEncStartSb(stTestEncoder *pTestEnc)
 }
 
 
+/* Lets user space detect a driver that takes packed 4:2:2 HEVC sources. */
+static int nk_packed_src = 1;
+module_param(nk_packed_src, int, 0444);
+
 int cviVEncEncOnePic(void *handle, cviEncOnePicCfg *pPicCfg, int s32MilliSec)
 {
 	int ret = 0;
@@ -2999,6 +3003,16 @@ int cviVEncEncOnePic(void *handle, cviEncOnePicCfg *pPicCfg, int s32MilliSec)
 	pTestEnc->srcFrameStride = pPicCfg->stride;
 	pEncOP->cbcrInterleave = pPicCfg->cbcrInterleave;
 	pEncOP->nv21 = pPicCfg->nv21;
+	if (pPicCfg->packedFormat && pEncOP->bitstreamFormat == STD_HEVC) {
+		EncOpenParam *op = &pCodecInst->CodecInfo->encInfo.openParam;
+		const int packed = pPicCfg->packedFormat == 2 ? PACKED_UYVY : PACKED_YUYV;
+		if (op->packedFormat != packed)
+			pr_info("venc: HEVC packed 4:2:2 source %d, stride %d\n", packed, pPicCfg->stride);
+		pEncOP->packedFormat = op->packedFormat = packed;
+		pEncOP->srcFormat = op->srcFormat = packed == PACKED_UYVY ? FORMAT_UYVY : FORMAT_YUYV;
+		op->cbcrInterleave = 0;
+		op->nv21 = 0;
+	}
 	pEncOP->picMotionLevel = pPicCfg->picMotionLevel;
 	pEncOP->picDciLv = pPicCfg->picDciLv;
 	pEncOP->picMotionMap = pPicCfg->picMotionMap;
