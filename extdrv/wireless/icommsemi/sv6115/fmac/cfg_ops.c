@@ -1641,7 +1641,12 @@ END:
  *	later passes to cfg80211_probe_status().
  */
 static int ssv_cfg80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
-            const u8 *peer, u64 *cookie)
+            const u8 *peer,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+            u64 _cookie)
+#else
+            u64 *cookie)
+#endif
 {
     return 0;
 }
@@ -1814,7 +1819,12 @@ ssv_cfg80211_remain_on_channel(struct wiphy *wiphy,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
                                 enum nl80211_channel_type channel_type,
 #endif
-                                unsigned int duration, u64 *cookie
+                                unsigned int duration,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+                                u64 _cookie
+#else
+                                u64 *cookie
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
 				/*
 				 * 7.2 added an optional receive address filter for the off-channel
@@ -1861,7 +1871,9 @@ ssv_cfg80211_remain_on_channel(struct wiphy *wiphy,
 
     sc->roc_elem = roc_elem;
     /* Set the cookie value */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(7, 3, 0))
     *cookie = (u64)(sc->roc_cookie_cnt);
+#endif
 
     /* Forward the information to the FMAC */
     error = ssv_send_roc(sc, ssv_vif, chan, duration);
@@ -2110,7 +2122,11 @@ static struct ssv_sta *ssv_retrieve_sta(struct ssv_softc *sc,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 static int ssv_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
                                 struct cfg80211_mgmt_tx_params *params,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0))
+                                u64 _cookie)
+#else
                                 u64 *cookie)
+#endif
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
 static int ssv_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
                                 struct ieee80211_channel *chan, bool offchan,
@@ -2144,6 +2160,9 @@ static int ssv_cfg80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
     struct ieee80211_mgmt *mgmt = NULL;
     int error = 0;
     bool ap = false;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0))
+    u64 *cookie = &_cookie;
+#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
     ssv_params.chan = params->chan;
@@ -2228,7 +2247,7 @@ static int ssv_cfg80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
                 }
                 else
                 {
-                    u64 cookie;
+                    u64 cookie = 0;
 
                     /* Start a ROC procedure for 30ms */
                     error = ssv_cfg80211_remain_on_channel(wiphy,
@@ -2241,7 +2260,12 @@ static int ssv_cfg80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
                                                            NL80211_CHAN_NO_HT,
 #endif
-                                                           30, &cookie
+                                                           30,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0))
+                                                           cookie
+#else
+                                                           &cookie
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 2, 0)
 							   , NULL
 #endif
@@ -2610,7 +2634,11 @@ struct cfg80211_ops ssv_cfg80211_ops = {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
     .set_monitor_channel = ssv_cfg80211_set_monitor_channel,
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(7, 3, 0)
+    .probe_peer = ssv_cfg80211_probe_client,
+#else
     .probe_client = ssv_cfg80211_probe_client,
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 8, 0)
     .update_mgmt_frame_registrations = ssv_cfg80211_update_mgmt_frame_registrations,
 #else
