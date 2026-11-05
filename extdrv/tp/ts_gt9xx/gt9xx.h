@@ -38,7 +38,9 @@
 #include <linux/uaccess.h>
 
 #ifdef CONFIG_OF
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 1, 0)
 #include <linux/of_gpio.h>
+#endif
 #include <linux/regulator/consumer.h>
 #endif
 #ifdef CONFIG_FB
