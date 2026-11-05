@@ -2,8 +2,13 @@
 #include <linux/kernel.h>
 #include <linux/miscdevice.h>
 #include <linux/module.h>
+#include <linux/version.h>
 #include <linux/of_reserved_mem.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 #include <linux/of_gpio.h>
+#else
+#include <linux/gpio.h>
+#endif
 #include <linux/platform_device.h>
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
@@ -610,7 +615,11 @@ static int _init_resources(struct platform_device *pdev)
 {
 	int rc = 0;
 	struct cvi_vip_mipi_tx_dev *tdev;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 	enum of_gpio_flags flags;
+#else
+	unsigned long flags;
+#endif
 
 	tdev = dev_get_drvdata(&pdev->dev);
 	if (!tdev) {
@@ -657,6 +666,44 @@ static int _init_resources(struct platform_device *pdev)
 			tdev->pwm_pin_active = -EINVAL;
 		}
 	} else {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+		struct gpio_desc *reset_gpio;
+		struct gpio_desc *pwm_gpio;
+		struct gpio_desc *power_ct_gpio;
+
+		reset_gpio = devm_gpiod_get_index_optional(&pdev->dev,
+							 "reset-gpio", 0, GPIOD_ASIS);
+		if (IS_ERR(reset_gpio))
+			return dev_err_probe(&pdev->dev, PTR_ERR(reset_gpio),
+					     "cannot get mipi_tx reset GPIO\n");
+		if (!reset_gpio)
+			tdev->reset_pin = -1;
+		else
+			tdev->reset_pin = desc_to_gpio(reset_gpio);
+		tdev->reset_pin_active = (gpiod_is_active_low(reset_gpio)) ? 0 : 1;
+
+		pwm_gpio = devm_gpiod_get_index_optional(&pdev->dev,
+							 "pwm-gpio", 0, GPIOD_ASIS);
+		if (IS_ERR(pwm_gpio))
+			return dev_err_probe(&pdev->dev, PTR_ERR(pwm_gpio),
+					     "cannot get mipi_tx pwm GPIO\n");
+		if (!pwm_gpio)
+			tdev->pwm_pin = -1;
+		else
+			tdev->pwm_pin = desc_to_gpio(pwm_gpio);
+		tdev->pwm_pin_active = (gpiod_is_active_low(pwm_gpio)) ? 0 : 1;
+
+		power_ct_gpio = devm_gpiod_get_index_optional(&pdev->dev,
+							 "power-ct-gpio", 0, GPIOD_ASIS);
+		if (IS_ERR(power_ct_gpio))
+			return dev_err_probe(&pdev->dev, PTR_ERR(power_ct_gpio),
+					     "cannot get mipi_tx power_ct GPIO\n");
+		if (!power_ct_gpio)
+			tdev->power_ct_pin = -1;
+		else
+			tdev->power_ct_pin = desc_to_gpio(power_ct_gpio);
+		tdev->power_ct_pin_active = (gpiod_is_active_low(power_ct_gpio)) ? 0 : 1;
+#else
 		// reset pin
 		tdev->reset_pin = of_get_named_gpio_flags(pdev->dev.of_node,
 					 "reset-gpio", 0, &flags);
@@ -671,6 +718,7 @@ static int _init_resources(struct platform_device *pdev)
 		tdev->power_ct_pin = of_get_named_gpio_flags(pdev->dev.of_node,
 					 "power-ct-gpio", 0, &flags);
 		tdev->power_ct_pin_active = (flags & OF_GPIO_ACTIVE_LOW) ? 0 : 1;
+#endif
 	}
 
 	smooth = sclr_disp_check_tgen_enable();

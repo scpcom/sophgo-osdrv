@@ -3,7 +3,12 @@
 #include <linux/uaccess.h>
 #include <linux/poll.h>
 #include <linux/sys.h>
+#include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 #include <linux/of_gpio.h>
+#else
+#include <linux/gpio.h>
+#endif
 
 #include <linux/cvi_base.h>
 #include <linux/cvi_common.h>
@@ -258,7 +263,11 @@ static void _disp_sel_pinmux(enum cvi_disp_intf intf_type, void *param)
 
 static void _disp_ctrlpin_set(unsigned int gpio_num, enum GPIO_ACTIVE_E active)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 	enum of_gpio_flags flags;
+#else
+	unsigned long flags;
+#endif
 	static int count;
 	char name[16] = "";
 	int rc = 0;
@@ -277,7 +286,11 @@ static void _disp_ctrlpin_set(unsigned int gpio_num, enum GPIO_ACTIVE_E active)
 
 static void _disp_resetpin_set(unsigned int gpio_num, enum GPIO_ACTIVE_E active)
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 	enum of_gpio_flags flags;
+#else
+	unsigned long flags;
+#endif
 	int rc = 0;
 
 	if (gpio_is_valid(gpio_num)) {
