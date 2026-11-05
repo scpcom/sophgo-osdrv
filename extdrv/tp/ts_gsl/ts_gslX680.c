@@ -22,8 +22,10 @@
 
 
 #include <linux/slab.h>
-#include <linux/of_gpio.h>
 #include <linux/version.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 1, 0)
+#include <linux/of_gpio.h>
+#endif
 #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 0)
 #include <asm-generic/gpio.h>
 #endif
