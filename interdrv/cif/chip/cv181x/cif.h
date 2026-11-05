@@ -31,8 +31,12 @@ struct cvi_link {
 	enum output_msb_e		msb;
 	unsigned int			crop_top;
 	unsigned int			distance_fp;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+	struct gpio_desc		*snsr_reset;
+#else
 	int				snsr_rst_pin;
 	enum of_gpio_flags		snsr_rst_pol;
+#endif
 	union {
 		struct cvi_csi_status	sts_csi;
 		struct cvi_lvds_status	sts_lvds;

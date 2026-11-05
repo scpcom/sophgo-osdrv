@@ -1,9 +1,15 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <linux/interrupt.h>
 #include <linux/of_platform.h>
 #include <linux/of_reserved_mem.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 #include <linux/of_gpio.h>
+#else
+#include <linux/gpio.h>
+#include <linux/gpio/machine.h>
+#endif
 #include <linux/platform_device.h>
 #include <linux/delay.h>
 #include <linux/iommu.h>
@@ -19,7 +25,6 @@
 #include "pinctrl-cv180x.h"
 #endif
 #include <linux/ctype.h>
-#include <linux/version.h>
 
 #ifdef CONFIG_PROC_FS
 #include <linux/proc_fs.h>
@@ -2449,6 +2454,18 @@ static inline int cif_enable_snsr_clk(struct cvi_cif_dev *dev,
 static int cif_reset_snsr_gpio(struct cvi_cif_dev *dev,
 			       unsigned int devno, uint8_t on)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+	struct gpio_desc *reset;
+
+	if (devno >= MAX_LINK_NUM || on > 1)
+		return -EINVAL;
+	reset = dev->link[devno].snsr_reset;
+	/* Bridges without a DT sensor-reset line intentionally need no toggle. */
+	if (!reset)
+		return 0;
+	/* Logical assertion observes the polarity of the owned DT descriptor. */
+	return gpiod_direction_output(reset, on);
+#else
 	struct cvi_link *link;
 	int reset;
 
@@ -2466,6 +2483,7 @@ static int cif_reset_snsr_gpio(struct cvi_cif_dev *dev,
 		gpio_direction_output(link->snsr_rst_pin, !reset);
 
 	return 0;
+#endif
 }
 
 static inline int cif_reset_lvds(struct cvi_cif_dev *dev,
@@ -2485,6 +2503,27 @@ static inline int cif_bt_fmt_out(struct cvi_cif_dev *dev,
 	return 0;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+static int cif_gpio_init(struct cvi_cif_dev *dev, struct snsr_rst_gpio_s snsr_gpio)
+{
+	struct gpio_desc *reset;
+
+	if (snsr_gpio.devno >= MAX_LINK_NUM ||
+	    (snsr_gpio.snsr_rst_pol != GPIO_ACTIVE_HIGH &&
+	     snsr_gpio.snsr_rst_pol != GPIO_ACTIVE_LOW))
+		return -EINVAL;
+	reset = dev->link[snsr_gpio.devno].snsr_reset;
+	if (!reset)
+		return -EOPNOTSUPP;
+	/* Keep the old ioctl layout for callers that confirm the configured line,
+	 * but never let a global number reassign ownership or DT polarity.
+	 */
+	if (snsr_gpio.snsr_rst_pin != desc_to_gpio(reset) ||
+	    snsr_gpio.snsr_rst_pol != gpiod_is_active_low(reset))
+		return -EINVAL;
+	return 0;
+}
+#else
 static int cif_gpio_init(struct platform_device *pdev, struct snsr_rst_gpio_s snsr_gpio)
 {
 	struct cvi_cif_dev *dev;
@@ -2508,6 +2547,7 @@ static int cif_gpio_init(struct platform_device *pdev, struct snsr_rst_gpio_s sn
 
 	return 0;
 }
+#endif
 
 static long _cif_ioctl(struct cvi_cif_dev *dev, unsigned int cmd,
 		       unsigned long arg, unsigned int from_user)
@@ -2758,10 +2798,14 @@ static long _cif_ioctl(struct cvi_cif_dev *dev, unsigned int cmd,
 	}
 	case CVI_MIPI_GPIO_INIT:
 	{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 		struct platform_device *pdev;
+#endif
 		struct snsr_rst_gpio_s sns_gpio;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 		pdev = to_platform_device(_dev);
+#endif
 
 		if (from_user) {
 			if (copy_from_user(&sns_gpio, (void *)arg, sizeof(sns_gpio))) {
@@ -2770,7 +2814,11 @@ static long _cif_ioctl(struct cvi_cif_dev *dev, unsigned int cmd,
 			}
 		} else
 			memcpy(&sns_gpio, (void *)arg, sizeof(sns_gpio));
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+		return cif_gpio_init(dev, sns_gpio);
+#else
 		return cif_gpio_init(pdev, sns_gpio);
+#endif
 	}
 	case CVI_MIPI_SET_SNS_I2C_INFO:
 	{
@@ -3035,9 +3083,20 @@ static int _init_resource(struct platform_device *pdev)
 
 	/* reset pin */
 	for (i = 0; i < MAX_LINK_NUM; ++i) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+		struct gpio_desc *reset_gpio;
+#endif
 		link = &dev->link[i];
 		link->dev = &pdev->dev;
 		link->mac_clk = RX_MAC_CLK_400M;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+		reset_gpio = devm_gpiod_get_index_optional(&pdev->dev,
+							 "snsr-reset", i, GPIOD_ASIS);
+		if (IS_ERR(reset_gpio))
+			return dev_err_probe(&pdev->dev, PTR_ERR(reset_gpio),
+					     "cannot get sensor reset GPIO\n");
+		link->snsr_reset = reset_gpio;
+#else
 		if(!lt_int)
 			link->snsr_rst_pin = of_get_named_gpio_flags(pdev->dev.of_node,
 					"snsr-reset", i, &link->snsr_rst_pol);
@@ -3054,6 +3113,7 @@ static int _init_resource(struct platform_device *pdev)
 
 		dev_info(&pdev->dev, "rst_pin = %d, pol = %d\n",
 			link->snsr_rst_pin, link->snsr_rst_pol);
+#endif
 	}
 
 	/* sw reset */
@@ -3253,7 +3313,9 @@ static int dbg_hdler(struct cvi_cif_dev *dev, char const *input)
 {
 	struct cvi_link *link = &dev->link[0];
 	struct cif_ctx *ctx;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 0)
 	int reset;
+#endif
 	u32 num;
 	u8 str[80] = {0};
 	u8 t = 0;
@@ -3291,6 +3353,9 @@ static int dbg_hdler(struct cvi_cif_dev *dev, char const *input)
 		if (a > MAX_LINK_NUM)
 			return -EINVAL;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
+		return cif_reset_snsr_gpio(dev, a, v);
+#else
 		link = &dev->link[a];
 		ctx = &link->cif_ctx;
 
@@ -3332,6 +3397,7 @@ static int dbg_hdler(struct cvi_cif_dev *dev, char const *input)
 		else
 			gpio_direction_output(link->snsr_rst_pin, !reset);
 		break;
+#endif
 	case 3:
 		/* sensor enable */
 		if (a >= MAX_LINK_NUM)
