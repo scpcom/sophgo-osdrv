@@ -613,9 +613,10 @@ int cvi_gdc_init(struct cvi_dwa_vdev *wdev)
 				   "gdc_work");
 
 	if (IS_ERR(wdev->thread)) {
-		CVI_TRACE_DWA(CVI_DBG_ERR, "failed to create gdc thread\n");
+		ret = PTR_ERR(wdev->thread);
 		wdev->thread = NULL;
-		return -1;
+		CVI_TRACE_DWA(CVI_DBG_ERR, "failed to create gdc kthread: %d\n", ret);
+		return ret;
 	}
 
 	// Same as sched_set_fifo in linux 5.x
@@ -624,9 +625,14 @@ int cvi_gdc_init(struct cvi_dwa_vdev *wdev)
 #else
 	tsk.sched_priority = MAX_RT_PRIO / 2;
 #endif
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+	/* Exported helper preserves the vendor FIFO priority of 50. */
+	sched_set_fifo(wdev->thread);
+#else
 	ret = sched_setscheduler(wdev->thread, SCHED_FIFO, &tsk);
 	if (ret)
 		CVI_TRACE_DWA(CVI_DBG_WARN, "gdc thread priority update failed: %d\n", ret);
+#endif
 
 	gdc_proc_ctx = wdev->shared_mem;
 
@@ -993,14 +999,22 @@ s32 dwa_start_handler(struct cvi_dwa_vdev *wdev_dwa)
 #else
 	tsk.sched_priority = MAX_RT_PRIO / 2;
 #endif
+
+	if (IS_ERR(wdev_dwa->thread)) {
+		ret = PTR_ERR(wdev_dwa->thread);
+		wdev_dwa->thread = NULL;
+		CVI_TRACE_DWA(CVI_DBG_ERR, "failed to create gdc kthread: %d\n", ret);
+		return ret;
+	}
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+	/* Exported helper preserves the vendor FIFO priority of 50. */
+	sched_set_fifo(wdev_dwa->thread);
+#else
 	ret = sched_setscheduler(wdev_dwa->thread, SCHED_FIFO, &tsk);
 	if (ret)
 		CVI_TRACE_DWA(CVI_DBG_WARN, "gdc thread priority update failed: %d\n", ret);
-
-	if (IS_ERR(wdev_dwa->thread)) {
-		CVI_TRACE_DWA(CVI_DBG_ERR, "failed to create gdc kthread\n");
-		return -1;
-	}
+#endif
 
 	return ret;
 }
