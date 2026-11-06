@@ -1,15 +1,19 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <linux/interrupt.h>
 #include <linux/of_platform.h>
 #include <linux/of_reserved_mem.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 1, 0)
 #include <linux/of_gpio.h>
+#else
+#include <linux/gpio.h>
+#endif
 #include <linux/platform_device.h>
 #include <linux/delay.h>
 #include <linux/iommu.h>
 #include <linux/debugfs.h>
 #include <linux/i2c.h>
-#include <linux/version.h>
 
 #include "linux/vi_snsr.h"
 #include "snsr_i2c.h"
