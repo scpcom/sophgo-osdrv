@@ -6464,9 +6464,17 @@ int cvitest_venc_main(int argc, char **argv)
 	struct task_struct *thread_id[MAX_NUM_INSTANCE];
 	int ret = 0;
 	int i = 0;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+	struct sched_attr param = {
+				.size = sizeof(param),
+				.sched_policy = SCHED_RR,
+				.sched_priority = 80,
+			};
+#else
 	struct sched_param param = {
 				.sched_priority = 80,
 			};
+#endif
 
 	for (i = 0; i < MAX_NUM_INSTANCE; i++) {
 		pEncConfig[i] = osal_malloc(sizeof(TestEncConfig));
@@ -6510,7 +6518,12 @@ int cvitest_venc_main(int argc, char **argv)
 			ret = 0;
 			goto BAILOUT;
 		}
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+		if (sched_setattr_nocheck(thread_id[i], &param))
+			pr_warn("cvi vcodec: failed to set worker RT priority\n");
+#else
 		sched_setscheduler(thread_id[i], SCHED_RR, &param);
+#endif
 	}
 
 	for (i = 0; i < gNumInstance; i++) {

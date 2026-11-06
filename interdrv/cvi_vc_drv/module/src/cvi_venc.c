@@ -3098,10 +3098,17 @@ CVI_S32 CVI_VENC_StartRecvFrame(VENC_CHN VeChn,
 	MUTEX_UNLOCK(&pChnHandle->chnMutex);
 
 	if (IF_WANNA_ENABLE_BIND_MODE()) {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+		struct sched_attr param = {
+			.size = sizeof(param),
+			.sched_policy = SCHED_RR,
+			.sched_priority = 95,
+		};
+#else
 		struct sched_param param = {
 			.sched_priority = 95,
 		};
-
+#endif
 		pVbCtx->currBindMode = CVI_TRUE;
 		pChnHandle->bChnEnable = CVI_TRUE;
 		if (!pVbCtx->thread) {
@@ -3130,7 +3137,12 @@ CVI_S32 CVI_VENC_StartRecvFrame(VENC_CHN VeChn,
 				pVbCtx->thread = NULL;
 				return CVI_FAILURE;
 			}
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+			if (sched_setattr_nocheck(pVbCtx->thread, &param))
+				pr_warn("cvi venc: failed to set worker RT priority\n");
+#else
 			sched_setscheduler(pVbCtx->thread, SCHED_RR, &param);
+#endif
 			SEMA_POST(&pChnVars->sem_send);
 		}
 	}
@@ -6981,9 +6993,17 @@ CVI_S32 cvi_VENC_CB_SendFrame(CVI_S32 VpssGrp, CVI_S32 VpssChn, CVI_S32 VpssChn1
 			pChnHandle->sbm_state = VENC_SBM_STATE_IDLE;
 
 			if (!pSbmHandle->pSBMSendFrameThread) {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+				struct sched_attr param = {
+					.size = sizeof(param),
+					.sched_policy = SCHED_RR,
+					.sched_priority = 99,
+				};
+#else
 				struct sched_param param = {
 					.sched_priority = 99,
 				};
+#endif
 
 				pSbmHandle->pSBMSendFrameThread = kthread_run(venc_sbm_send_frame_thread,
 								(CVI_VOID *)NULL, "cvitask_vc_sb");
@@ -6994,7 +7014,13 @@ CVI_S32 cvi_VENC_CB_SendFrame(CVI_S32 VpssGrp, CVI_S32 VpssChn, CVI_S32 VpssChn1
 					pSbmHandle->pSBMSendFrameThread = NULL;
 					goto SBM_CB_FAILURE;
 				}
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+				if (sched_setattr_nocheck(pSbmHandle->pSBMSendFrameThread, &param))
+					pr_warn("cvi venc: failed to set worker RT priority\n");
+#else
 				sched_setscheduler(pSbmHandle->pSBMSendFrameThread, SCHED_RR, &param);
+#endif
+
 			}
 		}
 

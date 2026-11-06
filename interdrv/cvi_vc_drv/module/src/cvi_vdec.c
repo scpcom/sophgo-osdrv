@@ -1124,9 +1124,17 @@ CVI_S32 CVI_VDEC_SendStream(VDEC_CHN VdChn, const VDEC_STREAM_S *pstStream,
 	cviGetDebugConfigFromDecProc();
 
 	if (IF_WANNA_ENABLE_BIND_MODE()) {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+		struct sched_attr param = {
+			.size = sizeof(param),
+			.sched_policy = SCHED_RR,
+			.sched_priority = 95,
+		};
+#else
 		struct sched_param param = {
 			.sched_priority = 95,
 		};
+#endif
 		pVbCtx->currBindMode = CVI_TRUE;
 		pVbCtx->thread = kthread_run(vdec_event_handler,
 				(CVI_VOID *) pChnHandle, "vdec_handler%d", VdChn);
@@ -1138,7 +1146,12 @@ CVI_S32 CVI_VDEC_SendStream(VDEC_CHN VdChn, const VDEC_STREAM_S *pstStream,
 			return CVI_FAILURE;
 		}
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+		if (sched_setattr_nocheck(pVbCtx->thread, &param))
+			pr_warn("cvi vdec: failed to set worker RT priority\n");
+#else
 		sched_setscheduler(pVbCtx->thread, SCHED_RR, &param);
+#endif
 	}
 
 
