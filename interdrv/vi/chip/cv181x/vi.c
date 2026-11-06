@@ -1,7 +1,11 @@
 #include <vi.h>
 #include <vi_interfaces.h>
 #include <linux/cvi_base_ctx.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 1, 0)
 #include <linux/of_gpio.h>
+#else
+#include <linux/gpio.h>
+#endif
 #include <proc/vi_dbg_proc.h>
 #include <proc/vi_proc.h>
 #include <proc/vi_isp_proc.h>
