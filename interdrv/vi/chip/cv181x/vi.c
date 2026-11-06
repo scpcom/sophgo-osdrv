@@ -4808,7 +4808,16 @@ void vi_destory_thread(struct cvi_vi_dev *vdev, enum E_VI_TH th_id)
 
 int vi_create_thread(struct cvi_vi_dev *vdev, enum E_VI_TH th_id)
 {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+	/* Preserve the vendor capture-thread priority for this kernel-owned task. */
+	struct sched_attr attr = {
+		.size = sizeof(attr),
+		.sched_policy = SCHED_FIFO,
+		.sched_priority = MAX_RT_PRIO - 10,
+	};
+#else
 	struct sched_param param;
+#endif
 	int rc = 0;
 
 	if (th_id < 0 || th_id >= E_VI_TH_MAX) {
@@ -4818,8 +4827,6 @@ int vi_create_thread(struct cvi_vi_dev *vdev, enum E_VI_TH th_id)
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 	param.sched_priority = MAX_USER_RT_PRIO - 10;
-#else
-	param.sched_priority = MAX_RT_PRIO - 10;
 #endif
 
 	if (vdev->vi_th[th_id].w_thread == NULL) {
@@ -4858,7 +4865,16 @@ int vi_create_thread(struct cvi_vi_dev *vdev, enum E_VI_TH th_id)
 			return rc;
 		}
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+		rc = sched_setattr_nocheck(vdev->vi_th[th_id].w_thread, &attr);
+		if (rc) {
+			kthread_stop(vdev->vi_th[th_id].w_thread);
+			vdev->vi_th[th_id].w_thread = NULL;
+			return rc;
+		}
+#else
 		sched_setscheduler(vdev->vi_th[th_id].w_thread, SCHED_FIFO, &param);
+#endif
 
 		vdev->vi_th[th_id].flag = 0;
 		atomic_set(&vdev->vi_th[th_id].thread_exit, 0);
