@@ -13,6 +13,7 @@
 
 #include <linux/delay.h>
 #include <linux/interrupt.h>
+#include <linux/module.h>
 #include <linux/string.h>
 #include <linux/timer.h>
 #include <linux/uaccess.h>
@@ -27,7 +28,14 @@
 #include <linux/sched/signal.h>
 #endif
 #define IVE_TOP_16_8_8(val, a, b, c) ((val) | (a << 16) | (b << 8) | (c))
-#define TIMEOUT_MS (1)
+/* How long an operation may run when its caller sleeps until the engine's
+ * interrupt: as long as the polling path waits (10000 x 10 us). A full HD
+ * SAD takes about 7 ms, longer than one tick. User space reads the
+ * parameter to tell a driver that waits long enough. */
+static unsigned int timeout_ms = 100;
+module_param(timeout_ms, uint, 0444);
+MODULE_PARM_DESC(timeout_ms, "Longest wait for an operation's interrupt (ms)");
+#define TIMEOUT_MS (timeout_ms)
 
 char IMG_FMT[16][32] = {
 	"YUV420 planar",
