@@ -28,7 +28,9 @@
 #include <linux/uaccess.h>
 #include <linux/version.h>
 #include <linux/wait.h>
+#if defined(CONFIG_ARCH_CVITEK)
 #include <linux/streamline_annotate.h>
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 #include <linux/sched/signal.h>
 #endif
@@ -550,7 +552,9 @@ int vpu_wait_interrupt(vpudrv_intr_info_t *p_intr_info)
 		return ret;
 	}
 
+#if defined(CONFIG_ARCH_CVITEK)
 	ANNOTATE_CHANNEL_COLOR(1, ANNOTATE_GREEN, "vcodec end");
+#endif
 	if (signal_pending(current)) {
 		ret = -ERESTARTSYS;
 		return ret;
@@ -573,8 +577,10 @@ int vpu_wait_interrupt(vpudrv_intr_info_t *p_intr_info)
 	enable_irq(pvctx->s_vcodec_irq);
 #endif
 
+#if defined(CONFIG_ARCH_CVITEK)
 	ANNOTATE_CHANNEL_END(1);
 	ANNOTATE_NAME_CHANNEL(1, 1, "vcodec end");
+#endif
 
 	return ret;
 }
