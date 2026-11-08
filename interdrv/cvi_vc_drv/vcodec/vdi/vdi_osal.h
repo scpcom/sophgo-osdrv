@@ -598,7 +598,7 @@ int GetLogDecor(void);
 #endif
 
 // log print
-void LogMsg(int level, const char *format, ...);
+__printf(2, 3) void LogMsg(int level, const char *format, ...);
 
 // math
 int math_div(int number, int denom);

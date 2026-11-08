@@ -5131,13 +5131,6 @@ void rcLibUpdateRc(CodecInst *pCodecInst, EncOutputInfo *info, int avg_qp,
 {
 	EncInfo *pEncInfo = &pCodecInst->CodecInfo->encInfo;
 	stRcInfo *pRcInfo = &pCodecInst->rcInfo;
-#ifdef AUTO_FRM_SKIP_DROP
-	int frame_skip;
-	frame_skip = pEncInfo->frm_rc.rc_pic.frame_skip;
-#else
-	frame_skip = 0;
-#endif
-
 	CVI_VC_RC("frame_drop = %d\n", pEncInfo->frm_rc.rc_pic.frame_drop);
 
 	if (pEncInfo->frm_rc.rc_pic.frame_drop) {

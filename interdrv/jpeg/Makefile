@@ -5,7 +5,6 @@ include $(PWD)/../Makefile.interdrv.param
 
 HAL_PATH = hal/$(CVIARCH_L)
 
-CHIP_TYPE = CHIP_BM1880
 SUB_TYPE = ASIC_EVB
 
 # Add your debugging flag (or not) to CFLAGS
@@ -15,7 +14,7 @@ else
   DEBFLAGS = # Optimization is selected by platform KCFLAGS.
 endif
 
-ccflags-y += $(DEBFLAGS) -I$(PWD) -I$(LDDINCDIR) -D$(CHIP_TYPE) -D$(SUB_TYPE) -DUSE_KERNEL_MODE -Wno-date-time -Werror
+ccflags-y += $(DEBFLAGS) -I$(PWD) -D$(SUB_TYPE) -DUSE_KERNEL_MODE -Wno-date-time -Werror
 
 KBUILD_EXTRA_SYMBOLS += $(PWD)/../vcodec/Module.symvers
 

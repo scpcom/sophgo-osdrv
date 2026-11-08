@@ -7,7 +7,7 @@ HAL_PATH = hal/$(CVIARCH_L)
 
 ccflags-y += -I$(PWD)/../include/common/uapi/ -I$(PWD)/../include/chip/$(CVIARCH_L)/uapi/
 ccflags-y += -I$(PWD)/../include/common/kapi/
-ccflags-y += -I$(PWD) -I$(LDDINCDIR) -DCNM_FPGA_PLATFORM -DCNM_FPGA_PCI_INTERFACE -DCVI_H26X_USE_ION_FW_BUFFER -DUSE_KERNEL_MODE -Wno-date-time -Werror
+ccflags-y += -I$(PWD) -DCNM_FPGA_PCI_INTERFACE -DCVI_H26X_USE_ION_FW_BUFFER -DUSE_KERNEL_MODE -Wno-date-time -Werror
 
 ifeq ($(OSDRV_IN_TREE),)
 PWD	:= $(shell pwd)

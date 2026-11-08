@@ -2418,7 +2418,6 @@ cmd_err:
  */
 static CVI_S32 vpss_try_schedule_online(struct vpss_handler_ctx *ctx)
 {
-	MMF_CHN_S chn = {.enModId = CVI_ID_VPSS, .s32DevId = VPSS_ONLINE_GRP_0, .s32ChnId = 0};
 	CVI_U8 workingMask = ctx->workingMask;
 	CVI_U8 u8ChnMask = 0;
 	VPSS_GRP workingGrp = 0;
@@ -2450,7 +2449,6 @@ static CVI_S32 vpss_try_schedule_online(struct vpss_handler_ctx *ctx)
 		// sc's mask
 		u8ChnMask = getWorkMask(vpss_ctx);
 
-		chn.s32DevId = workingGrp;
 		vc_sbm_enabled = _is_vc_sbm_enabled(workingGrp, vpss_ctx);
 
 		// commit hw settings of this vpss-grp.
@@ -2729,7 +2727,6 @@ static CVI_VOID vpss_sbm_err_handle(struct vpss_handler_ctx *ctx)
 static CVI_VOID vpss_handle_online(struct vpss_handler_ctx *ctx)
 {
 	VPSS_GRP workingGrp;
-	struct cvi_vpss_ctx *vpss_ctx;
 	CVI_U64 duration64;
 	struct timespec64 time;
 	CVI_U32 state;
@@ -2749,7 +2746,6 @@ static CVI_VOID vpss_handle_online(struct vpss_handler_ctx *ctx)
 		return;
 	}
 
-	vpss_ctx = &ctx->vpssCtxWork[workingGrp];
 	state = vpssExtCtx[workingGrp].grp_state;
 	CVI_TRACE_VPSS(CVI_DBG_DEBUG, "ctx[%d] event=0x%x, Grp(%d) state=0x%x\n",
 			ctx->u8VpssDev, events, workingGrp,
@@ -3241,15 +3237,9 @@ static CVI_S32 _vpss_update_rotation_mesh(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, RO
 static CVI_S32 _vpss_update_ldc_mesh(VPSS_GRP VpssGrp, VPSS_CHN VpssChn,
 	const VPSS_LDC_ATTR_S *pstLDCAttr, ROTATION_E enRotation, CVI_U64 paddr)
 {
-	CVI_U64 paddr_old;
 	struct cvi_gdc_mesh *pmesh = &mesh[VpssGrp][VpssChn];
 
 	mutex_lock(&pmesh->lock);
-	if (pmesh->paddr) {
-		paddr_old = pmesh->paddr;
-	} else {
-		paddr_old = 0;
-	}
 	pmesh->paddr = paddr;
 	pmesh->vaddr = NULL;
 	mutex_unlock(&pmesh->lock);
@@ -3259,9 +3249,6 @@ static CVI_S32 _vpss_update_ldc_mesh(VPSS_GRP VpssGrp, VPSS_CHN VpssChn,
 	vpssCtx[VpssGrp]->stChnCfgs[VpssChn].enRotation = enRotation;
 	mutex_unlock(&vpssCtx[VpssGrp]->lock);
 	//mutex_unlock(&pmesh->lock);
-
-	//if (paddr_old)
-	//	CVI_SYS_IonFree(paddr_old, vaddr_old);
 
 	CVI_TRACE_VPSS(CVI_DBG_DEBUG, "Grp(%d) Chn(%d) mesh base(0x%llx)\n"
 		      , VpssGrp, VpssChn, (unsigned long long)paddr);
@@ -5365,7 +5352,6 @@ int vpss_set_grp_sbm(struct vpss_grp_sbm_cfg *cb_cfg)
 	u8 sb_nb = cb_cfg->sb_nb;
 	CVI_U32 ion_size = cb_cfg->ion_size;
 	struct vpss_grp_sbm_cfg *sbm_cfg;
-	VPSS_GRP_ATTR_S *pstGrpAttr;
 	CVI_S32 ret;
 	CVI_U32 *ion_vaddr = NULL;
 	CVI_U64 ion_paddr = 0;
@@ -5406,7 +5392,6 @@ int vpss_set_grp_sbm(struct vpss_grp_sbm_cfg *cb_cfg)
 		return CVI_FAILURE;
 	}
 
-	pstGrpAttr = &vpssCtx[VpssGrp]->stGrpAttr;
 
 	sprintf(ion_name, "VpssGrp%dWrapBuf", VpssGrp);
 	ret = sys_ion_alloc(&ion_paddr, (void *)&ion_vaddr, ion_name, ion_size, true);

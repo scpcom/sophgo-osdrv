@@ -1883,7 +1883,7 @@ CVI_S32 rgn_update_canvas(RGN_HANDLE Handle)
 	struct cvi_rgn_ctx *ctx = NULL;
 	CVI_S32 ret = -EINVAL;
 	CVI_S32 s32Ret;
-	CVI_U32 proc_idx;
+	CVI_U32 proc_idx __maybe_unused;
 
 	s32Ret = CHECK_RGN_HANDLE(&ctx, Handle);
 	if (s32Ret != CVI_SUCCESS)

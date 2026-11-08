@@ -705,7 +705,7 @@ int cviJpgEncOpen(CVIJpgHandle *pHandle, CVIEncConfigParam *pConfig)
 #endif
 #endif
 	Uint32 framebufWidth = 0;
-	Uint32 framebufHeight = 0;
+	Uint32 framebufHeight __maybe_unused = 0;
 	Uint32 framebufStride = 0;
 	int srcFrameFormat = 0;
 	Uint32 framebufFormat = FORMAT_420;

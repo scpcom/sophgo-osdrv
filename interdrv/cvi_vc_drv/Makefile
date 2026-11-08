@@ -93,7 +93,7 @@ ccflags-y += -I$(PWD)/../sys/common/ -I$(PWD)/../sys/common/uapi
 ccflags-y += -I$(srctree)/drivers/tee
 ccflags-y += -I$(srctree)/drivers/staging/android
 ccflags-y += -I$(PWD)/../base/$(CVIARCH_L)
-ccflags-y += -I$(LDDINCDIR) -Wno-date-time -Wno-error=date-time
+ccflags-y += -Wno-date-time -Wno-error=date-time
 ccflags-y += $(VCODEC_DRIVER_HEADER)
 ccflags-y += -I$(PWD)/../include/
 ccflags-y += -DUSE_KERNEL_MODE -DCVI_H26X_USE_ION_MEM -DCVI_JPG_USE_ION_MEM -DBITSTREAM_ION_CACHED_MEM -DMJPEG_INTERFACE_API -DCVI_H26X_ES_BUFFER_QUEUE_ENABLE -DCVI_H26X_USE_ION_FW_BUFFER -DENV_SET_ADDR_REMAP
@@ -187,7 +187,7 @@ soph_vc_driver-objs :=	$(VCODEC_DRIVER_PATH)/sample/main_enc_cvitest.o	\
 
 VCODEC_DRIVER_DEFINES = -DUSE_KERNEL_MODE -DCVI_H26X_USE_ION_MEM -DBITSTREAM_ION_CACHED_MEM -DCVI_JPG_USE_ION_MEM -DBITSTREAM_ION_CACHED_MEM -DMJPEG_INTERFACE_API -DCVI_H26X_ES_BUFFER_QUEUE_ENABLE
 
-ccflags-y += $(PWD) -I$(LDDINCDIR) $(VCODEC_DRIVER_HEADER) $(VCODEC_DRIVER_DEFINES) -Wno-date-time
+ccflags-y += $(PWD) $(VCODEC_DRIVER_HEADER) $(VCODEC_DRIVER_DEFINES) -Wno-date-time
 
 ifneq ($(OSDRV_IN_TREE),)
 PWD	:= $(shell pwd)

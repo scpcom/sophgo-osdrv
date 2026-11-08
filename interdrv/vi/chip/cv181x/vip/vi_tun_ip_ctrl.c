@@ -41,7 +41,6 @@ void vi_tuning_gamma_ips_update(
 	u8 tun_idx = 0;
 	static int stop_update_gamma_ip = -1;
 	struct cvi_vip_isp_post_cfg     *post_cfg;
-	struct cvi_vip_isp_post_tun_cfg *post_tun;
 
 	struct cvi_vip_isp_ygamma_config  *ygamma_cfg;
 	struct cvi_vip_isp_gamma_config   *gamma_cfg;
@@ -53,7 +52,6 @@ void vi_tuning_gamma_ips_update(
 	if ((tun_idx >= TUNING_NODE_NUM) || (post_cfg->tun_update[tun_idx] == 0))
 		return;
 
-	post_tun = &post_cfg->tun_cfg[tun_idx];
 
 	if (tuning_dis[3]) {
 		if (stop_update_gamma_ip > 0)
@@ -83,7 +81,6 @@ void vi_tuning_dci_update(
 	u8 tun_idx = 0;
 	static int stop_update_dci = -1;
 	struct cvi_vip_isp_post_cfg     *post_cfg;
-	struct cvi_vip_isp_post_tun_cfg *post_tun;
 	struct cvi_vip_isp_dci_config   *dci_cfg;
 
 	post_cfg = (struct cvi_vip_isp_post_cfg *)tuning_buf_addr.post_vir[raw_num];
@@ -92,7 +89,6 @@ void vi_tuning_dci_update(
 	if ((tun_idx >= TUNING_NODE_NUM) || (post_cfg->tun_update[tun_idx] == 0))
 		return;
 
-	post_tun = &post_cfg->tun_cfg[tun_idx];
 
 	if (tuning_dis[3]) {
 		if (stop_update_dci > 0)
@@ -116,7 +112,6 @@ void vi_tuning_cacp_update(
 	u8 tun_idx = 0;
 	static int stop_update_cacp = -1;
 	struct cvi_vip_isp_post_cfg     *post_cfg;
-	struct cvi_vip_isp_post_tun_cfg *post_tun;
 	struct cvi_vip_isp_cacp_config   *cacp_cfg;
 
 	post_cfg = (struct cvi_vip_isp_post_cfg *)tuning_buf_addr.post_vir[raw_num];
@@ -125,7 +120,6 @@ void vi_tuning_cacp_update(
 	if ((tun_idx >= TUNING_NODE_NUM) || (post_cfg->tun_update[tun_idx] == 0))
 		return;
 
-	post_tun = &post_cfg->tun_cfg[tun_idx];
 
 	if (tuning_dis[3]) {
 		if (stop_update_cacp > 0)
@@ -149,7 +143,6 @@ void vi_tuning_drc_update(
 	u8 tun_idx = 0;
 	static int stop_update_drc = -1;
 	struct cvi_vip_isp_post_cfg     *post_cfg;
-	struct cvi_vip_isp_post_tun_cfg *post_tun;
 	struct cvi_vip_isp_drc_config   *drc_cfg;
 
 	post_cfg = (struct cvi_vip_isp_post_cfg *)tuning_buf_addr.post_vir[raw_num];
@@ -159,7 +152,6 @@ void vi_tuning_drc_update(
 	if ((tun_idx >= TUNING_NODE_NUM) || (post_cfg->tun_update[tun_idx] == 0))
 		return;
 
-	post_tun = &post_cfg->tun_cfg[tun_idx];
 
 	if (tuning_dis[3]) {
 		if (stop_update_drc > 0)
@@ -183,7 +175,6 @@ void vi_tuning_clut_update(
 	int ret;
 	static int stop_update_clut = -1;
 	struct cvi_vip_isp_post_cfg     *post_cfg;
-	struct cvi_vip_isp_post_tun_cfg *post_tun;
 	struct cvi_vip_isp_clut_config  *clut_cfg;
 	unsigned long flags;
 
@@ -196,7 +187,6 @@ void vi_tuning_clut_update(
 	if ((tun_idx >= TUNING_NODE_NUM) || (post_cfg->tun_update[tun_idx] == 0))
 		return;
 
-	post_tun = &post_cfg->tun_cfg[tun_idx];
 
 	if (tuning_dis[3]) {
 		if (stop_update_clut > 0)

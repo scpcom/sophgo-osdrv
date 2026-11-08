@@ -122,13 +122,13 @@ CVI_S32 vb_print_pool(VB_POOL poolId)
 	mutex_lock(&vbPool[poolId].lock);
 	hash_for_each_safe(vb_hash, bkt, tmp, vb, node) {
 		if (vb->vb_pool == poolId) {
-			sprintf(str, "Pool[%d] vb paddr(%#llx) usr_cnt(%d) /",
+			snprintf(str, sizeof(str), "Pool[%d] vb paddr(%#llx) usr_cnt(%d) /",
 				vb->vb_pool, vb->phy_addr, vb->usr_cnt.counter);
 
 			for (i = 0; i < CVI_ID_BUTT; ++i) {
 				if (vb->mod_ids & BIT(i)) {
-					strncat(str, sys_get_modname(i), sizeof(str));
-					strcat(str, "/");
+					strlcat(str, sys_get_modname(i), sizeof(str));
+					strlcat(str, "/", sizeof(str));
 				}
 			}
 			CVI_TRACE_BASE(CVI_BASE_DBG_INFO, "%s\n", str);

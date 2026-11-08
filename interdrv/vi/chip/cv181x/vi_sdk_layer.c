@@ -169,7 +169,6 @@ void vi_fill_dis_info(struct vb_s *blk)
 {
 	CVI_U8 snr_num = blk->buf.dev_num;
 	CVI_U32 frm_num = blk->buf.frm_num;
-	CVI_BOOL isSetDisInfo = false;
 	static struct crop_size_s dis_i[VI_MAX_DEV_NUM] = { 0 };
 
 	if (gViCtx->isDisEnable[snr_num]) {
@@ -180,7 +179,6 @@ void vi_fill_dis_info(struct vb_s *blk)
 		if (dis_flag[snr_num] == 1) {
 			if (dis_i_frm_num[snr_num] == frm_num) {
 				dis_i[snr_num] = dis_i_data[snr_num];
-				isSetDisInfo = true;
 			}
 
 			vi_pr(VI_DBG, "fill dis snr(%d), frm(%d), dis_frm(%d), crop(%d, %d, %d, %d)\n"
@@ -1125,15 +1123,9 @@ static CVI_S32 _vi_update_rotation_mesh(VI_CHN ViChn, ROTATION_E enRotation)
 static CVI_S32 _vi_update_ldc_mesh(VPSS_CHN ViChn, const VI_LDC_ATTR_S *pstLDCAttr
 	, ROTATION_E enRotation, CVI_U64 paddr)
 {
-	CVI_U64 paddr_old;
 	struct cvi_gdc_mesh *pmesh = &g_vi_mesh[ViChn];
 
 	mutex_lock(&pmesh->lock);
-	if (pmesh->paddr) {
-		paddr_old = pmesh->paddr;
-	} else {
-		paddr_old = 0;
-	}
 	pmesh->paddr = paddr;
 	pmesh->vaddr = NULL;
 

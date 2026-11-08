@@ -278,7 +278,7 @@ static void DisplayDecodedInformationForHevc(DecHandle handle, Uint32 frameNo,
 #endif
 		{
 			VLOG(logLevel,
-			     "%02d %5d %d %4d(%4d) %3d %2d(%2d) %2d(%2d) %7d %08x %08x %08x %08x %08x %4dx%-4d %4d %4d %d\n",
+			     "%02d %5d %d %4d(%4d) %3d %2d(%2d) %2d(%2d) %7d %08x %08x %08x %08llx %08llx %4dx%-4d %4d %4d %d\n",
 			     handle->instIndex, frameNo, decodedInfo->picType,
 			     decodedInfo->h265Info.decodedPOC,
 			     decodedInfo->h265Info.displayPOC,
@@ -447,7 +447,7 @@ static void Wave4DisplayEncodedInformation(EncHandle handle,
 	} else {
 #ifdef REPORT_PIC_SUM_VAR
 		VLOG(INFO,
-		     "HEVC %02d %5d %5d %5d    %08x  %08x %8x     %2d        %2d    %8d   %8d\n",
+		     "HEVC %02d %5d %5d %5d    %08llx  %08llx %8x     %2d        %2d    %8d   %8d\n",
 		     handle->instIndex, encodedInfo->encPicCnt,
 		     encodedInfo->picType, encodedInfo->reconFrameIndex,
 		     encodedInfo->rdPtr, encodedInfo->wrPtr,
@@ -457,7 +457,7 @@ static void Wave4DisplayEncodedInformation(EncHandle handle,
 		     encodedInfo->sumPicVar);
 #else
 		VLOG(INFO,
-		     "HEVC %02d %5d %5d %5d    %08x  %08x %8x     %2d        %2d    %8d\n",
+		     "HEVC %02d %5d %5d %5d    %08llx  %08llx %8x     %2d        %2d    %8d\n",
 		     handle->instIndex, encodedInfo->encPicCnt,
 		     encodedInfo->picType, encodedInfo->reconFrameIndex,
 		     encodedInfo->rdPtr, encodedInfo->wrPtr,
@@ -517,7 +517,7 @@ static void Coda9DisplayEncodedInformation(DecHandle handle, CodStd codec,
 		else
 			strPicType = picTypeArray[encodedInfo->picType];
 		// Print informations
-		VLOG(INFO, "AVC  %02d %5d %5s %5d    %08x %08x\n",
+		VLOG(INFO, "AVC  %02d %5d %5s %5d    %08llx %08llx\n",
 		     handle->instIndex, encodedInfo->encPicCnt, strPicType,
 		     encodedInfo->reconFrameIndex, encodedInfo->rdPtr,
 		     encodedInfo->wrPtr);

@@ -616,7 +616,6 @@ static int h26x_event_handler(CVI_VOID *data)
 	VENC_CHN VencChn;
 	venc_chn_vars *pChnVars = NULL;
 	//VENC_CHN_STATUS_S stStat;
-	venc_enc_ctx *pEncCtx;
 	CVI_S32 ret;
 	//CVI_S32 s32MilliSec = -1;
 	MMF_CHN_S chn = { .enModId = CVI_ID_VENC,
@@ -638,7 +637,6 @@ static int h26x_event_handler(CVI_VOID *data)
 	memset(&stVFrame, 0, sizeof(VIDEO_FRAME_INFO_S));
 
 	pChnVars = pChnHandle->pChnVars;
-	pEncCtx = &pChnHandle->encCtx;
 	pVbCtx = pChnHandle->pVbCtx;
 	VencChn = pChnHandle->VeChn;
 
@@ -1082,7 +1080,6 @@ static CVI_S32 cviInitChnCtx(VENC_CHN VeChn, const VENC_CHN_ATTR_S *pstAttr)
 {
 	CVI_S32 s32Ret = CVI_SUCCESS;
 	venc_chn_context *pChnHandle;
-	venc_sbm_context *pSbmhandle;
 	venc_enc_ctx *pEncCtx;
 
 	s32Ret = _cviVencInitCtxHandle();
@@ -1102,7 +1099,6 @@ static CVI_S32 cviInitChnCtx(VENC_CHN VeChn, const VENC_CHN_ATTR_S *pstAttr)
 	}
 
 	pChnHandle = handle->chn_handle[VeChn];
-	pSbmhandle = &handle->sbm_context;
 	pChnHandle->VeChn = VeChn;
 
 	MUTEX_INIT(&pChnHandle->chnMutex, 0);
@@ -3756,7 +3752,6 @@ CVI_S32 CVI_VENC_DestroyChn(VENC_CHN VeChn)
 	venc_sbm_context *pSbmHandle = NULL;
 	venc_enc_ctx *pEncCtx = NULL;
 	venc_chn_vars *pChnVars = NULL;
-	struct cvi_venc_vb_ctx *pVbCtx = NULL;
 	MMF_CHN_S chn = { .enModId = CVI_ID_VENC,
 			  .s32DevId = 0,
 			  .s32ChnId = 0};
@@ -3773,7 +3768,6 @@ CVI_S32 CVI_VENC_DestroyChn(VENC_CHN VeChn)
 	pSbmHandle = &handle->sbm_context;
 	pEncCtx = &pChnHandle->encCtx;
 	pChnVars = pChnHandle->pChnVars;
-	pVbCtx = pChnHandle->pVbCtx;
 
 	chn.s32ChnId = pChnHandle->VeChn;
 	base_mod_jobs_exit(chn, CHN_TYPE_IN);
@@ -6526,8 +6520,6 @@ static CVI_S32 cviSbSkipOneFrm(VENC_CHN VeChn, cviVencSbSetting *pstSbSetting)
 	venc_enc_ctx *pEncCtx;
 	CVI_S32 s32Count = 0;
 	CVI_S32 s32MaxCount = 0;
-	venc_chn_context *pChnHandleDummy = NULL;
-	venc_enc_ctx *pEncCtxDummy;
 	CVI_U32 u32Reg94;
 	CVI_U32 u32Reg90;
 	CVI_U32 u32Reg80;
@@ -6550,9 +6542,6 @@ static CVI_S32 cviSbSkipOneFrm(VENC_CHN VeChn, cviVencSbSetting *pstSbSetting)
 	pChnHandle = handle->chn_handle[VeChn];
 
 	pEncCtx = &pChnHandle->encCtx;
-
-	pChnHandleDummy = handle->chn_handle[2];
-	pEncCtxDummy = &pChnHandleDummy->encCtx;
 
 #if 0
 	memset(&stFrame, 0, sizeof(VIDEO_FRAME_INFO_S));
@@ -6807,7 +6796,6 @@ CVI_S32 cvi_VENC_CB_SendFrame(CVI_S32 VpssGrp, CVI_S32 VpssChn, CVI_S32 VpssChn1
 	MMF_CHN_S encChn = {0};
 	CVI_S32 priChn = -1;
 	CVI_S32 secChn = -1;
-	CVI_BOOL SnapEnable = false;
 	MMF_CHN_S chn = {.enModId = CVI_ID_VPSS, .s32DevId = VpssGrp, .s32ChnId = VpssChn};
 	MMF_BIND_DEST_S stBindDest;
 
@@ -6882,8 +6870,6 @@ CVI_S32 cvi_VENC_CB_SendFrame(CVI_S32 VpssGrp, CVI_S32 VpssChn, CVI_S32 VpssChn1
 		}
 	}
 
-	SnapEnable = false;
-
 	if (secChn != -1) {
 		s32Ret = check_chn_handle(secChn);
 		if (s32Ret == CVI_SUCCESS) {
@@ -6892,7 +6878,6 @@ CVI_S32 cvi_VENC_CB_SendFrame(CVI_S32 VpssGrp, CVI_S32 VpssChn, CVI_S32 VpssChn1
 
 			if (pSecChnHandle->jpgFrmSkipCnt > 0) {
 				stSbSetting.codec |= 0x4;
-				SnapEnable = true;
 			}
 		}
 	}
@@ -7044,7 +7029,6 @@ CVI_S32 cvi_VENC_CB_SkipFrame(CVI_S32 VpssGrp, CVI_S32 VpssChn, CVI_U32 srcImgHe
 	venc_chn_context *pChnHandle;
 	CVI_S32 priChn = -1;
 	CVI_S32 secChn = -1;
-	venc_enc_ctx *pEncCtx;
 #if BYPASS_SB_MODE == 0
 	cviVencSbSetting *pstSbSetting;
 #endif
@@ -7144,7 +7128,6 @@ CVI_S32 cvi_VENC_CB_SkipFrame(CVI_S32 VpssGrp, CVI_S32 VpssChn, CVI_U32 srcImgHe
 	}
 #endif
 
-	pEncCtx = &pChnHandle->encCtx;
 
 	if (pChnHandle->pChnAttr->stVencAttr.enType == PT_H265) {
 		stSbSetting.codec = 0x1; // h265
@@ -7302,7 +7285,6 @@ CVI_S32 CVI_VENC_SetSvcParam(VENC_CHN VeChn, VENC_SVC_PARAM_S *pstSvcParam)
 	CVI_S32 s32Ret = CVI_FAILURE;
 	venc_chn_context *pChnHandle;
 	venc_enc_ctx *pEncCtx;
-	PAYLOAD_TYPE_E enType;
 
 	s32Ret = check_chn_handle(VeChn);
 	if (s32Ret != CVI_SUCCESS) {
@@ -7335,7 +7317,6 @@ CVI_S32 CVI_VENC_SetSvcParam(VENC_CHN VeChn, VENC_SVC_PARAM_S *pstSvcParam)
 
 	pChnHandle = handle->chn_handle[VeChn];
 	pEncCtx = &pChnHandle->encCtx;
-	enType = pChnHandle->pChnAttr->stVencAttr.enType;
 
 	if (!pEncCtx->base.ioctl) {
 		CVI_VENC_ERR("base.ioctl is NULL\n");
@@ -7364,7 +7345,6 @@ CVI_S32 CVI_VENC_GetSvcParam(VENC_CHN VeChn, VENC_SVC_PARAM_S *pstSvcParam)
 {
 	CVI_S32 s32Ret = CVI_FAILURE;
 	venc_chn_context *pChnHandle;
-	PAYLOAD_TYPE_E enType;
 
 	s32Ret = check_chn_handle(VeChn);
 	if (s32Ret != CVI_SUCCESS) {
@@ -7379,7 +7359,6 @@ CVI_S32 CVI_VENC_GetSvcParam(VENC_CHN VeChn, VENC_SVC_PARAM_S *pstSvcParam)
 	}
 
 	pChnHandle = handle->chn_handle[VeChn];
-	enType = pChnHandle->pChnAttr->stVencAttr.enType;
 	memcpy(pstSvcParam, &pChnHandle->svcParam, sizeof(VENC_SVC_PARAM_S));
 	return CVI_SUCCESS;
 }

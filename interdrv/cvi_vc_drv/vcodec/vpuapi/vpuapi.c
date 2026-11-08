@@ -859,7 +859,6 @@ static RetCode DecRegisterFrameBuffer(DecHandle handle, FrameBuffer *bufArray,
 	CodecInst *pCodecInst;
 	DecInfo *pDecInfo;
 	Int32 i;
-	Uint32 size, totalAllocSize;
 	RetCode ret;
 	FrameBuffer *fb, nullFb;
 	vpu_buffer_t *vb;
@@ -937,22 +936,9 @@ static RetCode DecRegisterFrameBuffer(DecHandle handle, FrameBuffer *bufArray,
 			return ret;
 		}
 	}
-	totalAllocSize = 0;
 	if (pCodecInst->productId != PRODUCT_ID_960) {
 		pDecInfo->mapCfg.tiledBaseAddr = pDecInfo->frameBufPool[0].bufY;
 	}
-
-	if (numFbsForDecoding == 1) {
-		size = ProductCalculateFrameBufSize(
-			handle->productId, stride, height,
-			(TiledMapType)mapType, format,
-			pDecInfo->openParam.cbcrInterleave, &pDecInfo->dramCfg);
-	} else {
-		size = pDecInfo->frameBufPool[1].bufY -
-		       pDecInfo->frameBufPool[0].bufY;
-	}
-	size *= numFbsForDecoding;
-	totalAllocSize += size;
 
 	/* LinearMap */
 	if (pDecInfo->wtlEnable == TRUE || numFbsForWTL != 0) {
@@ -979,19 +965,6 @@ static RetCode DecRegisterFrameBuffer(DecHandle handle, FrameBuffer *bufArray,
 				return ret;
 			}
 		}
-		if (numFbsForWTL == 1) {
-			size = ProductCalculateFrameBufSize(
-				handle->productId, stride, height,
-				(TiledMapType)mapType, format,
-				pDecInfo->openParam.cbcrInterleave,
-				&pDecInfo->dramCfg);
-		} else {
-			size = pDecInfo->frameBufPool[numFbsForDecoding + 1]
-				       .bufY -
-			       pDecInfo->frameBufPool[numFbsForDecoding].bufY;
-		}
-		size *= numFbsForWTL;
-		totalAllocSize += size;
 	}
 
 	ret = ProductVpuRegisterFramebuffer(pCodecInst);

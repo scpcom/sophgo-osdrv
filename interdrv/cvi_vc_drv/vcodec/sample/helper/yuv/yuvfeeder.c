@@ -125,7 +125,7 @@ static BOOL yuvYuvFeeder_Feed(YuvFeederImpl *impl, Int32 coreIdx,
 	if (!osal_fread(pYuv, 1, frameSize, ctx->fp)) {
 		if (osal_feof(ctx->fp) == 0)
 			VLOG(ERR,
-			     "Yuv Data osal_fread failed file handle is 0x%x\n",
+			     "Yuv Data osal_fread failed file handle is %p\n",
 			     ctx->fp);
 		return FALSE;
 	}

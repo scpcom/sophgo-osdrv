@@ -1801,7 +1801,6 @@ inline CVI_S32 cvi_ive_go(struct cvi_ive_device *ndev, IVE_TOP_C *ive_top_c,
 {
 	CVI_S32 cnt = 0;
 	CVI_S32 ret = CVI_SUCCESS;
-	CVI_S32 int_mask = 0;
 	IVE_FILTEROP_REG_h10_C REG_h10;
 	IVE_FILTEROP_REG_h14_C REG_h14;
 	IVE_FILTEROP_REG_28_C  REG_28;
@@ -1811,27 +1810,18 @@ inline CVI_S32 cvi_ive_go(struct cvi_ive_device *ndev, IVE_TOP_C *ive_top_c,
 		done_mask = IVE_TOP_REG_FRAME_DONE_FILTEROP_WDMA_Y_MASK;
 
 	if (optype == MOD_HIST) {
-		int_mask = IVE_TOP_REG_INTR_STATUS_HIST_MASK;
 		ive_top_c->REG_94.reg_intr_en_hist = !bInstant;
 	} else if (optype == MOD_NCC) {
-		int_mask = IVE_TOP_REG_INTR_STATUS_NCC_MASK;
 		ive_top_c->REG_94.reg_intr_en_ncc = !bInstant;
 	} else if (optype == MOD_INTEG) {
-		int_mask = IVE_TOP_REG_INTR_STATUS_INTG_MASK;
 		ive_top_c->REG_94.reg_intr_en_intg = !bInstant;
 	} else if (optype == MOD_DMA) {
-		int_mask = IVE_TOP_REG_INTR_STATUS_DMAF_MASK;
 		ive_top_c->REG_94.reg_intr_en_dmaf = !bInstant;
 	} else if (optype == MOD_GRADFG) {
-		int_mask = IVE_TOP_REG_INTR_STATUS_FILTEROP_WDMA_Y_MASK;
 		ive_top_c->REG_94.reg_intr_en_filterop_wdma_y = !bInstant;
 	} else if (optype == MOD_SAD) {
-		int_mask = IVE_TOP_REG_INTR_STATUS_SAD_MASK;
 		ive_top_c->REG_94.reg_intr_en_sad = !bInstant;
 	} else {
-		int_mask = IVE_TOP_REG_INTR_STATUS_FILTEROP_ODMA_MASK |
-			   IVE_TOP_REG_INTR_STATUS_FILTEROP_WDMA_Y_MASK |
-			   IVE_TOP_REG_INTR_STATUS_FILTEROP_WDMA_C_MASK;
 		ive_top_c->REG_94.reg_intr_en_filterop_odma = !bInstant;
 		ive_top_c->REG_94.reg_intr_en_filterop_wdma_y = !bInstant;
 		ive_top_c->REG_94.reg_intr_en_filterop_wdma_c = !bInstant;
@@ -7373,7 +7363,6 @@ CVI_S32 cvi_ive_Map(struct cvi_ive_device *ndev, IVE_SRC_IMAGE_S *pstSrc,
 	CVI_U16 u16Word;
 	CVI_U16 *_pu16Ptr = NULL;
 	CVI_U8 *pu8Ptr = NULL;
-	CVI_U16 *pu16Ptr = NULL;
 	//DEFINE_IMG_IN_C(img_in_c);
 	IMG_IN_C img_in_c = _DEFINE_IMG_IN_C;
 	//DEFINE_IVE_FILTEROP_C(ive_filterop_c);
@@ -7417,7 +7406,6 @@ CVI_S32 cvi_ive_Map(struct cvi_ive_device *ndev, IVE_SRC_IMAGE_S *pstSrc,
 				 (void __user *)(unsigned long)pstMap->u64VirAddr,
 				 pstMap->u32Size);
 	pu8Ptr = (CVI_U8 *)_pu16Ptr;
-	pu16Ptr = (CVI_U16 *)_pu16Ptr;
 
 	ive_map_c.REG_1.reg_lut_prog_en = 1;
 	ive_map_c.REG_2.reg_lut_st_addr = 0;
@@ -7432,12 +7420,10 @@ CVI_S32 cvi_ive_Map(struct cvi_ive_device *ndev, IVE_SRC_IMAGE_S *pstSrc,
 			u16Word = (0x00ff & *pu8Ptr);
 			pu8Ptr++;
 		} else {
-			// u16Word = *pu16Ptr;
 			if (l >= 0xB0 && l <= 0xBF)
 				u16Word = 0x470 + (l - 0xB0);
 			else
 				u16Word = (0x00ff & l);
-			pu16Ptr++;
 		}
 		ive_map_c.REG_3.reg_lut_wdata = u16Word;
 		ive_map_c.REG_3.reg_lut_w1t = 1;
@@ -9504,7 +9490,7 @@ CVI_S32 cvi_ive_STCandiCorner(struct cvi_ive_device *ndev,
 				  CVI_BOOL bInstant)
 {
 	CVI_S32 ret = CVI_SUCCESS;
-	CVI_U32 u32SizeS8C2, u32SizeU8C1;
+	CVI_U32 u32SizeS8C2;
 	CVI_U16 u16MaxEig;
 	IVE_DST_IMAGE_S stEigenMap;
 	CVI_S8 as8Mask[25] = { 0, 0, 0, 0,  0, 0, -1, 0, 1, 0, 0, -2, 0,
@@ -9578,7 +9564,6 @@ CVI_S32 cvi_ive_STCandiCorner(struct cvi_ive_device *ndev,
 	}
 
 	u32SizeS8C2 = pstSrc->u32Height * pstSrc->u32Stride[0] * 2;
-	u32SizeU8C1 = pstSrc->u32Height * pstSrc->u32Stride[0];
 	stEigenMap.u64PhyAddr[0] =
 		pstStCandiCornerCtrl->stMem.u64PhyAddr + u32SizeS8C2;
 	stEigenMap.enType = IVE_IMAGE_TYPE_S8C2_PACKAGE;

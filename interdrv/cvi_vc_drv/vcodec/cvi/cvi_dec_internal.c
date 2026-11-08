@@ -478,7 +478,7 @@ static int _cviH264_InitDecoder(cviVideoDecoder *pvdec)
 	     pdeccfg->coda9.enableTiled2Linear);
 	VLOG(INFO, "[wtlEnable          ]: %d\n", pdop->wtlEnable);
 	VLOG(INFO, "[wtlMode            ]: %d\n", pdop->wtlMode);
-	VLOG(INFO, "[bitstreamBuffer    ]: 0x%08x\n", pdop->bitstreamBuffer);
+	VLOG(INFO, "[bitstreamBuffer    ]: 0x%08llx\n", pdop->bitstreamBuffer);
 	VLOG(INFO, "[bitstreamBufferSize]: %d\n", pdop->bitstreamBufferSize);
 	VLOG(INFO, "[bitstreamMode      ]: %d\n", pdop->bitstreamMode);
 	VLOG(INFO, "[cbcrInterleave     ]: %d\n", pdop->cbcrInterleave);
@@ -2248,7 +2248,7 @@ static int _cviH265_GetDecodedData(cviVideoDecoder *pvdec)
 			void *decodedData = NULL;
 			Uint32 decodedDataSize = 0;
 #endif
-			VpuRect rcDisplay;
+			VpuRect rcDisplay __maybe_unused;
 
 			rcDisplay.left = 0;
 			rcDisplay.top = 0;
@@ -2336,7 +2336,7 @@ static int _cviH265_GetDecodedData(cviVideoDecoder *pvdec)
 
 	if (pdoi->indexFrameDisplay == DISPLAY_IDX_FLAG_SEQ_END) {
 		if (Queue_Peek(pvdec->displayQ) != NULL) {
-			VLOG(ERR, "Queue_Peek=%d\n",
+			VLOG(ERR, "Queue_Peek=%p\n",
 			     Queue_Peek(pvdec->displayQ));
 			pvdec->success = FALSE;
 		}

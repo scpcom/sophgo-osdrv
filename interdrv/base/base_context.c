@@ -658,10 +658,7 @@ CVI_S32 vb_qbuf(MMF_CHN_S chn, enum CHN_TYPE_E chn_type, VB_BLK blk)
 	struct vb_jobs_t *jobs = base_get_jobs_by_chn(chn, chn_type);
 	struct vb_s *vb = (struct vb_s *)blk;
 	CVI_S32 ret = CVI_SUCCESS;
-	CVI_U32 chip = 0;
 	CVI_U32 cb_param = 0;
-
-	chip = sys_get_chipid();
 
 	CVI_TRACE_BASE(CVI_BASE_DBG_INFO, ":%s dev(%d) chn(%d) chnType(%d): phy-addr(%lld) cnt(%d)\n",
 			sys_get_modname(chn.enModId), chn.s32DevId, chn.s32ChnId, chn_type,
@@ -744,12 +741,10 @@ CVI_S32 vb_dqbuf(MMF_CHN_S chn, enum CHN_TYPE_E chn_type, VB_BLK *blk)
 	struct vb_jobs_t *jobs;
 	struct vb_s *p;
 	//struct cvi_buffer buf;
-	CVI_U32 cb_param = 0;
 
 	*blk = VB_INVALID_HANDLE;
 
 	///<TODO:
-	cb_param = 0xFF;
 	//if (base_dqbuf_cb[chn.enModId])
 	//	(*base_dqbuf_cb[chn.enModId])(&buf, cb_param);
 	jobs = base_get_jobs_by_chn(chn, chn_type);

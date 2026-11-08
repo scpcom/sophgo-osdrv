@@ -493,7 +493,6 @@ void FreeJpgInstance(JpgInst *pJpgInst)
 
 JpgRet CheckJpgInstValidity(JpgInst *pci)
 {
-	JpgInst *pJpgInst = 0;
 	int i;
 	jpu_instance_pool_t *jip;
 
@@ -501,7 +500,7 @@ JpgRet CheckJpgInstValidity(JpgInst *pci)
 	if (!jip)
 		return JPG_RET_FAILURE;
 
-	for (i = 0; i < MAX_NUM_INSTANCE; ++i, ++pJpgInst) {
+	for (i = 0; i < MAX_NUM_INSTANCE; ++i) {
 		if ((JpgInst *)jip->jpgInstPool[i] == pci)
 			return JPG_RET_SUCCESS;
 	}

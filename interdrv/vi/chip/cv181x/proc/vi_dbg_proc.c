@@ -28,14 +28,11 @@ static inline void _vi_dbg_proc_show(struct seq_file *m, void *v)
 	struct cvi_vi_dev *vdev = m->private;
 	struct isp_ctx *ctx = &vdev->ctx;
 	enum cvi_isp_raw raw_num = ISP_PRERAW_A;
-	enum cvi_isp_raw raw_max = ISP_PRERAW_MAX - 1;
 
 	u32 frmCnt_start[ISP_PRERAW_VIRT_MAX], sofCnt_start[ISP_PRERAW_VIRT_MAX];
 	u32 frmCnt_end[ISP_PRERAW_VIRT_MAX], sofCnt_end[ISP_PRERAW_VIRT_MAX];
 	u64 t2 = 0, t1 = 0;
 	char raw_char;
-
-	raw_max = gViCtx->total_dev_num;
 
 	for (raw_num = ISP_PRERAW_A; raw_num < ISP_PRERAW_VIRT_MAX; raw_num++) {
 		if (!ctx->isp_pipe_enable[raw_num])

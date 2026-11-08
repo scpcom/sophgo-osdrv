@@ -15,7 +15,7 @@ int cviJpgDecOpen(CVIJpgHandle *pHandle, CVIDecConfigParam *pConfig)
 	JpgRet ret = JPG_RET_SUCCESS;
 	CVIJpgHandle handle;
 	JpgInst *pJpgInst = 0;
-	JpgDecInfo *pDecInfo = 0;
+	JpgDecInfo *pDecInfo __maybe_unused = 0;
 	JpgDecOpenParam decOP = { 0 };
 	jpu_buffer_t vbStream = { 0 };
 	int usePartialMode = 0;
@@ -128,7 +128,7 @@ int cviJpgDecOpen(CVIJpgHandle *pHandle, CVIDecConfigParam *pConfig)
 	CVI_JPG_DBG_FLOW("iDataLen = 0x%X\n", pConfig->iDataLen);
 	if (pConfig->iDataLen > STREAM_BUF_SIZE) {
 		JLOG(ERR,
-		     "The length 0f the input stream is greater than the length of the JPU input buffer!, vbStream addr = 0x%lX\n",
+		     "The length 0f the input stream is greater than the length of the JPU input buffer!, vbStream addr = 0x%llX\n",
 		     vbStream.phys_addr);
 		goto ERR_DEC_INIT;
 	} else {
@@ -272,7 +272,7 @@ int cviJpgDecSendFrameData(CVIJpgHandle handle, void *data, int length)
 {
 	JpgRet ret = JPG_RET_SUCCESS;
 	JpgDecParam decParam = { 0 };
-	Uint32 needFrameBufCount = 1;
+	Uint32 needFrameBufCount __maybe_unused = 1;
 	Uint32 regFrameBufCount = 0;
 	Uint32 framebufWidth = 0;
 	Uint32 framebufHeight = 0;

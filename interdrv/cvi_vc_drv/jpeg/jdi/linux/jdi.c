@@ -236,11 +236,6 @@ int jdi_get_enc_task_num(void)
 int jdi_init(void)
 {
 	jdi_info_t *jdi = &s_jdi_info[0];
-#ifdef USE_VMALLOC_FOR_INSTANCE_POOL_MEMORY
-	unsigned long page_size = VMEM_PAGE_SIZE;
-	unsigned long page_mask = (~(page_size - 1));
-#endif
-	PhysicalAddress pgoff;
 	int ret;
 
 	if (jdi->jpu_fd != -1 && jdi->jpu_fd != 0x00) {
@@ -336,10 +331,8 @@ int jdi_init(void)
 		goto ERR_JDI_INIT;
 	}
 
-	pgoff = jdi->jdb_register.phys_addr & page_mask;
 #else
 	jdi->jdb_register.size = JPU_BIT_REG_SIZE;
-	pgoff = 0;
 #endif
 
 #ifdef JPU_FPGA_PLATFORM
@@ -365,8 +358,6 @@ int jdi_release(void)
 {
 	jdi_info_t *jdi = &s_jdi_info[0];
 	int ret;
-	int i;
-	BOOL bCloseIonFd = TRUE;
 
 	if (jdi->jpu_fd == -1 || jdi->jpu_fd == 0x00)
 		return 0;
@@ -412,14 +403,6 @@ int jdi_release(void)
 #endif
 
 	memset(jdi, 0, sizeof(jdi_info_t));
-
-	for (i = 0; i < MAX_NUM_JPU_CORE; i++) {
-		jdi = &s_jdi_info[i];
-		if (jdi->jpu_fd > 0) {
-			bCloseIonFd = FALSE;
-			break;
-		}
-	}
 	return 0;
 }
 
@@ -1117,7 +1100,7 @@ int jdi_free_ion_memory(jpu_buffer_t *vb)
 	}
 
 	if (vb->size == 0) {
-		JLOG(ERR, "addr=%p\n", vb->phys_addr);
+		JLOG(ERR, "addr=0x%llx\n", vb->phys_addr);
 		return -1;
 	}
 
@@ -1138,13 +1121,13 @@ int jdi_free_ion_memory(jpu_buffer_t *vb)
 	}
 
 	if (!p_jdb->size) {
-		JLOG(ERR, "Invalid buffer to free! address=0x%lx\n",
+		JLOG(ERR, "Invalid buffer to free! address=%p\n",
 		     p_jdb->virt_addr);
 		jdi_unlock();
 		return -1;
 	}
 
-	JLOG(INFO, "phys_addr %llx, virt_addr %p, fd %d\n", p_jdb->phys_addr,
+	JLOG(INFO, "phys_addr %llx, virt_addr %p, base 0x%llx\n", p_jdb->phys_addr,
 	     p_jdb->virt_addr, p_jdb->base);
 	ret = sys_ion_free_nofd((CVI_U64)vb->phys_addr);
 	if (ret != 0) {

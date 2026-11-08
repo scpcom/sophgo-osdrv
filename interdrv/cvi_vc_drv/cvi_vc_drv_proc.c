@@ -1218,7 +1218,6 @@ static int rc_proc_show(struct seq_file *m, void *v)
 			CVI_U32 u32IQp = 0;
 			CVI_U32 u32PQp = 0;
 			CVI_U32 u32BQp = 0;
-			CVI_U32 u32Qfactor = 0;
 			CVI_U32 u32MinIprop = 0;
 			CVI_U32 u32MaxIprop = 0;
 			CVI_U32 u32MaxQp = 0;
@@ -1231,14 +1230,11 @@ static int rc_proc_show(struct seq_file *m, void *v)
 			CVI_U32 u32SPInterval = 0;
 			CVI_S32 s32SPQpDelta = 0;
 			CVI_U32 u32BgInterval = 0;
-			CVI_S32 s32BgQpDelta = 0;
 			CVI_S32 s32ViQpDelta = 0;
 			CVI_U32 u32BFrmNum = 0;
 			CVI_S32 s32BQpDelta = 0;
 			CVI_S32 s32MaxReEncodeTimes = 0;
 			CVI_S32 s32ChangePos = 0;
-			CVI_U32 u32MaxQfactor = 0;
-			CVI_U32 u32MinQfactor = 0;
 			VENC_RC_QPMAP_MODE_E enQpMapMode =
 				VENC_RC_QPMAP_MODE_BUTT + 1;
 			CVI_S32 s32MinStillPercent = 0;
@@ -1283,8 +1279,6 @@ static int rc_proc_show(struct seq_file *m, void *v)
 			case VENC_GOPMODE_SMARTP:
 				u32BgInterval = pstChnAttr->stGopAttr.stSmartP
 							.u32BgInterval;
-				s32BgQpDelta = pstChnAttr->stGopAttr.stSmartP
-						       .s32BgQpDelta;
 				s32ViQpDelta = pstChnAttr->stGopAttr.stSmartP
 						       .s32ViQpDelta;
 				break;
@@ -1292,8 +1286,6 @@ static int rc_proc_show(struct seq_file *m, void *v)
 				u32BgInterval =
 					pstChnAttr->stGopAttr.stAdvSmartP
 						.u32BgInterval;
-				s32BgQpDelta = pstChnAttr->stGopAttr.stAdvSmartP
-						       .s32BgQpDelta;
 				s32ViQpDelta = pstChnAttr->stGopAttr.stAdvSmartP
 						       .s32ViQpDelta;
 				break;
@@ -1366,11 +1358,6 @@ static int rc_proc_show(struct seq_file *m, void *v)
 						     .u32BitRate;
 				bVariFpsEn = pstChnAttr->stRcAttr.stMjpegCbr
 						     .bVariFpsEn;
-
-				u32MaxQfactor =
-					pRcParam->stParamMjpegCbr.u32MaxQfactor;
-				u32MinQfactor =
-					pRcParam->stParamMjpegCbr.u32MinQfactor;
 			} else if (pstChnAttr->stRcAttr.enRcMode ==
 				   VENC_RC_MODE_H264VBR) {
 				strcpy(cRcMode, "VBR");
@@ -1433,10 +1420,6 @@ static int rc_proc_show(struct seq_file *m, void *v)
 
 				s32ChangePos =
 					pRcParam->stParamMjpegVbr.s32ChangePos;
-				u32MaxQfactor =
-					pRcParam->stParamMjpegVbr.u32MaxQfactor;
-				u32MinQfactor =
-					pRcParam->stParamMjpegVbr.u32MinQfactor;
 			} else if (pstChnAttr->stRcAttr.enRcMode ==
 				   VENC_RC_MODE_H264FIXQP) {
 				strcpy(cRcMode, "FIXQP");
@@ -1466,8 +1449,6 @@ static int rc_proc_show(struct seq_file *m, void *v)
 			} else if (pstChnAttr->stRcAttr.enRcMode ==
 				   VENC_RC_MODE_MJPEGFIXQP) {
 				strcpy(cRcMode, "FIXQP");
-				u32Qfactor = pstChnAttr->stRcAttr.stMjpegFixQp
-						     .u32Qfactor;
 				bVariFpsEn = pstChnAttr->stRcAttr.stMjpegFixQp
 						     .bVariFpsEn;
 			} else if (pstChnAttr->stRcAttr.enRcMode ==

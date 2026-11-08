@@ -61,7 +61,7 @@ void jdi_SetLogDecor(int decor);
 int jdi_GetLogDecor(void);
 #endif
 
-void jdi_LogMsg(int level, const char *format, ...);
+__printf(2, 3) void jdi_LogMsg(int level, const char *format, ...);
 
 #ifdef REDUNDENT_CODE
 #if defined(linux) || defined(__linux) || defined(ANDROID)
