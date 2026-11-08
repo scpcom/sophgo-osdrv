@@ -333,6 +333,7 @@ void JpgDecGramSetup(JpgDecInfo *jpg);
 JpgRet CheckJpgEncOpenParam(JpgEncOpenParam *pop);
 JpgRet CheckJpgEncParam(JpgEncHandle handle, JpgEncParam *param);
 int JpgEncLoadHuffTab(JpgEncInfo *pJpgEncInfo);
+void JpgEncForgetTables(void);
 int JpgEncLoadQMatTab(JpgEncInfo *pJpgEncInfo);
 int JpgEncEncodeHeader(JpgEncHandle handle, JpgEncParamSet *para);
 

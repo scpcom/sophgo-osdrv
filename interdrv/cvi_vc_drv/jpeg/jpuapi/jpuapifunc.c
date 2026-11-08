@@ -551,6 +551,7 @@ int JpgDecHuffTabSetUp(JpgDecInfo *jpg)
 	int HuffLength;
 	int v;
 
+	JpgEncForgetTables();
 	// MIN Tables
 	JpuWriteReg(MJPEG_HUFF_CTRL_REG, 0x003);
 
@@ -795,6 +796,7 @@ int JpgDecQMatTabSetUp(JpgDecInfo *jpg)
 
 	// SetPeriQMatTab
 	// Comp 0
+	JpgEncForgetTables();
 	JpuWriteReg(MJPEG_QMAT_CTRL_REG, 0x03);
 	table = jpg->cInfoTab[0][3];
 	for (i = 0; i < 64; i++) {
@@ -2099,6 +2101,22 @@ static int JpgEncGenHuffTab(JpgEncInfo *pEncInfo, int tabNum)
 	return 1;
 }
 
+/*
+ * The JPU keeps the tables it was given until a hardware reset or a decoder
+ * loads its own. Encoders mostly use the same tables, so they are written
+ * only when they change instead of about 750 register writes per picture;
+ * JpgEncForgetTables makes the next picture write them again.
+ */
+static bool enc_huff_loaded, enc_qmat_loaded;
+static Uint32 enc_huff_code[4][256], enc_huff_size[4][256];
+static Uint32 enc_qmat[3][64];
+
+void JpgEncForgetTables(void)
+{
+	enc_huff_loaded = false;
+	enc_qmat_loaded = false;
+}
+
 int JpgEncLoadHuffTab(JpgEncInfo *pEncInfo)
 {
 	int i, j, t;
@@ -2108,6 +2126,11 @@ int JpgEncLoadHuffTab(JpgEncInfo *pEncInfo)
 		if (!JpgEncGenHuffTab(pEncInfo, i))
 			return 0;
 	}
+
+	if (enc_huff_loaded &&
+	    !memcmp(enc_huff_code, pEncInfo->huffCode, sizeof(enc_huff_code)) &&
+	    !memcmp(enc_huff_size, pEncInfo->huffSize, sizeof(enc_huff_size)))
+		return 1;
 
 	JpuWriteReg(MJPEG_HUFF_CTRL_REG, 0x3);
 
@@ -2137,6 +2160,9 @@ int JpgEncLoadHuffTab(JpgEncInfo *pEncInfo)
 		}
 	}
 	JpuWriteReg(MJPEG_HUFF_CTRL_REG, 0x0);
+	memcpy(enc_huff_code, pEncInfo->huffCode, sizeof(enc_huff_code));
+	memcpy(enc_huff_size, pEncInfo->huffSize, sizeof(enc_huff_size));
+	enc_huff_loaded = true;
 	return 1;
 }
 
@@ -2149,27 +2175,35 @@ int JpgEncLoadQMatTab(JpgEncInfo *pEncInfo)
 	unsigned long long dividend = 0x80000, divisor = 0;
 	unsigned long long quotient;
 #endif
+	Uint32 qmat[3][64];
 	int comp, i, t;
 	for (comp = 0; comp < 3; comp++) {
 		int quantID = pEncInfo->pCInfoTab[comp][3];
 		if (quantID >= 4)
 			return 0;
-		t = (comp == 0) ? Q_COMPONENT0 :
-		    (comp == 1) ? Q_COMPONENT1 :
-					Q_COMPONENT2;
-		JpuWriteReg(MJPEG_QMAT_CTRL_REG, 0x3 + t);
 		for (i = 0; i < 64; i++) {
 			divisor = pEncInfo->pQMatTab[quantID][i];
 			do_div(dividend, divisor);
 			quotient = dividend;
 			dividend = 0x80000;
 			// enhace bit precision & rounding Q
-			JpuWriteReg(MJPEG_QMAT_DATA_REG,
-				    (divisor << 20) |
-					(quotient & 0xFFFFF));
+			qmat[comp][i] = (divisor << 20) | (quotient & 0xFFFFF);
 		}
+	}
+	if (enc_qmat_loaded && !memcmp(enc_qmat, qmat, sizeof(qmat)))
+		return 1;
+
+	for (comp = 0; comp < 3; comp++) {
+		t = (comp == 0) ? Q_COMPONENT0 :
+		    (comp == 1) ? Q_COMPONENT1 :
+					Q_COMPONENT2;
+		JpuWriteReg(MJPEG_QMAT_CTRL_REG, 0x3 + t);
+		for (i = 0; i < 64; i++)
+			JpuWriteReg(MJPEG_QMAT_DATA_REG, qmat[comp][i]);
 		JpuWriteReg(MJPEG_QMAT_CTRL_REG, t);
 	}
+	memcpy(enc_qmat, qmat, sizeof(qmat));
+	enc_qmat_loaded = true;
 
 	return 1;
 }

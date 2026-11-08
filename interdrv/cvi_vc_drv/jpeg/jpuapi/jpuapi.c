@@ -155,6 +155,7 @@ JpgRet JPU_SWReset(void)
 
 JpgRet JPU_HWReset(void)
 {
+	JpgEncForgetTables();
 	if (jdi_hw_reset() < 0)
 		return JPG_RET_FAILURE;
 
