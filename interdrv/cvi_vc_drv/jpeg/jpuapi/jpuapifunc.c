@@ -2018,12 +2018,18 @@ static int JpgEncGenHuffTab(JpgEncInfo *pEncInfo, int tabNum)
 {
 	int p, i, l, lastp, si, maxsymbol;
 
-	int *huffsize = vzalloc(sizeof(int) * 256);
-	int *huffcode = vzalloc(sizeof(int) * 256);
+	int *huffsize = kcalloc(256, sizeof(int), GFP_KERNEL);
+	int *huffcode = kcalloc(256, sizeof(int), GFP_KERNEL);
 	int code;
 
 	BYTE *bitleng, *huffval;
 	unsigned int *ehufco, *ehufsi;
+
+	if (!huffsize || !huffcode) {
+		kfree(huffsize);
+		kfree(huffcode);
+		return 0;
+	}
 
 	bitleng = pEncInfo->pHuffBits[tabNum];
 	huffval = pEncInfo->pHuffVal[tabNum];
@@ -2038,8 +2044,8 @@ static int JpgEncGenHuffTab(JpgEncInfo *pEncInfo, int tabNum)
 	for (l = 1; l <= 16; l++) {
 		i = bitleng[l - 1];
 		if (i < 0 || p + i > maxsymbol) {
-			vfree(huffsize);
-			vfree(huffcode);
+			kfree(huffsize);
+			kfree(huffcode);
 			return 0;
 		}
 		while (i--)
@@ -2060,8 +2066,8 @@ static int JpgEncGenHuffTab(JpgEncInfo *pEncInfo, int tabNum)
 			code++;
 		}
 		if (code >= (1 << si)) {
-			vfree(huffsize);
-			vfree(huffcode);
+			kfree(huffsize);
+			kfree(huffcode);
 			return 0;
 		}
 		code <<= 1;
@@ -2080,16 +2086,16 @@ static int JpgEncGenHuffTab(JpgEncInfo *pEncInfo, int tabNum)
 	for (p = 0; p < lastp; p++) {
 		i = huffval[p];
 		if (i < 0 || i >= maxsymbol || ehufsi[i]) {
-			vfree(huffsize);
-			vfree(huffcode);
+			kfree(huffsize);
+			kfree(huffcode);
 			return 0;
 		}
 		ehufco[i] = huffcode[p];
 		ehufsi[i] = huffsize[p];
 	}
 
-	vfree(huffsize);
-	vfree(huffcode);
+	kfree(huffsize);
+	kfree(huffcode);
 	return 1;
 }
 
@@ -2098,8 +2104,10 @@ int JpgEncLoadHuffTab(JpgEncInfo *pEncInfo)
 	int i, j, t;
 	int huffData;
 
-	for (i = 0; i < 4; i++)
-		JpgEncGenHuffTab(pEncInfo, i);
+	for (i = 0; i < 4; i++) {
+		if (!JpgEncGenHuffTab(pEncInfo, i))
+			return 0;
+	}
 
 	JpuWriteReg(MJPEG_HUFF_CTRL_REG, 0x3);
 
