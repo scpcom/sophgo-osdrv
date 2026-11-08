@@ -33,6 +33,12 @@
 #include "base.h"
 #include "vo_cb.h"
 
+#if defined(CONFIG_ARCH_CVITEK)
+#define cvi_ion_sync_for_cpu arch_sync_dma_for_device
+#else
+#include "ion/ion.h"
+#endif
+
 #define MAX_PALETTES 16
 #define VXRES_SIZE(xres, bpp)                                                 \
 	ALIGN((xres), GOP_ALIGNMENT / (bpp/8))
@@ -399,7 +405,7 @@ static int cvifb_set_par(struct fb_info *info)
 	len = pitch * info->var.yres * (1 + double_buffer);
 
 #if ((LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)) && defined(__riscv)) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
-	arch_sync_dma_for_device(info->fix.smem_start, info->fix.smem_len, DMA_TO_DEVICE);
+	cvi_ion_sync_for_cpu(info->fix.smem_start, info->fix.smem_len, DMA_TO_DEVICE);
 #else
 	__dma_map_area(info->screen_base, info->fix.smem_len, DMA_TO_DEVICE);
 #endif
@@ -519,7 +525,7 @@ static int cvifb_pan_display(struct fb_var_screeninfo *var, struct fb_info *info
 	cfg->ow_cfg[0].addr = par->mem_base + par->mem_offset;
 
 #if ((LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)) && defined(__riscv)) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
-	arch_sync_dma_for_device(info->fix.smem_start, info->fix.smem_len, DMA_TO_DEVICE);
+	cvi_ion_sync_for_cpu(info->fix.smem_start, info->fix.smem_len, DMA_TO_DEVICE);
 #else
 	__dma_map_area(info->screen_base, info->fix.smem_len, DMA_TO_DEVICE);
 #endif
@@ -741,7 +747,7 @@ static int cvifb_probe(struct platform_device *pdev)
 	// clear the framebuffer.
 	memset_io(info->screen_base, 0x00, info->screen_size);
 #if ((LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)) && defined(__riscv)) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
-	arch_sync_dma_for_device(info->fix.smem_start, info->fix.smem_len, DMA_TO_DEVICE);
+	cvi_ion_sync_for_cpu(info->fix.smem_start, info->fix.smem_len, DMA_TO_DEVICE);
 #else
 	__dma_map_area(info->screen_base, info->fix.smem_len, DMA_TO_DEVICE);
 #endif
