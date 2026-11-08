@@ -3175,10 +3175,19 @@ static void ive_reset(struct cvi_ive_device *ndev, IVE_TOP_C *ive_top_c)
 	ndev->total_tile = 0;
 	ndev->tile_num = 0;
 
+	/*
+	 * SAD and DMA never write the FILTEROP or background-model blocks, so
+	 * after them those blocks still hold the defaults written here; skip
+	 * rewriting about 150 registers. Any other operation, a hardware reset
+	 * and the first operation after load write them all.
+	 */
 	ive_reset_reg(1, ive_top_c);
-	ive_reset_reg(2, ive_top_c);
+	if (!ndev->filterop_bg_clean)
+		ive_reset_reg(2, ive_top_c);
 	ive_reset_reg(3, ive_top_c);
-	ive_reset_reg(4, ive_top_c);
+	if (!ndev->filterop_bg_clean)
+		ive_reset_reg(4, ive_top_c);
+	ndev->filterop_bg_clean = false;
 	// disable
 	ive_set_int(ive_top_c, 0);
 	ive_top_c->REG_3.reg_imgmux_img0_sel = 1;
@@ -3832,6 +3841,7 @@ CVI_S32 cvi_ive_reset(struct cvi_ive_device *ndev, CVI_S32 select)
 {
 	//DEFINE_IVE_TOP_C(ive_top_c);
 	IVE_TOP_C ive_top_c = _DEFINE_IVE_TOP_C;
+	ndev->filterop_bg_clean = false; /* the hardware reset sets its own values */
 	usleep_range(3, 5);
 	vip_sys_reg_write_mask(VIP_SYS_REG_RST_IVE_TOP,
 		VIP_SYS_REG_RST_IVE_TOP_MASK, 0x1);
@@ -4241,6 +4251,9 @@ CVI_S32 cvi_ive_CmdQ(struct cvi_ive_device *ndev)
 	CVI_DBG_INFO("CVI_MPI_IVE_CMDQ\n");
 	cmdq_printk(&ive_cmdq_c);
 
+	/* CMDQ writes FILTEROP directly without going through ive_reset. */
+	ndev->filterop_bg_clean = false;
+
 	ive_cmdq_c.INT_EN.reg_cmdq_int_en = 1;
 	ive_cmdq_c.INT_EN.reg_cmdq_end_en = 1;
 	ive_cmdq_c.INT_EN.reg_cmdq_wait_en = 1;
@@ -4386,6 +4399,7 @@ CVI_S32 cvi_ive_DMA(struct cvi_ive_device *ndev, IVE_DATA_S *pstSrc,
 
 	CVI_DBG_INFO("CVI_MPI_IVE_DMA\n");
 	ive_reset(ndev, &ive_top_c);
+	ndev->filterop_bg_clean = true; /* DMA writes neither block */
 	if (g_dump_image_info == CVI_TRUE) {
 		dump_ive_data("pstSrc", pstSrc);
 		dump_ive_data("pstDst", pstDst);
@@ -8638,6 +8652,7 @@ CVI_S32 cvi_ive_SAD(struct cvi_ive_device *ndev, IVE_SRC_IMAGE_S *pstSrc1,
 
 	CVI_DBG_INFO("CVI_MPI_IVE_SAD\n");
 	ive_reset(ndev, &ive_top_c);
+	ndev->filterop_bg_clean = true; /* SAD writes neither block */
 	if (g_dump_image_info == CVI_TRUE) {
 		dump_ive_image("pstSrc1", pstSrc1);
 		dump_ive_image("pstSrc2", pstSrc2);

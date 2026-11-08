@@ -33,6 +33,8 @@ struct cvi_ive_device {
 	int total_tile;
 	int use_count;
 	uintptr_t *private_data;
+	/* FILTEROP and background-model registers hold ive_reset's defaults */
+	bool filterop_bg_clean;
 };
 
 struct ive_profiling_info {
