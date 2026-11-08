@@ -18,6 +18,18 @@
 #include "linux/vi_snsr.h"
 #include "snsr_i2c.h"
 
+#if !defined(CONFIG_ARCH_CVITEK)
+/* Upstream DesignWare splits transactions at I2C_M_STOP. This replaces
+ * the vendor I2C_M_WRSTOP=0x0002, not its numerical flag value. */
+#define I2C_M_WRSTOP I2C_M_STOP
+#endif
+
+#if defined(CONFIG_ARCH_CVITEK)
+#define get_i2c_adap_idx(adap) adap->i2c_idx
+#else
+#define get_i2c_adap_idx(adap) adap->nr
+#endif
+
 enum {
 	SNSR_I2C_DBG_DISABLE = 0,
 	SNSR_I2C_DBG_VERIFY,
@@ -368,9 +380,9 @@ static int _init_resource(struct platform_device *pdev)
 		i2c_adap = i2c_get_adapter(i);
 		if (!i2c_adap)
 			continue;
-		dev_info(&pdev->dev, "i2c:-------hook %d\n", i2c_adap->i2c_idx);
-		if (i2c_adap->i2c_idx < I2C_MAX_NUM) {
-			ctx = &dev->ctx[i2c_adap->i2c_idx];
+		dev_info(&pdev->dev, "i2c:-------hook %d\n", get_i2c_adap_idx(i2c_adap));
+		if (get_i2c_adap_idx(i2c_adap) < I2C_MAX_NUM) {
+			ctx = &dev->ctx[get_i2c_adap_idx(i2c_adap)];
 			if (!ctx->client) {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0))
 				ctx->client = i2c_new_client_device(i2c_adap, &cvi_info);
@@ -381,7 +393,7 @@ static int _init_resource(struct platform_device *pdev)
 				if (!ctx->buf)
 					return -ENOMEM;
 			} else
-				dev_err(&pdev->dev, "duplicate i2c_adpa idx %d\n", i2c_adap->i2c_idx);
+				dev_err(&pdev->dev, "duplicate i2c_adpa idx %d\n", get_i2c_adap_idx(i2c_adap));
 
 		}
 		i2c_put_adapter(i2c_adap);
