@@ -11,7 +11,9 @@
 #include <linux/delay.h>
 #include <linux/clk.h>
 #include <linux/reset.h>
+#if defined(CONFIG_ARCH_CVITEK)
 #include <linux/streamline_annotate.h>
+#endif
 #include <linux/clk.h>
 #include <asm/cacheflush.h>
 
