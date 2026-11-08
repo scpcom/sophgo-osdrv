@@ -65,6 +65,10 @@
 #define from_timer timer_container_of
 #endif
 
+#if defined(CONFIG_ARCH_CVITEK)
+#define cvi_ion_sync_for_cpu arch_sync_dma_for_device
+#endif
+
 enum tpu_submit_path {
 	TPU_PATH_DESNORMAL = 0,
 	TPU_PATH_DESSEC = 1,
@@ -980,7 +984,7 @@ static int cvi_tpu_cache_flush(struct cvi_tpu_device *ndev, unsigned long arg)
 		return ret;
 	}
 #if ((KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE) && defined(__riscv)) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
-	arch_sync_dma_for_device(flush_arg.paddr, flush_arg.size, DMA_TO_DEVICE);
+	cvi_ion_sync_for_cpu(flush_arg.paddr, flush_arg.size, DMA_TO_DEVICE);
 #else
 	__dma_map_area(phys_to_virt(flush_arg.paddr), flush_arg.size, DMA_TO_DEVICE);
 #endif
@@ -1002,7 +1006,7 @@ static int cvi_tpu_cache_invalidate(struct cvi_tpu_device *ndev,
 	}
 #if ((KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE) && defined(__riscv)) || (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 0, 0))
 
-	arch_sync_dma_for_device(invalidate_arg.paddr, invalidate_arg.size, DMA_FROM_DEVICE);
+	cvi_ion_sync_for_cpu(invalidate_arg.paddr, invalidate_arg.size, DMA_FROM_DEVICE);
 #else
 	__dma_map_area(phys_to_virt(invalidate_arg.paddr), invalidate_arg.size, DMA_FROM_DEVICE);
 #endif
