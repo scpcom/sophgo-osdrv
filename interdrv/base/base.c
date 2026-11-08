@@ -21,7 +21,9 @@
 #endif
 #include <linux/security.h>
 #include <linux/cred.h>
+#if defined(CONFIG_ARCH_CVITEK)
 #include "tee_cv_private.h"
+#endif
 #include "base.h"
 #include "vb.h"
 #include "cvi_vb_proc.h"
