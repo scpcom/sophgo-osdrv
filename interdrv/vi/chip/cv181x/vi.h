@@ -13,7 +13,9 @@
 #include <linux/poll.h>
 #include <linux/sched/signal.h>
 #include <linux/slab.h>
+#if defined(CONFIG_ARCH_CVITEK)
 #include <linux/streamline_annotate.h>
+#endif
 #include <linux/version.h>
 #if (KERNEL_VERSION(4, 11, 0) <= LINUX_VERSION_CODE)
 #include <uapi/linux/sched/types.h>

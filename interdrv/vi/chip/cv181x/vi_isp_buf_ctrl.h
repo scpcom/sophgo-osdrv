@@ -13,7 +13,9 @@
 #include <linux/poll.h>
 #include <linux/sched/signal.h>
 #include <linux/slab.h>
+#if defined(CONFIG_ARCH_CVITEK)
 #include <linux/streamline_annotate.h>
+#endif
 #include <linux/version.h>
 #include <uapi/linux/sched/types.h>
 #include <linux/vi_tun_cfg.h>
