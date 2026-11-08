@@ -25,7 +25,9 @@
 #include <linux/of_device.h>
 #include <linux/reset.h>
 #include <linux/of_reserved_mem.h>
+#if defined(CONFIG_ARCH_CVITEK)
 #include <linux/streamline_annotate.h>
+#endif
 #include <linux/version.h>
 #include <linux/vmalloc.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
