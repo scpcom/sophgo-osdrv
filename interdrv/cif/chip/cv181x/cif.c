@@ -3096,6 +3096,11 @@ static int _init_resource(struct platform_device *pdev)
 			return dev_err_probe(&pdev->dev, PTR_ERR(reset_gpio),
 					     "cannot get sensor reset GPIO\n");
 		link->snsr_reset = reset_gpio;
+
+		if (reset_gpio) {
+			dev_info(&pdev->dev, "rst_pin = %d, pol = %d\n",
+				desc_to_gpio(reset_gpio), gpiod_is_active_low(reset_gpio) ? 1 : 0);
+		}
 #else
 		if(!lt_int)
 			link->snsr_rst_pin = of_get_named_gpio_flags(pdev->dev.of_node,
