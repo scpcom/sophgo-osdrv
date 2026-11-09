@@ -2300,13 +2300,13 @@ static void gtp_parse_dt(struct device *dev)
 	struct gpio_desc *gtp_int_desc;
 	struct gpio_desc *gtp_rst_desc;
 
-	gtp_int_desc = devm_gpiod_get_optional(dev, "goodix,irq-gpio", GPIOD_ASIS);
+	gtp_int_desc = devm_gpiod_get_optional(dev, "goodix,irq", GPIOD_ASIS);
 	if (IS_ERR_OR_NULL(gtp_int_desc))
 		gtp_int_gpio = -1;
 	else
 		gtp_int_gpio = desc_to_gpio(gtp_int_desc);
 
-	gtp_rst_desc = devm_gpiod_get_optional(dev, "goodix,rst-gpio", GPIOD_ASIS);
+	gtp_rst_desc = devm_gpiod_get_optional(dev, "goodix,rst", GPIOD_ASIS);
 	if (IS_ERR_OR_NULL(gtp_rst_desc))
 		gtp_rst_gpio = -1;
 	else
