@@ -3090,8 +3090,18 @@ static int _init_resource(struct platform_device *pdev)
 		link->dev = &pdev->dev;
 		link->mac_clk = RX_MAC_CLK_400M;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)
-		reset_gpio = devm_gpiod_get_index_optional(&pdev->dev,
+		if (!lt_int) {
+			reset_gpio = devm_gpiod_get_index_optional(&pdev->dev,
 							 "snsr-reset", i, GPIOD_ASIS);
+		} else if (i == 0) {
+			reset_gpio = gpio_to_desc(361);
+			if (devm_gpio_request_one(&pdev->dev, desc_to_gpio(reset_gpio),
+						GPIOF_OUT_INIT_HIGH, "snsr-rst") < 0)
+				reset_gpio = NULL;
+		} else {
+			reset_gpio = NULL;
+		}
+
 		if (IS_ERR(reset_gpio))
 			return dev_err_probe(&pdev->dev, PTR_ERR(reset_gpio),
 					     "cannot get sensor reset GPIO\n");
