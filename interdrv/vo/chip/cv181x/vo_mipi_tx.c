@@ -672,7 +672,7 @@ static int _init_resources(struct platform_device *pdev)
 		struct gpio_desc *power_ct_gpio;
 
 		reset_gpio = devm_gpiod_get_index_optional(&pdev->dev,
-							 "reset-gpio", 0, GPIOD_ASIS);
+							 "reset", 0, GPIOD_ASIS);
 		if (IS_ERR(reset_gpio))
 			return dev_err_probe(&pdev->dev, PTR_ERR(reset_gpio),
 					     "cannot get mipi_tx reset GPIO\n");
@@ -683,7 +683,7 @@ static int _init_resources(struct platform_device *pdev)
 		tdev->reset_pin_active = (gpiod_is_active_low(reset_gpio)) ? 0 : 1;
 
 		pwm_gpio = devm_gpiod_get_index_optional(&pdev->dev,
-							 "pwm-gpio", 0, GPIOD_ASIS);
+							 "pwm", 0, GPIOD_ASIS);
 		if (IS_ERR(pwm_gpio))
 			return dev_err_probe(&pdev->dev, PTR_ERR(pwm_gpio),
 					     "cannot get mipi_tx pwm GPIO\n");
@@ -694,7 +694,7 @@ static int _init_resources(struct platform_device *pdev)
 		tdev->pwm_pin_active = (gpiod_is_active_low(pwm_gpio)) ? 0 : 1;
 
 		power_ct_gpio = devm_gpiod_get_index_optional(&pdev->dev,
-							 "power-ct-gpio", 0, GPIOD_ASIS);
+							 "power-ct", 0, GPIOD_ASIS);
 		if (IS_ERR(power_ct_gpio))
 			return dev_err_probe(&pdev->dev, PTR_ERR(power_ct_gpio),
 					     "cannot get mipi_tx power_ct GPIO\n");
