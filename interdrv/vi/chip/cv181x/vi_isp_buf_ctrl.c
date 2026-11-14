@@ -33,6 +33,10 @@ struct isp_buffer *isp_buf_remove(struct isp_queue *q)
 	struct isp_buffer *b = NULL;
 	unsigned long flags;
 
+	if (!q->num_rdy) {
+		return NULL;
+	}
+
 	spin_lock_irqsave(&buf_lock, flags);
 	if (!list_empty(&q->rdy_queue)) {
 		b = list_first_entry(&q->rdy_queue, struct isp_buffer, list);
