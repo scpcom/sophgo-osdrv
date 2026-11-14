@@ -456,8 +456,10 @@ static CVI_S32 _rgn_update_cover_canvas(struct cvi_rgn_ctx *ctx, const RGN_CHN_A
 
 	// update canvas
 	if (buf_len > ctx->ion_len) {
-		if (ctx->ion_len != 0)
+		if (ctx->stCanvasInfo[0].u64PhyAddr && ctx->ion_len != 0) {
 			sys_ion_free(ctx->stCanvasInfo[0].u64PhyAddr);
+			ctx->stCanvasInfo[0].u64PhyAddr = 0;
+		}
 
 		ctx->stCanvasInfo[0].enPixelFormat = enPixelFormat;
 		ctx->stCanvasInfo[0].stSize.u32Width = rect.u32Width;
@@ -1672,12 +1674,16 @@ RGN_UPDATE_HW_FAIL:
 RGN_ION_ALLOC_FAIL:
 	if (ctx->stRegion.enType == OVERLAY_RGN) {
 		for (i = 0; i < ctx->stRegion.unAttr.stOverlay.u32CanvasNum; ++i)
-			if (ctx->stCanvasInfo[i].u64PhyAddr)
+			if (ctx->stCanvasInfo[i].u64PhyAddr) {
 				sys_ion_free(ctx->stCanvasInfo[i].u64PhyAddr);
+				ctx->stCanvasInfo[i].u64PhyAddr = 0;
+			}
 	} else if (ctx->stRegion.enType == OVERLAYEX_RGN) {
 		for (i = 0; i < ctx->stRegion.unAttr.stOverlayEx.u32CanvasNum; ++i)
-			if (ctx->stCanvasInfo[i].u64PhyAddr)
+			if (ctx->stCanvasInfo[i].u64PhyAddr) {
 				sys_ion_free(ctx->stCanvasInfo[i].u64PhyAddr);
+				ctx->stCanvasInfo[i].u64PhyAddr = 0;
+			}
 	}
 RGN_FMT_INCORRECT:
 	mutex_unlock(&g_rgnlock);
@@ -1713,15 +1719,21 @@ CVI_S32 rgn_detach_from_chn(RGN_HANDLE Handle, const MMF_CHN_S *pstChn)
 
 	if (ctx->stChnAttr.enType == OVERLAY_RGN) {
 		for (i = 0; i < ctx->stRegion.unAttr.stOverlay.u32CanvasNum; ++i)
-			if (ctx->stCanvasInfo[i].u64PhyAddr)
+			if (ctx->stCanvasInfo[i].u64PhyAddr) {
 				sys_ion_free(ctx->stCanvasInfo[i].u64PhyAddr);
+				ctx->stCanvasInfo[i].u64PhyAddr = 0;
+			}
 	} else if (ctx->stChnAttr.enType == OVERLAYEX_RGN) {
 		for (i = 0; i < ctx->stRegion.unAttr.stOverlayEx.u32CanvasNum; ++i)
-			if (ctx->stCanvasInfo[i].u64PhyAddr)
+			if (ctx->stCanvasInfo[i].u64PhyAddr) {
 				sys_ion_free(ctx->stCanvasInfo[i].u64PhyAddr);
+				ctx->stCanvasInfo[i].u64PhyAddr = 0;
+			}
 	} else {
-		if (ctx->stCanvasInfo[0].u64PhyAddr)
+		if (ctx->stCanvasInfo[0].u64PhyAddr) {
 			sys_ion_free(ctx->stCanvasInfo[0].u64PhyAddr);
+			ctx->stCanvasInfo[0].u64PhyAddr = 0;
+		}
 	}
 
 	mutex_unlock(&g_rgnlock);
