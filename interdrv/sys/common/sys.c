@@ -216,8 +216,16 @@ static CVI_S32 _sys_ion_free(CVI_U64 addr_p)
 	}
 
 	dmabuf = (struct dma_buf *)(mem_info.dmabuf);
+	if (!dmabuf) {
+		pr_err("dmabuf_fd get failed, addr:0x%llx\n", addr_p);
+		return -ENOMEM;
+	}
 #if 1
 	ionbuf = (struct ion_buffer *)dmabuf->priv;
+	if (!ionbuf) {
+		pr_err("ionbuf get failed, addr:0x%llx\n", addr_p);
+		return -ENOMEM;
+	}
 	if (ionbuf->name && ion_debug_alloc_free) {
 		pr_info("%s: ionbuf->name: %s\n", __func__, ionbuf->name);
 		vfree(ionbuf->name);

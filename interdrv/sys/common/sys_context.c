@@ -64,6 +64,13 @@ CVI_S32 sys_ctx_mem_put(struct mem_mapping *mem_info)
 	CVI_S32 i = 0;
 	CVI_S8 find_hit = 0;
 
+	if (!mem_info) {
+		return -1;
+	}
+	if (mem_info->phy_addr == 0) {
+		return -1;
+	}
+
 	spin_lock(&mem_lock);
 	for (i = 0; i < MEM_MAPPING_MAX; i++) {
 		if (ctx_mem_mgr[i].phy_addr == 0) {
@@ -92,6 +99,13 @@ CVI_S32 sys_ctx_mem_get(struct mem_mapping *mem_info)
 {
 	CVI_S32 i = 0;
 	CVI_S8 find_hit = 0;
+
+	if (!mem_info) {
+		return -1;
+	}
+	if (mem_info->phy_addr == 0) {
+		return -1;
+	}
 
 	spin_lock(&mem_lock);
 	for (i = 0; i < MEM_MAPPING_MAX; i++) {
