@@ -2937,11 +2937,21 @@ static CVI_VOID vpss_handle_frame_done(struct vpss_handler_ctx *ctx)
 
 	vpssExtCtx[workingGrp].grp_state = GRP_STATE_IDLE;
 
-	vb_dqbuf(chn, CHN_TYPE_IN, &blk);
-	if (blk == VB_INVALID_HANDLE) {
-		CVI_TRACE_VPSS(CVI_DBG_ERR, "Mod(%d) can't get vb-blk.\n", chn.enModId);
+	/*
+	 * An end of frame can come after the input stopped: NanoKVM unbinds VI
+	 * and disables the channel when it parks the outputs without viewers or
+	 * hands an output to VI-direct capture. There is no input frame to give
+	 * back then, and dequeuing would only fail; that is not an error.
+	 */
+	if (base_mod_jobs_workq_empty(chn, CHN_TYPE_IN)) {
+		CVI_TRACE_VPSS(CVI_DBG_DEBUG, "Grp(%d) end of frame without an input\n", workingGrp);
 	} else {
-		vb_done_handler(chn, CHN_TYPE_IN, blk);
+		vb_dqbuf(chn, CHN_TYPE_IN, &blk);
+		if (blk == VB_INVALID_HANDLE) {
+			CVI_TRACE_VPSS(CVI_DBG_ERR, "Mod(%d) can't get vb-blk.\n", chn.enModId);
+		} else {
+			vb_done_handler(chn, CHN_TYPE_IN, blk);
+		}
 	}
 
 	VpssChn = 0;
