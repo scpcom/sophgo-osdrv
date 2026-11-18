@@ -598,7 +598,15 @@ static void gdc_job_worker(struct kthread_work *work)
 
 int cvi_gdc_init(struct cvi_dwa_vdev *wdev)
 {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+	struct sched_attr attr = {
+		.size = sizeof(attr),
+		.sched_policy = SCHED_FIFO,
+		.sched_priority = MAX_RT_PRIO / 2,
+	};
+#else
 	struct sched_param tsk;
+#endif
 	int ret;
 
 	INIT_LIST_HEAD(&wdev->event_list);
@@ -622,12 +630,9 @@ int cvi_gdc_init(struct cvi_dwa_vdev *wdev)
 	// Same as sched_set_fifo in linux 5.x
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 	tsk.sched_priority = MAX_USER_RT_PRIO / 2;
-#else
-	tsk.sched_priority = MAX_RT_PRIO / 2;
 #endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
-	/* Exported helper preserves the vendor FIFO priority of 50. */
-	sched_set_fifo(wdev->thread);
+	ret = sched_setattr_nocheck(wdev->thread, &attr);
 #else
 	ret = sched_setscheduler(wdev->thread, SCHED_FIFO, &tsk);
 	if (ret)
@@ -983,7 +988,15 @@ s32 dwa_stop_handler(struct cvi_dwa_vdev *wdev_dwa)
 s32 dwa_start_handler(struct cvi_dwa_vdev *wdev_dwa)
 {
 	s32 ret = CVI_SUCCESS;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
+	struct sched_attr attr = {
+		.size = sizeof(attr),
+		.sched_policy = SCHED_FIFO,
+		.sched_priority = MAX_RT_PRIO / 2,
+	};
+#else
 	struct sched_param tsk;
+#endif
 
 	if(wdev_dwa->thread){
 		CVI_TRACE_DWA(CVI_DBG_ERR, "dwa thread has been initialized\n");
@@ -996,8 +1009,6 @@ s32 dwa_start_handler(struct cvi_dwa_vdev *wdev_dwa)
 	// Same as sched_set_fifo in linux 5.x
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 12, 0))
 	tsk.sched_priority = MAX_USER_RT_PRIO / 2;
-#else
-	tsk.sched_priority = MAX_RT_PRIO / 2;
 #endif
 
 	if (IS_ERR(wdev_dwa->thread)) {
@@ -1008,8 +1019,7 @@ s32 dwa_start_handler(struct cvi_dwa_vdev *wdev_dwa)
 	}
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 12, 0))
-	/* Exported helper preserves the vendor FIFO priority of 50. */
-	sched_set_fifo(wdev_dwa->thread);
+	ret = sched_setattr_nocheck(wdev_dwa->thread, &attr);
 #else
 	ret = sched_setscheduler(wdev_dwa->thread, SCHED_FIFO, &tsk);
 	if (ret)
