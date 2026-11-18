@@ -271,11 +271,10 @@ void vi_tuning_mempool_alloc(enum cvi_isp_raw raw_num,
 	u32 offset_be = VI_ALIGN(sizeof(struct cvi_vip_isp_post_cfg));
 	u32 offset_fe = offset_be + VI_ALIGN(sizeof(struct cvi_vip_isp_be_cfg));
 
-	if (tuning_buf_pool[raw_num].is_allocated) {
-		vi_pr(VI_ERR, "tuning_buf pool already allocated\n");
-		return;
-	}
-
+	/*
+	 * The pool has a fixed layout, so a second call (streaming restarted,
+	 * or VI_IOCTL_GET_TUN_ADDR after start) gets the same buffers back.
+	 */
 	*post_cfg = (struct cvi_vip_isp_post_cfg*)(tuning_buf_pool[raw_num].memory + offset_post);
 	*be_cfg = (struct cvi_vip_isp_be_cfg*)(tuning_buf_pool[raw_num].memory + offset_be);
 	*fe_cfg = (struct cvi_vip_isp_fe_cfg*)(tuning_buf_pool[raw_num].memory + offset_fe);
