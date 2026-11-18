@@ -568,7 +568,7 @@ static const struct of_device_id cvi_dwa_dt_match[] = {
 };
 
 #ifdef CONFIG_PM_SLEEP
-static int dwa_suspend(struct device *dev)
+static int __maybe_unused dwa_suspend(struct device *dev)
 {
 	CVI_S32 ret = CVI_SUCCESS;
 
@@ -594,7 +594,7 @@ static int dwa_suspend(struct device *dev)
 	return ret;
 }
 
-static int dwa_resume(struct device *dev)
+static int __maybe_unused dwa_resume(struct device *dev)
 {
 	CVI_S32 ret = CVI_SUCCESS;
 

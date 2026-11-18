@@ -948,14 +948,14 @@ static void cvi_ive_remove(struct platform_device *pdev)
 }
 
 #ifdef CONFIG_PM_SLEEP
-static int cvi_ive_suspend(struct device *dev)
+static int __maybe_unused cvi_ive_suspend(struct device *dev)
 {
 	//[TODO]
 	pr_debug("[IVE] ive_suspend\n");
 	return 0;
 }
 
-static int cvi_ive_resume(struct device *dev)
+static int __maybe_unused cvi_ive_resume(struct device *dev)
 {
 	//[TODO]
 	pr_debug("[IVE] ive_resume\n");

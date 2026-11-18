@@ -3695,14 +3695,14 @@ static int cvi_cif_resume(struct platform_device *pdev)
 	return 0;
 }
 
-static int cif_pm_suspend(struct device *dev)
+static int __maybe_unused cif_pm_suspend(struct device *dev)
 {
 	struct platform_device *pdev = to_platform_device(dev);
 	cvi_cif_suspend(pdev);
 	return 0;
 }
 
-static int cif_pm_resume(struct device *dev)
+static int __maybe_unused cif_pm_resume(struct device *dev)
 {
 	struct platform_device *pdev = to_platform_device(dev);
 	cvi_cif_resume(pdev);

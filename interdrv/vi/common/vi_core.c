@@ -305,7 +305,7 @@ err_destroy_instance:
 }
 
 #ifdef CONFIG_PM_SLEEP
-static int vi_pm_suspend(struct device *dev)
+static int __maybe_unused vi_pm_suspend(struct device *dev)
 {
 	struct platform_device *pdev = to_platform_device(dev);
 	struct cvi_vi_dev *vdev = dev_get_drvdata(&pdev->dev);
@@ -315,7 +315,7 @@ static int vi_pm_suspend(struct device *dev)
 	return 0;
 }
 
-static int vi_pm_resume(struct device *dev)
+static int __maybe_unused vi_pm_resume(struct device *dev)
 {
 	struct platform_device *pdev = to_platform_device(dev);
 	struct cvi_vi_dev *vdev = dev_get_drvdata(&pdev->dev);
