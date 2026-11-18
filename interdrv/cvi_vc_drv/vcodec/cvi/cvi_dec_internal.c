@@ -2529,7 +2529,7 @@ static int _cviH264_GetDecodedData(cviVideoDecoder *pvdec)
 
 	if (pdoi->indexFrameDisplay == DISPLAY_IDX_FLAG_SEQ_END) {
 		if (pvdec->seqChangeRequest == TRUE) {
-			int ret;
+			int ret = CVI_SEQ_CHANGE;
 
 			pvdec->seqChangeRequest = FALSE;
 

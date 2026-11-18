@@ -282,8 +282,10 @@ static s32 mesh_gdc_do_ldc(struct cvi_dwa_vdev *wdev, const void *pUsageParam,
 
 	pstTask[0] = vmalloc(sizeof(struct gdc_task_attr));
 	pstTask[1] = vmalloc(sizeof(struct gdc_task_attr));
-	if (!pstTask[0] || !pstTask[1])
+	if (!pstTask[0] || !pstTask[1]) {
+		ret = -ENOMEM;
 		goto LDC_FAIL_EXIT;
+	}
 
 	// get buf for gdc output.
 	buf_size = vb_in->buf.length[0] + vb_in->buf.length[1] +

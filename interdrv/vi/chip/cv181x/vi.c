@@ -482,7 +482,7 @@ static void cvi_isp_rdy_buf_remove(struct cvi_vi_dev *vdev, const u8 chn_num)
 void isp_fill_rgbmap(struct isp_ctx *ctx, enum cvi_isp_raw raw_num, const u8 chn_num)
 {
 	uintptr_t ba;
-	uint32_t dmaid;
+	uint32_t dmaid = U32_MAX;
 	uint32_t seglen, stride, max_size;
 	uint8_t i = 0;
 	void *vaddr = NULL;
@@ -508,6 +508,9 @@ void isp_fill_rgbmap(struct isp_ctx *ctx, enum cvi_isp_raw raw_num, const u8 chn
 		if (chn_num == ISP_FE_CH0)
 			dmaid = ISP_BLK_ID_DMA_CTL20;
 	}
+	/* No rgbmap DMA for this raw and channel. */
+	if (dmaid == U32_MAX)
+		return;
 
 	ba = ctx->phys_regs[dmaid];
 	seglen = ISP_RD_BITS(ba, REG_ISP_DMA_CTL_T, DMA_SEGLEN, SEGLEN);

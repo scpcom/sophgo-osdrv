@@ -1442,7 +1442,7 @@ RetCode ProductCheckEncOpenParam(EncOpenParam *pop)
 				CVI_VC_ERR("picHeight = %d\n", picHeight);
 				return RETCODE_INVALID_PARAM;
 			}
-			if (ActivePPS->entropyCodingMode > 2 &&
+			if (ActivePPS->entropyCodingMode > 2 ||
 			    ActivePPS->entropyCodingMode < 0)
 				return RETCODE_INVALID_PARAM;
 			if (ActivePPS->cabacInitIdc < 0 ||
@@ -1566,7 +1566,7 @@ RetCode ProductCheckEncOpenParam(EncOpenParam *pop)
 			}
 		}
 
-		if (param->useRecommendEncParam < 0 &&
+		if (param->useRecommendEncParam < 0 ||
 		    param->useRecommendEncParam > 3) {
 			CVI_VC_ERR("\n");
 			return RETCODE_INVALID_PARAM;
@@ -1703,7 +1703,7 @@ RetCode ProductCheckEncOpenParam(EncOpenParam *pop)
 				CVI_VC_ERR("RC must disable as ctuQp enable\n");
 				return RETCODE_INVALID_PARAM;
 			}
-			if (param->intraQpOffset < -10 &&
+			if (param->intraQpOffset < -10 ||
 			    param->intraQpOffset > 10) {
 				CVI_VC_ERR("\n");
 				return RETCODE_INVALID_PARAM;
@@ -1760,7 +1760,7 @@ RetCode ProductCheckEncOpenParam(EncOpenParam *pop)
 				return RETCODE_INVALID_PARAM;
 			}
 */
-			if (param->bitAllocMode < 0 &&
+			if (param->bitAllocMode < 0 ||
 			    param->bitAllocMode > 2) {
 				CVI_VC_ERR("\n");
 				return RETCODE_INVALID_PARAM;

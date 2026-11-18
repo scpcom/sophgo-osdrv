@@ -745,7 +745,7 @@ int free_common_memory(unsigned long core_idx)
 {
 	vdi_info_t *vdi;
 	vpudrv_buffer_t vdb;
-	vpudrv_buffer_t *p_vdb;
+	vpudrv_buffer_t *p_vdb = NULL;
 	int i;
 
 	vdi = vdi_get_vdi_info(core_idx);
@@ -792,7 +792,9 @@ int free_common_memory(unsigned long core_idx)
 		}
 	}
 
-	osal_memset(p_vdb, 0x0, sizeof(vpudrv_buffer_t));
+	/* A buffer missing from the pool left p_vdb pointing anywhere. */
+	if (p_vdb)
+		osal_memset(p_vdb, 0x0, sizeof(vpudrv_buffer_t));
 	osal_memset(&vdi->pvip->vpu_common_buffer, 0x0, sizeof(vpu_buffer_t));
 	osal_memset(&vdi->vpu_common_memory, 0x0, sizeof(vpu_buffer_t));
 

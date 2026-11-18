@@ -728,12 +728,11 @@ static int vdec_event_handler(CVI_VOID *data)
 	MMF_CHN_S chn = {.enModId = CVI_ID_VDEC, .s32DevId = 0, .s32ChnId = 0};
 	struct vb_s *vb;
 
-	CVI_VDEC_INFO("thread %d enter\n", VdecChn);
-
 	if (pChnHandle == NULL)
 		return CVI_ERR_VDEC_NULL_PTR;
 
 	VdecChn = pChnHandle->VdChn;
+	CVI_VDEC_INFO("thread %d enter\n", VdecChn);
 	pVbCtx = pChnHandle->pVbCtx;
 
 	pBindFrmQueue = (VDEC_BIND_FRM_S *)MEM_MALLOC(sizeof(VDEC_BIND_FRM_S) * MAX_VDEC_FRM_NUM);

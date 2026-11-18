@@ -6677,7 +6677,7 @@ CVI_S32 cviResetSb(cviVencSbSetting *pstSbSetting)
 static CVI_S32 cviSetSBMEnable(venc_chn_context *pChnHandle,
 			      CVI_BOOL bSBMEn)
 {
-	CVI_S32 ret;
+	CVI_S32 ret = CVI_SUCCESS;
 	venc_enc_ctx *pEncCtx = &pChnHandle->encCtx;
 
 	if (MUTEX_LOCK(&pChnHandle->chnMutex) != 0) {
@@ -6715,7 +6715,7 @@ static CVI_S32 cviSetSBMEnable(venc_chn_context *pChnHandle,
 static CVI_S32 cviSetSBMStSetting(venc_chn_context *pChnHandle,
 				cviVencSbSetting *pstSbSetting)
 {
-	CVI_S32 ret;
+	CVI_S32 ret = CVI_SUCCESS;
 	venc_enc_ctx *pEncCtx = &pChnHandle->encCtx;
 
 	if (MUTEX_LOCK(&pChnHandle->chnMutex) != 0) {
